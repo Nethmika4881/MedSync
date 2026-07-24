@@ -60,6 +60,8 @@ export default function MedicationsDatabasePage() {
                   <h3 className="font-bold text-slate-900 text-lg leading-tight">{med.genericName}</h3>
                   <p className="text-sm text-[var(--brand-primary)] font-semibold mt-0.5">{med.brandName}</p>
                 </div>
+
+
                 <div className="w-12 h-12 bg-slate-100 text-slate-600 flex flex-col items-center justify-center shrink-0"
                   style={{ clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)" }}>
                   <span className="text-xs font-bold capitalize">{med.form.substring(0, 4)}</span>
