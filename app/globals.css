@@ -1,0 +1,200 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* === CATMS Brand Tokens === */
+    --brand-primary: #16A085;
+    --brand-primary-dark: #0F7A66;
+    --brand-dark: #0B1220;
+    --bg-app: #F7F8FA;
+    --surface: #FFFFFF;
+    --border-subtle: #EAECEF;
+
+    /* Status colors */
+    --success: #16A34A;
+    --success-bg: #E9F9EF;
+    --danger: #DC2626;
+    --danger-bg: #FDECEC;
+    --warning: #D97706;
+    --warning-bg: #FFF4E5;
+    --info: #2563EB;
+    --info-bg: #EAF1FE;
+    --purple: #7C3AED;
+    --purple-bg: #F3ECFE;
+
+    /* Text hierarchy */
+    --text-primary: #101828;
+    --text-secondary: #475467;
+    --text-muted: #98A2B3;
+
+    /* Shadcn/Radix variables */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 162 73% 37%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 162 73% 37%;
+    --radius: 0.75rem;
+  }
+
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    @apply bg-app text-[var(--text-primary)];
+    font-family: 'Inter', 'Manrope', system-ui, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Manrope', 'Inter', system-ui, sans-serif;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+}
+
+@layer components {
+  /* === App Shell === */
+  .app-bg { background-color: var(--bg-app); }
+  .surface { background-color: var(--surface); }
+
+  /* === Cards === */
+  .card-base {
+    @apply bg-white rounded-2xl shadow-card border border-[var(--border-subtle)] p-6;
+    transition: box-shadow 0.2s ease;
+  }
+  .card-hover:hover {
+    @apply shadow-card-hover;
+  }
+
+  /* === Sidebar === */
+  .sidebar-nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+           text-[var(--text-secondary)] cursor-pointer transition-all duration-150;
+  }
+  .sidebar-nav-item:hover {
+    @apply bg-gray-50 text-[var(--text-primary)];
+  }
+  .sidebar-nav-item.active {
+    background-color: rgba(22, 160, 133, 0.10);
+    color: var(--brand-primary);
+    position: relative;
+  }
+  .sidebar-nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 24px;
+    background-color: var(--brand-primary);
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* === Status Pills === */
+  .pill-success { @apply bg-[var(--success-bg)] text-[var(--success)] text-xs font-semibold px-2.5 py-0.5 rounded-full; }
+  .pill-danger  { @apply bg-[var(--danger-bg)] text-[var(--danger)] text-xs font-semibold px-2.5 py-0.5 rounded-full; }
+  .pill-warning { @apply bg-[var(--warning-bg)] text-[var(--warning)] text-xs font-semibold px-2.5 py-0.5 rounded-full; }
+  .pill-info    { @apply bg-[var(--info-bg)] text-[var(--info)] text-xs font-semibold px-2.5 py-0.5 rounded-full; }
+  .pill-purple  { @apply bg-[var(--purple-bg)] text-[var(--purple)] text-xs font-semibold px-2.5 py-0.5 rounded-full; }
+
+  /* === Buttons === */
+  .btn-primary {
+    @apply bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white
+           font-semibold text-sm px-5 py-2 rounded-full transition-all duration-150
+           shadow-sm hover:shadow-md active:scale-[0.98];
+  }
+  .btn-secondary {
+    @apply bg-white border border-[var(--border-subtle)] text-[var(--text-primary)]
+           font-semibold text-sm px-5 py-2 rounded-full transition-all duration-150
+           hover:bg-gray-50 hover:shadow-sm active:scale-[0.98];
+  }
+  .btn-ghost {
+    @apply bg-transparent text-[var(--text-secondary)] font-medium text-sm
+           px-3 py-2 rounded-lg transition-colors hover:bg-gray-50;
+  }
+
+  /* === Loading skeleton === */
+  .skeleton {
+    @apply bg-gray-100 rounded-lg overflow-hidden relative;
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+    animation: shimmer 1.5s infinite;
+    transform: translateX(-100%);
+  }
+
+  /* === ContraindicationBanner === */
+  .contraindication-banner {
+    @apply border border-red-300 bg-red-50 rounded-xl p-4 flex items-start gap-3;
+  }
+
+  /* === SafetyInfoBanner === */
+  .safety-banner {
+    @apply border border-amber-300 bg-amber-50 rounded-xl p-4 flex items-start gap-3;
+  }
+
+  /* === Chat === */
+  .chat-bubble-in {
+    @apply bg-white border border-[var(--border-subtle)] text-[var(--text-primary)]
+           rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm max-w-[75%] shadow-sm;
+  }
+  .chat-bubble-out {
+    @apply bg-[var(--brand-primary)] text-white
+           rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm max-w-[75%];
+  }
+
+  /* === Page title === */
+  .page-title { @apply text-2xl font-bold text-[var(--text-primary)]; }
+  .card-title  { @apply text-base font-semibold text-[var(--text-primary)]; }
+  .body-text   { @apply text-sm text-[var(--text-secondary)] leading-relaxed; }
+  .caption     { @apply text-xs text-[var(--text-muted)]; }
+
+  /* === Scrollbar === */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #D0D5DD; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #98A2B3; }
+}
+
+/* Landing page gradient */
+.hero-gradient {
+  background: linear-gradient(135deg, #e8f5f2 0%, #f0f4ff 50%, #faf0ff 100%);
+}
+
+/* Teal gradient for charts */
+.chart-gradient-teal {
+  background: linear-gradient(180deg, rgba(22,160,133,0.2) 0%, rgba(22,160,133,0) 100%);
+}
+
+/* Upgrade card gradient (sidebar bottom) */
+.upgrade-card-gradient {
+  background: linear-gradient(135deg, #16A085 0%, #0F7A66 50%, #1a2e4a 100%);
+}
