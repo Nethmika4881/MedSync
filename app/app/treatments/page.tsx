@@ -6,7 +6,7 @@ import { useRole, useCurrentUser } from "@/lib/stores/authStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/catms/StatusPill";
-import { Activity, ClipboardCheck, Clock } from "lucide-react";
+import { Activity, Syringe, ClipboardCheck, Clock, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function TreatmentsPage() {
@@ -17,6 +17,7 @@ export default function TreatmentsPage() {
 
   if (!role || (role !== "nurse" && role !== "doctor")) return null;
 
+  
   const pendingTreatments = treatments.filter(t => t.status !== "Completed");
   const completedTreatments = treatments.filter(t => t.status === "Completed");
 
@@ -47,6 +48,7 @@ export default function TreatmentsPage() {
               <CardContent className="p-5">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-2">
+ 
                     <div className="w-8 h-8 bg-amber-100 text-amber-600 flex items-center justify-center shrink-0"
                       style={{ clipPath: "polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)" }}>
                       <Activity className="w-4 h-4" />
