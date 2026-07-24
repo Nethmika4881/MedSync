@@ -6,6 +6,7 @@ import { usePharmacyStore } from "@/lib/stores/pharmacyStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Pill, AlertCircle, CheckCircle2, RotateCcw } from "lucide-react";
 
+
 export default function MyPrescriptionsPage() {
   const user = useCurrentUser();
   const role = useRole();
@@ -13,6 +14,8 @@ export default function MyPrescriptionsPage() {
   const { doctors } = require("@/lib/mockData/doctors"); // import doctors for lookup
   
   if (!user || role !== "patient") return null;
+
+
 
   const myPrescriptions = prescriptions.filter(p => p.patientId === user.userId).map(p => ({
     ...p,
@@ -37,6 +40,7 @@ export default function MyPrescriptionsPage() {
               <Card key={presc.prescriptionId} className="border-[var(--brand-primary)] shadow-sm shadow-blue-500/10">
                 <CardContent className="p-5">
                   <div className="flex items-start gap-4">
+
                     <div className="w-12 h-12 bg-blue-100 text-[var(--brand-primary)] flex flex-col items-center justify-center shrink-0"
                       style={{ borderRadius: "24px", clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)" }}>
                       <Pill className="w-6 h-6" />
