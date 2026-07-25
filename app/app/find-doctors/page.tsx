@@ -118,6 +118,18 @@ function DoctorCard({ doctor, onBook }: { doctor: Doctor; onBook: (d: Doctor) =>
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
+const SPECIALIZATIONS = [
+  "All",
+  "Cardiology",
+  "Dermatology",
+  "General Practice",
+  "Gynecology",
+  "Neurology",
+  "Orthopedics",
+  "Pediatrics",
+  "Psychology",
+];
+
 export default function FindDoctorsPage() {
   const user = useCurrentUser();
   const [search, setSearch] = useState("");
