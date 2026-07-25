@@ -1,0 +1,28 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Soft, rounded background square with brand gradient -->
+  <rect width="32" height="32" rx="8" fill="url(#brandGradient)" />
+  
+  <!-- Clean medical cross / pulse integrated design -->
+  <path 
+    d="M16 8v16M8 16h16" 
+    stroke="#ffffff" 
+    stroke-width="3.5" 
+    stroke-linecap="round" 
+    stroke-linejoin="round" 
+  />
+  <path 
+    d="M11 16l2.5-4 4 8 2.5-4" 
+    stroke="#ffffff" 
+    stroke-width="2.5" 
+    stroke-linecap="round" 
+    stroke-linejoin="round" 
+  />
+
+  <!-- Definition of the primary brand gradient -->
+  <defs>
+    <linearGradient id="brandGradient" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0284c7" />
+      <stop offset="1" stop-color="#0369a1" />
+    </linearGradient>
+  </defs>
+</svg>
