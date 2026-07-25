@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useRole, useCurrentUser } from "@/lib/stores/authStore";
 import { useDoctorStore } from "@/lib/stores/doctorStore";
 import { Doctor } from "@/lib/mockData/doctors";
@@ -12,13 +13,13 @@ import { BookingModal } from "@/components/catms/BookingModal";
 import { getAvatarGradient } from "@/components/catms/BookingModal";
 
 export default function DoctorsPage() {
+  const router = useRouter();
   const role = useRole();
   const user = useCurrentUser();
-  const { doctors, addDoctor, deleteDoctor } = useDoctorStore();
+  const { doctors, deleteDoctor } = useDoctorStore();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>("All");
-  const [bookingDoctor, setBookingDoctor] = useState<Doctor | null>(null);
 
   if (!role || !user) return null;
 
@@ -31,25 +32,6 @@ export default function DoctorsPage() {
     (d.name.toLowerCase().includes(searchTerm.toLowerCase()) || d.specialization.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleAddDemoDoctor = () => {
-    addDoctor({
-      name: "New Doctor",
-      specialization: "General Practice",
-      branchId: "BR-001",
-      branchName: "Main Downtown Clinic",
-      email: "new.doctor@medsync.com",
-      phone: "+1 (555) 000-0000",
-      rating: 5.0,
-      reviewCount: 0,
-      consultationFee: 150,
-      experience: 5,
-      avatar: "ND",
-      bio: "A newly joined general practitioner dedicated to comprehensive patient care.",
-      education: "MD - Medical University",
-      isAvailable: true,
-    });
-  };
-
   return (
     <div className="space-y-6 animate-fade-in relative pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -58,7 +40,7 @@ export default function DoctorsPage() {
           <p className="text-slate-500">Find and schedule appointments with our specialists.</p>
         </div>
         {isAdmin && (
-          <Button onClick={handleAddDemoDoctor} className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-10 px-4 flex items-center gap-2">
+          <Button onClick={() => router.push("/app/doctors/new")} className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-10 px-4 flex items-center gap-2">
             <Plus className="w-4 h-4" />
             New Doctor
           </Button>
@@ -150,11 +132,10 @@ export default function DoctorsPage() {
                       <span className="font-bold text-slate-900">${doctor.consultationFee}</span>
                     </div>
                     <Button 
-                      onClick={() => setBookingDoctor(doctor)}
-                      disabled={!doctor.isAvailable}
-                      className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl disabled:opacity-50 transition-all"
+                      onClick={() => router.push(`/app/doctors/${doctor.doctorId}`)}
+                      className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-all"
                     >
-                      Book Visit
+                      View Profile
                     </Button>
                   </div>
                 </CardContent>
@@ -173,15 +154,6 @@ export default function DoctorsPage() {
         </div>
       )}
 
-      {/* Booking Modal */}
-      {bookingDoctor && (
-        <BookingModal
-          doctor={bookingDoctor}
-          onClose={() => setBookingDoctor(null)}
-          currentUserId={user.userId}
-          currentUserName={user.name}
-        />
-      )}
     </div>
   );
 }
