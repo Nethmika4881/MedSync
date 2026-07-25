@@ -5,7 +5,7 @@ import { useCurrentUser, useRole } from "@/lib/stores/authStore";
 import { usePharmacyStore } from "@/lib/stores/pharmacyStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Pill, AlertCircle, CheckCircle2, RotateCcw } from "lucide-react";
-import { cn } from "@/lib/utils";
+
 
 export default function MyPrescriptionsPage() {
   const user = useCurrentUser();
@@ -15,7 +15,8 @@ export default function MyPrescriptionsPage() {
   
   if (!user || role !== "patient") return null;
 
-  // Assuming user.userId matches a patientId (or demo logic)
+
+
   const myPrescriptions = prescriptions.filter(p => p.patientId === user.userId).map(p => ({
     ...p,
     status: p.pickedUp ? "Completed" : p.dispensed ? "Dispensed" : "Pending",
@@ -39,7 +40,7 @@ export default function MyPrescriptionsPage() {
               <Card key={presc.prescriptionId} className="border-[var(--brand-primary)] shadow-sm shadow-blue-500/10">
                 <CardContent className="p-5">
                   <div className="flex items-start gap-4">
-                    {/* CSS Capsule Shape */}
+
                     <div className="w-12 h-12 bg-blue-100 text-[var(--brand-primary)] flex flex-col items-center justify-center shrink-0"
                       style={{ borderRadius: "24px", clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)" }}>
                       <Pill className="w-6 h-6" />

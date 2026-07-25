@@ -17,7 +17,7 @@ export default function TreatmentsPage() {
 
   if (!role || (role !== "nurse" && role !== "doctor")) return null;
 
-  // Filter out non-nursing tasks if possible, but for demo we just show all treatments not completed
+  
   const pendingTreatments = treatments.filter(t => t.status !== "Completed");
   const completedTreatments = treatments.filter(t => t.status === "Completed");
 
@@ -48,7 +48,7 @@ export default function TreatmentsPage() {
               <CardContent className="p-5">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-2">
-                    {/* CSS cross/plus shape indicator */}
+ 
                     <div className="w-8 h-8 bg-amber-100 text-amber-600 flex items-center justify-center shrink-0"
                       style={{ clipPath: "polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)" }}>
                       <Activity className="w-4 h-4" />
