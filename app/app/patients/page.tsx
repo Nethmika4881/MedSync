@@ -1,15 +1,17 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { usePatientStore } from "@/lib/stores/patientStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, UserPlus, FileText, Phone, Mail, Activity, ArrowRight, Users } from "lucide-react";
+import { Search, UserPlus, Phone, Mail, Activity, ArrowRight, Users } from "lucide-react";
 import { AvatarWithName } from "@/components/catms/AvatarWithName";
 import { EmptyState } from "@/components/catms/EmptyState";
 import { ContraindicationRowBadge } from "@/components/catms/ContraindicationBanner";
 
 export default function PatientsPage() {
+  const router = useRouter();
   const { patients, allergies, conditions } = usePatientStore();
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -37,7 +39,10 @@ export default function PatientsPage() {
               className="w-full sm:w-64 h-10 pl-9 pr-4 rounded-xl border border-slate-200 text-sm focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none transition-all bg-white"
             />
           </div>
-          <Button className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-xl h-10 px-4">
+          <Button
+            onClick={() => router.push("/app/patients/new")}
+            className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-10 px-4"
+          >
             <UserPlus className="w-4 h-4 mr-2" />
             New Patient
           </Button>
@@ -51,11 +56,16 @@ export default function PatientsPage() {
           const activeConditions = conditions.filter(c => c.patientId === patient.patientId && c.status === "Active");
 
           return (
-            <Card key={patient.patientId} className="border-slate-200 shadow-sm hover:shadow-md transition-shadow group">
+            <Card key={patient.patientId} className="border-slate-200 shadow-sm hover:shadow-md transition-shadow group cursor-pointer" onClick={() => router.push(`/app/patients/${patient.patientId}`)}>
               <CardContent className="p-6">
                 <div className="flex justify-between items-start mb-4">
                   <AvatarWithName name={patient.name} subtitle={patient.patientId} avatarSrc={patient.avatar} size="lg" />
-                  <Button variant="ghost" size="icon" className="text-slate-400 group-hover:text-[var(--brand-primary)] transition-colors">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-slate-400 group-hover:text-[var(--brand-primary)] hover:bg-teal-50 transition-colors"
+                    onClick={(e) => { e.stopPropagation(); router.push(`/app/patients/${patient.patientId}`); }}
+                  >
                     <ArrowRight className="w-5 h-5" />
                   </Button>
                 </div>
