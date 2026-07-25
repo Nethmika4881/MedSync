@@ -28,8 +28,8 @@ export default function PatientsPage() {
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Patient Directory</h2>
           <p className="text-slate-500">View and manage all registered patients.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="relative group">
+        <div className="flex flex-col sm:flex-row w-full sm:w-auto items-stretch sm:items-center gap-3 mt-4 sm:mt-0">
+          <div className="relative group w-full sm:w-auto">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -41,7 +41,7 @@ export default function PatientsPage() {
           </div>
           <Button
             onClick={() => router.push("/app/patients/new")}
-            className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-10 px-4"
+            className="w-full sm:w-auto bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-10 px-4 shrink-0"
           >
             <UserPlus className="w-4 h-4 mr-2" />
             New Patient
