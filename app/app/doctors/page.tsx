@@ -1,20 +1,28 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRole } from "@/lib/stores/authStore";
-import { doctors, Doctor } from "@/lib/mockData/doctors";
+import { useRole, useCurrentUser } from "@/lib/stores/authStore";
+import { useDoctorStore } from "@/lib/stores/doctorStore";
+import { Doctor } from "@/lib/mockData/doctors";
 import { branches } from "@/lib/mockData/branches";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, MapPin, Calendar, Clock, Star } from "lucide-react";
-import { AvatarWithName } from "@/components/catms/AvatarWithName";
+import { Search, MapPin, Calendar, Clock, Star, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BookingModal } from "@/components/catms/BookingModal";
+import { getAvatarGradient } from "@/components/catms/BookingModal";
 
 export default function DoctorsPage() {
   const role = useRole();
+  const user = useCurrentUser();
+  const { doctors, addDoctor, deleteDoctor } = useDoctorStore();
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>("All");
+  const [bookingDoctor, setBookingDoctor] = useState<Doctor | null>(null);
 
-  if (!role) return null;
+  if (!role || !user) return null;
+
+  const isAdmin = role === "admin";
 
   const specialties: string[] = ["All", ...Array.from(new Set(doctors.map((d: Doctor) => d.specialization)))];
 
@@ -23,13 +31,38 @@ export default function DoctorsPage() {
     (d.name.toLowerCase().includes(searchTerm.toLowerCase()) || d.specialization.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const handleAddDemoDoctor = () => {
+    addDoctor({
+      name: "New Doctor",
+      specialization: "General Practice",
+      branchId: "BR-001",
+      branchName: "Main Downtown Clinic",
+      email: "new.doctor@medsync.com",
+      phone: "+1 (555) 000-0000",
+      rating: 5.0,
+      reviewCount: 0,
+      consultationFee: 150,
+      experience: 5,
+      avatar: "ND",
+      bio: "A newly joined general practitioner dedicated to comprehensive patient care.",
+      education: "MD - Medical University",
+      isAvailable: true,
+    });
+  };
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in relative pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Doctor Directory</h2>
           <p className="text-slate-500">Find and schedule appointments with our specialists.</p>
         </div>
+        {isAdmin && (
+          <Button onClick={handleAddDemoDoctor} className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-10 px-4 flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            New Doctor
+          </Button>
+        )}
       </div>
 
       {/* Filters */}
@@ -58,62 +91,97 @@ export default function DoctorsPage() {
       </div>
 
       {/* Doctor Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredDoctors.map((doctor: Doctor) => {
-          const branch = branches.find(b => b.branchId === doctor.branchId);
-          return (
-            <Card key={doctor.doctorId} className="border-slate-200 shadow-sm hover:shadow-md transition-all group overflow-hidden">
-              <div className="h-24 bg-gradient-to-r from-slate-100 to-slate-50 relative">
-                <div className="absolute -bottom-8 left-6">
-                  <div className="p-1.5 bg-white rounded-2xl shadow-sm">
-                    {/* Using our custom avatar shape without images */}
-                    <div className="w-16 h-16 bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xl avatar-shape shadow-inner">
-                      {doctor.name.split(' ').map((n: string) => n[0]).join('')}
+      {filteredDoctors.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredDoctors.map((doctor: Doctor) => {
+            const branch = branches.find(b => b.branchId === doctor.branchId);
+            const gradient = getAvatarGradient(doctor.avatar);
+            
+            return (
+              <Card key={doctor.doctorId} className="border-slate-200 shadow-sm hover:shadow-md transition-all group overflow-hidden flex flex-col relative">
+                {isAdmin && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); deleteDoctor(doctor.doctorId); }}
+                    className="absolute top-2 left-2 z-10 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-colors shadow-sm"
+                    title="Delete Doctor"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+                <div className={`h-24 bg-gradient-to-r ${gradient} relative`}>
+                  <div className="absolute -bottom-8 left-6">
+                    <div className="p-1.5 bg-white rounded-2xl shadow-sm">
+                      <div className="w-16 h-16 bg-slate-50 text-slate-700 flex items-center justify-center font-bold text-xl avatar-shape shadow-inner border border-slate-100">
+                        {doctor.avatar.replace(/[0-9]/g, "")}
+                      </div>
                     </div>
                   </div>
+                  <div className="absolute top-4 right-4 bg-white/80 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-slate-700 flex items-center gap-1 shadow-sm">
+                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                    {doctor.rating}
+                  </div>
                 </div>
-                <div className="absolute top-4 right-4 bg-white/80 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-slate-700 flex items-center gap-1 shadow-sm">
-                  <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                  {doctor.rating}
-                </div>
-              </div>
-              <CardContent className="pt-12 pb-6 px-6">
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                    Dr. {doctor.name}
-                  </h3>
-                  <p className="text-[var(--brand-primary)] font-semibold text-sm">{doctor.specialization}</p>
-                </div>
+                <CardContent className="pt-12 pb-6 px-6 flex-1 flex flex-col">
+                  <div className="mb-4">
+                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                      Dr. {doctor.name}
+                    </h3>
+                    <p className="text-[var(--brand-primary)] font-semibold text-sm">{doctor.specialization}</p>
+                  </div>
 
-                <div className="space-y-2.5 mb-6">
-                  <div className="flex items-start gap-2.5 text-sm text-slate-600">
-                    <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                    <span className="leading-tight">{branch?.name || "Main Clinic"}<br/><span className="text-xs text-slate-400">{branch?.address}</span></span>
+                  <div className="space-y-2.5 mb-6 flex-1">
+                    <div className="flex items-start gap-2.5 text-sm text-slate-600">
+                      <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                      <span className="leading-tight">{branch?.name || "Main Clinic"}<br/><span className="text-xs text-slate-400">{branch?.address}</span></span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-sm text-slate-600">
+                      <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
+                      {doctor.experience} Years Experience
+                    </div>
+                    <div className="flex items-center gap-2.5 text-sm text-slate-600">
+                      <Clock className="w-4 h-4 text-slate-400 shrink-0" />
+                      Avg. Wait Time: 15 mins
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2.5 text-sm text-slate-600">
-                    <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
-                    {doctor.experience} Years Experience
-                  </div>
-                  <div className="flex items-center gap-2.5 text-sm text-slate-600">
-                    <Clock className="w-4 h-4 text-slate-400 shrink-0" />
-                    Avg. Wait Time: 15 mins
-                  </div>
-                </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                  <div className="text-sm">
-                    <span className="text-slate-500">Consultation Fee</span><br/>
-                    <span className="font-bold text-slate-900">${doctor.consultationFee}</span>
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
+                    <div className="text-sm">
+                      <span className="text-slate-500">Consultation Fee</span><br/>
+                      <span className="font-bold text-slate-900">${doctor.consultationFee}</span>
+                    </div>
+                    <Button 
+                      onClick={() => setBookingDoctor(doctor)}
+                      disabled={!doctor.isAvailable}
+                      className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl disabled:opacity-50 transition-all"
+                    >
+                      Book Visit
+                    </Button>
                   </div>
-                  <Button className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl">
-                    Book Visit
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+            <Search className="w-6 h-6 text-slate-400" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900">No doctors found</h3>
+          <p className="text-slate-500 text-sm max-w-sm mt-1">Try adjusting your filters or search terms, or add a new doctor.</p>
+          <Button variant="outline" onClick={() => {setSearchTerm(""); setSelectedSpecialty("All");}} className="mt-6 rounded-xl">Clear Filters</Button>
+        </div>
+      )}
+
+      {/* Booking Modal */}
+      {bookingDoctor && (
+        <BookingModal
+          doctor={bookingDoctor}
+          onClose={() => setBookingDoctor(null)}
+          currentUserId={user.userId}
+          currentUserName={user.name}
+        />
+      )}
     </div>
   );
 }
