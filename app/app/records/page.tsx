@@ -6,7 +6,7 @@ import { useClinicalStore } from "@/lib/stores/clinicalStore";
 import { usePatientStore } from "@/lib/stores/patientStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, Download, CheckCircle2, ShieldAlert } from "lucide-react";
-import { cn } from "@/lib/utils";
+
 
 export default function MedicalRecordsPage() {
   const user = useCurrentUser();
@@ -16,7 +16,7 @@ export default function MedicalRecordsPage() {
   
   if (!user || role !== "patient") return null;
 
-  // Assuming user.userId matches a patientId (or demo logic)
+
   const myConsultations = consultations.filter(c => c.patientId === user.userId);
   const myTreatments = treatments.filter(t => t.patientId === user.userId);
   const myAllergies = allergies.filter(a => a.patientId === user.userId);
@@ -30,12 +30,12 @@ export default function MedicalRecordsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Health Profile Summary */}
+
         <Card className="border-slate-200 shadow-sm overflow-hidden md:col-span-2">
           <div className="h-3 bg-gradient-to-r from-blue-500 to-indigo-600" />
           <CardContent className="p-6">
             <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-              {/* CSS Hexagon icon */}
+
               <div className="w-8 h-8 bg-blue-100 text-blue-600 flex items-center justify-center" style={{ clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)" }}>
                 <FileText className="w-4 h-4" />
               </div>
@@ -84,7 +84,7 @@ export default function MedicalRecordsPage() {
           </CardContent>
         </Card>
 
-        {/* Consultation History */}
+
         <div className="md:col-span-2 space-y-4">
           <h3 className="text-lg font-bold text-slate-900">Consultation History</h3>
           {myConsultations.map(consult => (
