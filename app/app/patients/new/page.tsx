@@ -79,7 +79,7 @@ export default function NewPatientPage() {
           <Button onClick={() => { setSubmitted(false); setForm({ firstName: "", lastName: "", dob: "", gender: "Male", bloodGroup: "A+", phone: "", email: "", address: "", city: "", branchId: "BR-001", emergencyContactName: "", emergencyContactRelation: "", emergencyContactPhone: "" }); }}
             variant="outline" className="rounded-xl px-6 h-11">Register Another</Button>
           <Link href="/app/patients">
-            <Button className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-xl px-6 h-11">View All Patients</Button>
+            <Button className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl px-6 h-11">View All Patients</Button>
           </Link>
         </div>
       </div>
@@ -196,7 +196,7 @@ export default function NewPatientPage() {
         {error && <p className="text-red-600 text-sm font-medium bg-red-50 border border-red-200 px-4 py-3 rounded-xl">{error}</p>}
 
         <div className="flex gap-3">
-          <Button type="submit" className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-xl h-11 px-8 font-semibold">
+          <Button type="submit" className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-11 px-8 font-semibold">
             <UserPlus className="w-4 h-4 mr-2" /> Register Patient
           </Button>
           <Link href="/app/patients">
