@@ -658,8 +658,8 @@ export default function AppointmentsPage() {
             <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Appointments</h2>
             <p className="text-slate-500">Manage all scheduling and patient visits.</p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row w-full sm:w-auto items-stretch sm:items-center gap-3 mt-4 sm:mt-0">
+            <div className="relative w-full sm:w-auto">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -673,7 +673,7 @@ export default function AppointmentsPage() {
               <button
                 id="new-appointment-btn"
                 onClick={() => setShowNewModal(true)}
-                className="appt-new-btn flex items-center gap-2 h-10 px-4 rounded-xl text-white text-sm font-semibold"
+                className="appt-new-btn flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-white text-sm font-semibold w-full sm:w-auto shrink-0"
               >
                 <Calendar className="w-4 h-4" />
                 New Appointment
