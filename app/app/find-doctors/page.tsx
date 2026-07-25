@@ -295,7 +295,7 @@ function BookingModal({
               <h3 className="font-bold text-slate-900 text-lg">Select Date & Time</h3>
               <div>
                 <p className="text-xs font-semibold text-slate-500 uppercase mb-2 tracking-wide">Available Days</p>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                   {availableDays.map((day) => {
                     const booked = isFullyBooked(day);
                     const selected = selectedDay?.toDateString() === day.toDateString();
@@ -332,7 +332,7 @@ function BookingModal({
                   <p className="text-xs font-semibold text-slate-500 uppercase mb-2 tracking-wide">
                     Time Slots — {dayFmt(selectedDay)}
                   </p>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                     {TIME_SLOTS.map((slot) => {
                       const selected = selectedTime === slot;
                       return (

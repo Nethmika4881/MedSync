@@ -49,7 +49,7 @@ export default function DoctorsPage() {
             <button
               key={spec}
               onClick={() => setSelectedSpecialty(spec)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${selectedSpecialty === spec ? 'bg-[var(--brand-primary)] text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+              className={`shrink-0 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${selectedSpecialty === spec ? 'bg-[var(--brand-primary)] text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
             >
               {spec}
             </button>
