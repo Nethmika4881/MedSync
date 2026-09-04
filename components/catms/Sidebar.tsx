@@ -25,7 +25,7 @@ export function Sidebar() {
     <aside className="fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-slate-200 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-40 transition-transform">
       {/* Brand */}
       <div className="h-16 flex items-center px-6 border-b border-slate-100 shrink-0">
-        <Link href="/app/dashboard" className="flex items-center gap-2 text-xl font-bold font-outfit text-slate-900 tracking-tight">
+        <Link href="/dashboard" className="flex items-center gap-2 text-xl font-bold font-outfit text-slate-900 tracking-tight">
           <HeartPulse className="w-7 h-7 text-[var(--brand-primary)]" />
           Health<span className="text-[var(--brand-primary)]">ora</span>
         </Link>
