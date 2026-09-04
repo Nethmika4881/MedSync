@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AvatarWithName } from "@/components/catms/AvatarWithName";
 import { StatusPill } from "@/components/catms/StatusPill";
-import { ContraindicationBanner } from "@/components/catms/ContraindicationBanner";
+import { ContraindicationRowBadge } from "@/components/catms/ContraindicationBanner";
 import {
   ArrowLeft,
   Calendar,
@@ -84,7 +84,7 @@ export default function PatientProfilePage() {
 
       {/* Severe Allergy Warning */}
       {patientAllergies.some((a) => a.severity === "Severe" || a.severity === "Life-threatening") && (
-        <ContraindicationBanner
+        <ContraindicationRowBadge
           patientName={patient.name}
           allergyName={
             patientAllergies.find((a) => a.severity === "Severe" || a.severity === "Life-threatening")
@@ -213,7 +213,7 @@ export default function PatientProfilePage() {
                           {a.severity}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 mt-1">Reaction: {a.reactionDetails}</p>
+                      <p className="text-xs text-slate-500 mt-1">Reaction: {a.reaction}</p>
                     </li>
                   ))}
                 </ul>
