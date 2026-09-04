@@ -37,7 +37,7 @@ export default function DoctorProfilePage() {
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <AlertCircle className="w-12 h-12 text-slate-300" />
         <h2 className="text-xl font-semibold text-slate-700">Doctor Not Found</h2>
-        <Button onClick={() => router.push("/app/doctors")} variant="outline">
+        <Button onClick={() => router.push("/doctors")} variant="outline">
           Back to Directory
         </Button>
       </div>
@@ -62,7 +62,7 @@ export default function DoctorProfilePage() {
       {/* Header Actions */}
       <div className="flex items-center justify-between">
         <button
-          onClick={() => router.push("/app/doctors")}
+          onClick={() => router.push("/doctors")}
           className="flex items-center text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-1.5" />

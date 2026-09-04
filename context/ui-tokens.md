@@ -1,350 +1,138 @@
+This `ui-tokens.md` file defines the visual primitives extracted directly from your Healthora CATMS mockups. It is tailored specifically for your Tailwind CSS v3 and shadcn/ui stack, ensuring every component across the four portals remains visually identical.
+
 # UI Tokens
 
-Design tokens for JobPilot. All colors, typography, spacing, and component values extracted from the delivered design. Use these exact values throughout the codebase — never hardcode colors or use raw Tailwind color classes in components.
+Design tokens for Healthora Clinic Management (CATMS). All colors, typography, and spacing must use these semantic Tailwind variables. Hardcoded hex values (e.g., `bg-[#10b981]`) and generic color scales (e.g., `text-gray-500`) are strictly prohibited.
 
 ---
 
-## How to Use
+## globals.css (CSS Variables)
 
-This project uses **Tailwind CSS v4**. All design tokens are defined using the `@theme` directive in `app/globals.css`. No `tailwind.config.ts` needed for colors or tokens.
-
-Tailwind v4 automatically generates utility classes from `@theme` variables:
-
-- `--color-accent` → `bg-accent`, `text-accent`, `border-accent`
-- `--color-surface` → `bg-surface`, `text-surface`, `border-surface`
-
-```tsx
-// Correct — uses generated utility classes
-className="bg-surface text-text-primary border-border"
-
-// Also correct — references CSS variable directly
-style={{ color: 'var(--color-text-primary)' }}
-
-// Never — hardcoded hex values
-className="bg-[#F6F7FB] text-[#101828]"
-
-// Never — raw Tailwind color classes
-className="bg-purple-500 text-gray-600"
-```
-
----
-
-## globals.css — Complete Token Definition
+Define these HSL variables in your `@layer base` to power the shadcn/ui theme configuration in `tailwind.config.ts`.
 
 ```css
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme {
-  /* Font */
-  --font-sans: "Inter", sans-serif;
+@layer base {
+  :root {
+    /* Base Backgrounds */
+    --background: 210 40% 98%; /* #f8fafc / Very light gray page background */
+    --foreground: 222.2 84% 4.9%; /* #0f172a / Dark slate for primary text */
 
-  /* Page and surface backgrounds */
-  --color-background: #f6f7fb;
-  --color-surface: #ffffff;
-  --color-surface-secondary: #f9fafb;
-  --color-surface-tertiary: #f2f5f7;
-  --color-surface-muted: #f4f5fb;
+    /* Card & Surface */
+    --card: 0 0% 100%; /* #ffffff / Solid white for cards and sidebars */
+    --card-foreground: 222.2 84% 4.9%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
 
-  /* Borders */
-  --color-border: #e7eaf3;
-  --color-border-light: #e5e7eb;
-  --color-border-muted: #dfe1e7;
+    /* Brand Primary (Healthora Teal) */
+    --primary: 164 78% 38%; /* Teal/Emerald used for active states and primary buttons */
+    --primary-foreground: 0 0% 100%; /* White text on primary */
+    
+    /* Subtle Brand Muted (Light teal for active nav/badges) */
+    --primary-muted: 152 76% 96%; /* #ecfdf5 / Used for 'Paid' and 'Available' pill backgrounds */
+    
+    /* Secondary & Muted */
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%; /* #64748b / Slate-500 for subtitles and table headers */
 
-  /* Text */
-  --color-text-primary: #101828;
-  --color-text-secondary: #6a7282;
-  --color-text-muted: #99a1af;
-  --color-text-dark: #364153;
-  --color-text-darker: #36394a;
-  --color-text-darkest: #111827;
-  --color-text-black: #131316;
-  --color-text-slate: #272835;
-  --color-text-slate-medium: #666d80;
+    /* Borders & Inputs */
+    --border: 214.3 31.8% 91.4%; /* #e2e8f0 / Slate-200 for card borders and dividers */
+    --input: 214.3 31.8% 91.4%;
+    --ring: 164 78% 38%; /* Focus ring strictly matches the primary brand teal */
 
-  /* Primary accent — purple */
-  --color-accent: #7c5cfc;
-  --color-accent-dark: #5e4cff;
-  --color-accent-light: #f3e8ff;
-  --color-accent-muted: #faf5ff;
-  --color-accent-foreground: #ffffff;
+    /* Status Colors */
+    --success: 164 78% 38%; /* Matches Primary */
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 38 92% 50%; /* Amber for 'Due' status badges */
+    --warning-foreground: 0 0% 100%;
+    
+    --destructive: 0 84.2% 60.2%; /* Red for errors and cancellations */
+    --destructive-foreground: 210 40% 98%;
 
-  /* Success — green */
-  --color-success: #10b981;
-  --color-success-alt: #00bc7d;
-  --color-success-dark: #007a55;
-  --color-success-darker: #009966;
-  --color-success-light: #d0fae5;
-  --color-success-lightest: #ecfdf5;
-  --color-success-foreground: #007a55;
-
-  /* Info — blue */
-  --color-info: #61a8ff;
-  --color-info-dark: #155dfc;
-  --color-info-medium: #2b7fff;
-  --color-info-light: #dbeafe;
-  --color-info-lightest: #eff6ff;
-  --color-info-foreground: #155dfc;
-  --color-info-muted: #94a2c5;
-
-  /* Warning — orange */
-  --color-warning: #ff8904;
-  --color-warning-foreground: #ffffff;
-
-  /* Error — red */
-  --color-error: #ef4444;
-  --color-error-foreground: #ffffff;
-
-  /* LinkedIn brand */
-  --color-linkedin: #0a66c2;
-  --color-linkedin-light: #dce6f1;
-  --color-linkedin-foreground: #ffffff;
-
-  /* Dark overlays */
-  --color-overlay: #111827;
-  --color-overlay-dark: #131316;
-
-  /* Border radius */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-full: 9999px;
+    /* Radii */
+    --radius: 0.5rem; /* 8px default for inputs, pills, and buttons */
+    --radius-card: 0.75rem; /* 12px for dashboard cards */
+    --radius-modal: 1rem; /* 16px for large dialog modals */
+  }
 }
+
 ```
-
-Tailwind v4 generates utility classes automatically from every `--color-*` token above:
-
-- `bg-accent`, `text-accent`, `border-accent`
-- `bg-surface`, `text-surface-secondary`
-- `bg-success-light`, `text-text-muted`
-- etc.
 
 ---
 
 ## Color Usage Guide
 
-### Page Layout
+### Surfaces & Borders
 
-| Element           | Token                  |
-| ----------------- | ---------------------- |
-| Page background   | `bg-background`        |
-| Card / surface    | `bg-surface`           |
-| Secondary surface | `bg-surface-secondary` |
-| Default border    | `border-border`        |
-| Light border      | `border-border-light`  |
+| Element | Tailwind Class | Usage |
+| --- | --- | --- |
+| **Page Background** | `bg-background` | Outer canvas behind all cards and layouts. |
+| **Cards & Sidebar** | `bg-card` | Solid white surface for the sidebar navigation and content cards. |
+| **Dividers & Lines** | `border-border` | Subtle lines separating table rows and sidebar sections. |
+| **Modal Headers** | `bg-primary` | The top portion of booking/confirmation modals uses a solid teal fill. |
 
-### Typography
+### Brand & Interactive (Healthora Teal)
 
-| Element                | Token                           |
-| ---------------------- | ------------------------------- |
-| Headings, primary text | `text-text-primary` (#101828)   |
-| Secondary text, labels | `text-text-secondary` (#6A7282) |
-| Placeholder, muted     | `text-text-muted` (#99A1AF)     |
-| Dark labels            | `text-text-dark` (#364153)      |
+| Element | Tailwind Class | Usage |
+| --- | --- | --- |
+| **Primary Buttons** | `bg-primary text-primary-foreground` | "Book Now", "Review", "Confirm Booking". |
+| **Active Nav Items** | `bg-primary text-primary-foreground` | Highlights the current route (e.g., "Billing" or "Dashboard") in the sidebar. |
+| **Filter Chips** | `bg-primary text-primary-foreground` | Active state for category filters (e.g., "All" vs "Cardiology"). |
+| **Modal Steps** | `text-primary` | Numbered progress indicators inside booking modals. |
 
-### Accent (Primary Purple)
+### Status Badges (Pills)
 
-Used for: primary buttons, active nav items, match score bars, tailored badge, focus rings
+All status badges must use `rounded-full` (pill shape) with `px-3 py-1`.
 
-| Element                | Token                    |
-| ---------------------- | ------------------------ |
-| Button background      | `bg-accent`              |
-| Button text            | `text-accent-foreground` |
-| Light badge background | `bg-accent-light`        |
-| Subtle background      | `bg-accent-muted`        |
-
-### Match Score Colors
-
-Match score bars and indicators use gradient stops based on score range:
-
-| Score Range | Color  | Token                                  |
-| ----------- | ------ | -------------------------------------- |
-| 90-100%     | Green  | `text-success` / `bg-success-lightest` |
-| 70-89%      | Green  | `text-success` / `bg-success-light`    |
-| 50-69%      | Orange | `text-warning`                         |
-| Below 50%   | Gray   | `text-text-muted`                      |
-
-### Skills Badges
-
-| Type          | Background            | Text                      |
-| ------------- | --------------------- | ------------------------- |
-| Matched skill | `bg-success-lightest` | `text-success-foreground` |
-| Missing skill | `bg-accent-muted`     | `text-accent`             |
-
-### Source Badges
-
-| Source   | Background             | Text                  |
-| -------- | ---------------------- | --------------------- |
-| LinkedIn | `bg-linkedin-light`    | `text-linkedin`       |
-| URL      | `bg-surface-secondary` | `text-text-secondary` |
-
-### Status Badges
-
-| Status     | Background             | Text                      |
-| ---------- | ---------------------- | ------------------------- |
-| Tailored   | `bg-accent-light`      | `text-accent`             |
-| High Match | `bg-success-lightest`  | `text-success-foreground` |
-| Low Match  | `bg-surface-secondary` | `text-text-secondary`     |
+| Status | Background Token | Text Token | Example Usage |
+| --- | --- | --- | --- |
+| **Paid / Available** | `bg-primary-muted` | `text-primary` | Invoice Paid, Doctor Available |
+| **Due / Pending** | `bg-warning/15` | `text-warning` | Unpaid Invoices, Pending Approvals |
+| **Cancelled** | `bg-destructive/15` | `text-destructive` | Cancelled Appointments |
 
 ---
 
-## Typography
+## Typography Hierarchy
 
-| Element              | Size | Weight | Line height | Color token           |
-| -------------------- | ---- | ------ | ----------- | --------------------- |
-| Logo text            | 19px | 700    | 28px        | `text-text-darkest`   |
-| Stat number          | 30px | 600    | 36px        | `text-text-primary`   |
-| Section heading      | 16px | 600    | 24px        | `text-text-primary`   |
-| Nav item (active)    | 14px | 500    | 20px        | `text-accent`         |
-| Nav item (inactive)  | 14px | 500    | 20px        | `text-text-dark`      |
-| Card label           | 14px | 500    | 20px        | `text-text-secondary` |
-| Body / activity text | 14px | 500    | 20px        | `text-text-primary`   |
-| Trend badge text     | 12px | 500    | 16px        | `text-success-darker` |
-| Timestamp / muted    | 12px | 400    | 16px        | `text-text-muted`     |
-| Chart axis labels    | 12px | 400    | 15px        | `#9CA3AF`             |
-| Stat subtitle        | 12px | 400    | 16px        | `text-text-muted`     |
-
-Font family: **Inter** — import from Google Fonts or use next/font/google.
+| Element | Size & Weight | Tailwind Classes | Color |
+| --- | --- | --- | --- |
+| **Page Title** | 24px, Bold | `text-2xl font-bold` | `text-foreground` |
+| **Section Heading** | 18px, Semibold | `text-lg font-semibold` | `text-foreground` |
+| **Card Title** | 16px, Medium | `text-base font-medium` | `text-foreground` |
+| **Body Text** | 14px, Normal | `text-sm font-normal` | `text-foreground` |
+| **Subtitle / Muted** | 14px, Normal | `text-sm font-normal` | `text-muted-foreground` |
+| **Table Headers** | 12px, Bold, Caps | `text-xs font-bold uppercase tracking-wider` | `text-muted-foreground` |
+| **Metric Numbers** | 30px, Bold | `text-3xl font-bold` | `text-foreground` |
 
 ---
 
-## Spacing
+## Component Structural Tokens
 
-| Token       | Value      | Usage                 |
-| ----------- | ---------- | --------------------- |
-| `gap-1`     | 4px        | Tight inline gaps     |
-| `gap-2`     | 8px        | Badge and tag gaps    |
-| `gap-3`     | 12px       | Form field gaps       |
-| `gap-4`     | 16px       | Section internal gaps |
-| `gap-6`     | 24px       | Between sections      |
-| `gap-8`     | 32px       | Page section gaps     |
-| `p-4`       | 16px       | Card padding          |
-| `p-6`       | 24px       | Large card padding    |
-| `px-4 py-2` | 16px / 8px | Button padding        |
-| `px-3 py-1` | 12px / 4px | Badge padding         |
+**Cards (`<Card>`)**
 
----
+* **Border:** `border border-border`
+* **Shadow:** `shadow-sm`
+* **Radius:** `rounded-xl` (Mapped to `--radius-card`)
+* **Padding:** `p-6` for standard blocks; `p-4` for dense Doctor profile cards.
 
-## Component Tokens
+**Modals (`<Dialog>`)**
 
-### Cards
+* **Overlay:** `bg-black/40` (Darkens background content).
+* **Header Architecture:** Top half of the modal (containing title, subtitle, and close button) utilizes `bg-primary text-primary-foreground`. Bottom half utilizes `bg-card`.
+* **Shadow:** `shadow-lg`
+* **Radius:** `rounded-2xl` (Mapped to `--radius-modal`)
 
-```
-background: bg-surface
-border: 1px solid var(--border)
-border-radius: 16px (rounded-2xl in Tailwind)
-padding: 24px (p-6)
-box-shadow: 0px 1px 3px rgba(0,0,0,0.1), 0px 1px 2px -1px rgba(0,0,0,0.1)
-```
+**Forms & Inputs (`<Input>`, `<Select>`)**
 
-### Buttons
-
-**Primary:**
-
-```
-background: bg-accent
-text: text-accent-foreground
-border-radius: rounded-md
-padding: px-4 py-2
-font-weight: font-medium
-```
-
-**Secondary:**
-
-```
-background: bg-surface
-border: border border-border
-text: text-text-primary
-border-radius: rounded-md
-padding: px-4 py-2
-```
-
-**Ghost:**
-
-```
-background: transparent
-text: text-text-secondary
-hover: hover:bg-surface-secondary
-border-radius: rounded-md
-```
-
-### Input Fields
-
-```
-background: bg-surface
-border: border border-border
-border-radius: rounded-md
-padding: px-3 py-2
-text: text-text-primary
-placeholder: text-text-muted
-focus: ring-1 ring-accent
-```
-
-### Badges
-
-```
-border-radius: rounded-full
-padding: px-2 py-0.5
-font-size: text-xs
-font-weight: font-medium
-```
-
-### Match Score Bar
-
-```
-background track: bg-border-light
-fill: varies by score range (see Match Score Colors above)
-height: 4px
-border-radius: rounded-full
-```
-
-### Trend Badges (stat cards)
-
-```
-background: #ECFDF5 (success-lightest)
-text color: #009966 (success-darker)
-border-radius: 4px (rounded-sm)
-padding: 2px 8px
-font-size: 12px
-font-weight: 500
-```
-
-### Activity Dots
-
-Each activity type has a specific dot color:
-| Activity Type | Outer ring | Inner dot |
-|---|---|---|
-| Resume tailored | `#F3E8FF` (accent-light) | `#7C5CFC` (accent) |
-| Cover letter | `#DBEAFE` (info-light) | `#61A8FF` (info) |
-| Job found | `#D0FAE5` (success-light) | `#00BC7D` (success-alt) |
-Dot size: 8px inner, 16px outer with white border
-
-### Dashboard Chart Colors
-
-| Chart                            | Color                                                           |
-| -------------------------------- | --------------------------------------------------------------- |
-| Jobs Found Over Time (line)      | `#7C5CFC` stroke, 3px width, gradient fill rgba(124,92,252,0.2) |
-| Resume Tailoring Activity (bars) | `#61A8FF`                                                       |
-| Match Score Distribution (bars)  | `#10B981`                                                       |
-| Chart grid lines                 | `1px dashed #E7EAF3`                                            |
-| Chart axis labels                | `#9CA3AF`, 12px                                                 |
-
-### Logo
-
-```
-background: linear-gradient(45deg, #7C5CFC 0%, #4A2EC5 100%)
-border-radius: 10px
-size: 36x36px
-```
-
----
-
-## Invariants
-
-- Never use hex values directly in components — always use CSS variables via Tailwind tokens
-- Font is Inter — always import via next/font/google, never use a fallback system font
-- Never use raw Tailwind color classes like `bg-purple-500` or `text-gray-600` — use project tokens only
-- `--accent` (#7C5CFC) is the only purple — never use Tailwind's built-in purple scale
-- Match score bars always use color tokens based on score range — never hardcoded colors
-- LinkedIn badge always uses `--linkedin` (#0A66C2) — never generic blue
-- All borders default to `--border` (#E7EAF3) — never use `border-gray-*`
+* **Border:** `border border-border`
+* **Background:** `bg-card` (White)
+* **Radius:** `rounded-md`
+* **Focus State:** `focus-visible:ring-1 focus-visible:ring-ring` (Teal outline).

@@ -1,198 +1,112 @@
-# UI Rules
+**UI Rules**
 
-Concise rules for building JobPilot UI. Design assets are available — use them as the source of truth for visual decisions. These rules cover the most important patterns and constraints to keep the UI consistent without over-specifying every detail.
+Concise rules for building the Healthora Clinic Management (CATMS) UI. These constraints ensure visual consistency across all four portals (Patient, Doctor, Front Desk, Admin) and dictate how shadcn/ui primitives should be implemented.
 
 ---
 
-## Font
-
+**Font**
 Always import Inter via `next/font/google` in the root layout.
 
 ```typescript
-import { Inter } from "next/font/google";
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+import { Inter } from 'next/font/google'
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
+
 ```
 
-The `--font-sans` variable is already declared in `@theme` in globals.css. Apply the font variable class to the `<html>` tag in root layout. Never use system fonts as the primary font.
+The `--font-sans` variable must be mapped to your `fontFamily` in `tailwind.config.ts`. Never use system fonts as the primary font.
 
 ---
 
-## Layout
+**Layout Systems**
+Healthora utilizes two distinct layout patterns based on user role:
 
-- Page max-width: 1440px, centered
-- Main content area padding: 32px on all sides
-- Gap between page sections: 24px
-- Header height: 64px, full width, white background, padding 0 24px
-- All pages use top navbar only — no sidebar, no drawer
-
----
-
-## Navbar
-
-Three nav items: Dashboard, Find Jobs, Profile.
-
-- Active item: `color: #7C5CFC`, font-weight 500, 14px
-- Inactive item: `color: #4A5565`, font-weight 500, 14px
-- No underline — active state is color change only
-- Navbar always white background, full viewport width
+* **Patient Portal:** Top navigation bar only. Max-width container (e.g., `max-w-7xl`), centered, with a light gray page background (`bg-background`).
+* **Staff Portals (Doctor, Admin, Front Desk):** Fixed left sidebar (`w-64`, `bg-card`, `border-r`) with a fluid main content area.
+* **Spacing:** Main content areas must use `p-6` or `p-8`. Gap between major page sections is `gap-6` (24px).
 
 ---
 
-## Cards
+**Navigation (Sidebar & Navbar)**
 
-Every content section lives in a card.
-
-```
-background: #FFFFFF
-border: 1px solid #E7EAF3
-border-radius: 16px
-padding: 24px
-box-shadow: 0px 1px 3px rgba(0,0,0,0.1), 0px 1px 2px -1px rgba(0,0,0,0.1)
-```
-
-Never use colored card backgrounds — always white. Color goes inside cards via badges, bars, and text, never on the card surface itself.
+* **Active Item:** Teal background (`bg-primary`), white text (`text-primary-foreground`), `font-medium`, `rounded-md`.
+* **Inactive Item:** Transparent background, dark text (`text-foreground`), hover state `hover:bg-muted`.
+* **Icons:** Navigation icons scale to `w-5 h-5` and match the text color of the item.
 
 ---
 
-## Typography Hierarchy
+**Cards**
+Every distinct content section (e.g., Activity Overview, Upcoming Appointments) lives inside a Card.
 
-Three levels used consistently throughout:
-
-**Section headings** — card titles, page section titles
-
-```
-font-size: 16px
-font-weight: 600
-color: #101828
-line-height: 24px
-```
-
-**Body / primary content text**
+```css
+background: bg-card
+border: border border-border
+border-radius: rounded-xl
+padding: p-6
+box-shadow: shadow-sm
 
 ```
-font-size: 14px
-font-weight: 500
-color: #101828
-line-height: 20px
-```
 
-**Secondary / muted text** — labels, timestamps, subtitles
-
-```
-font-size: 12px
-font-weight: 400
-color: #99A1AF
-line-height: 16px
-```
-
-Stat numbers on dashboard use 30px / weight 600 / color #101828.
+Never use colored card backgrounds for content containers. Color goes inside cards via badges, buttons, and text.
 
 ---
 
-## Badges
+**Typography Hierarchy**
+Maintain strict sizing and weight mapping across all pages:
 
-All badges use `border-radius: 9999px` (pill shape) unless specified otherwise.
-
-```
-padding: 2px 8px
-font-size: 12px
-font-weight: 500
-```
-
-Trend badges on stat cards use `border-radius: 4px` (not pill) with `#ECFDF5` background and `#009966` text.
+* **Page Title:** `text-2xl font-bold text-foreground` (24px).
+* **Section/Card Heading:** `text-lg font-semibold text-foreground` (18px).
+* **Body Text:** `text-sm font-normal text-foreground` (14px).
+* **Secondary/Muted Text:** `text-sm font-normal text-muted-foreground` (14px). Used for timestamps, descriptions, and labels.
 
 ---
 
-## Buttons
+**Status Badges (Pills)**
+All status indicators must use a pill shape (`rounded-full`) and combine a low-opacity background with vibrant text.
 
-**Primary button:**
-
-```
-background: #7C5CFC
-color: #FFFFFF
-border-radius: 8px
-padding: 8px 16px
-font-size: 14px
-font-weight: 500
-```
-
-**Secondary button:**
-
-```
-background: #FFFFFF
-border: 1px solid #E7EAF3
-color: #101828
-border-radius: 8px
-padding: 8px 16px
-```
+* **Padding/Font:** `px-3 py-1 text-xs font-medium`.
+* **Paid/Available:** `bg-primary-muted text-primary`
+* **Due/Pending:** `bg-warning/15 text-warning`
+* **Cancelled/Error:** `bg-destructive/15 text-destructive`
 
 ---
 
-## Form Inputs
+**Buttons**
 
-```
-background: #FFFFFF
-border: 1px solid #E7EAF3
-border-radius: 8px
-padding: 8px 12px
-font-size: 14px
-color: #101828
-placeholder color: #99A1AF
-focus: ring-1 ring-accent border-accent
-```
+* **Primary Button:** `bg-primary text-primary-foreground hover:bg-primary/90`. Used for the main action (e.g., "Book Now", "Save Changes").
+* **Secondary/Outline Button:** `bg-card border border-border text-foreground hover:bg-muted`. Used for alternative actions (e.g., "Back", "Discard").
+* **Radius:** All standard buttons use `rounded-md` (`--radius`).
 
 ---
 
-## Table (Jobs List)
+**Forms & Inputs**
 
-- No alternating row colors — white rows only, separated by border
-- Row border: `1px solid #E7EAF3` between rows
-- Column headers: uppercase, 12px, font-weight 500, color `#6A7282`
-- Row text: 14px, color `#101828`
-- Hover state: `background: #F9FAFB`
+* **Inputs/Selects:** `bg-card border border-border text-foreground rounded-md px-3 py-2 text-sm`.
+* **Placeholder:** `text-muted-foreground`.
+* **Focus State:** Must strictly use `focus-visible:ring-1 focus-visible:ring-ring` (Healthora Teal). Never use default blue browser focus rings.
 
 ---
 
-## Match Score Bar
+**Tables (Invoices, Appointments)**
 
-Inline progress bar shown next to the percentage number.
-
-```
-height: 4px
-border-radius: 9999px
-background track: #E7EAF3
-```
-
-Fill color by score:
-
-- 80-100%: `#10B981` (green)
-- 60-79%: `#61A8FF` (blue)
-- Below 60%: `#FF8904` (orange)
+* **Headers:** `text-xs font-bold uppercase tracking-wider text-muted-foreground`.
+* **Row Dividers:** `border-b border-border` between rows. No alternating background colors.
+* **Hover State:** `hover:bg-muted/50` on clickable rows.
 
 ---
 
-## Empty States
+**Modals (Dialogs)**
+Healthora booking and confirmation modals feature a distinctive two-tone architecture:
 
-Every section that can be empty must have an empty state. Keep it minimal:
-
-- Short descriptive text in `color: #99A1AF`
-- Optional icon above text
-- CTA button if there's a logical next action
-
----
-
-## Tailwind v4 Note
-
-This project uses Tailwind v4. Tokens are defined with `@theme` in globals.css — no `tailwind.config.ts` needed. Never define colors in a config file. Always use `@theme` for new tokens.
+* **Header Section:** The top half containing the title and close button must use `bg-primary text-primary-foreground`.
+* **Content Section:** The bottom half containing the form/details uses `bg-card`.
+* **Radius:** Modals are exceptionally rounded using `rounded-2xl` (`--radius-modal`), overlapping the standard card radius.
+* **Overlay:** `bg-black/40` backdrop blur.
 
 ---
 
-## Do Nots
+**Tailwind v3 Constraints & Do Nots**
 
-- Never use Tailwind's built-in color classes (`bg-purple-500`, `text-gray-600`) — use project tokens only
-- Never define colors in `tailwind.config.ts` — use `@theme` in globals.css
-- Never add gradients to card backgrounds
-- Never use more than one font weight in a single UI element
-- Never show raw error messages to users — always show human readable text
-- Never stack more than 2 levels of border radius inside each other
-- Never use `position: fixed` for UI elements — use normal flow layout
+* **No Hardcoded Colors:** Never use raw Tailwind color classes (e.g., `bg-emerald-500`, `text-slate-600`) or hex codes (`bg-[#10b981]`). You must use the semantic tokens defined in `tailwind.config.ts` (e.g., `bg-primary`, `text-muted-foreground`).
+* **Configuration:** Colors must be mapped in `tailwind.config.ts` referencing the HSL CSS variables from `globals.css`.
+* **No Multiple Font Weights:** Never mix font weights in a single UI element (e.g., a button should be uniformly `font-medium`).
+* **No Fixed Positioning:** Never use `fixed` or `absolute` positioning for standard layout elements; rely on flexbox and grid.
