@@ -78,7 +78,7 @@ export default function NewPatientPage() {
         <div className="flex gap-3 justify-center">
           <Button onClick={() => { setSubmitted(false); setForm({ firstName: "", lastName: "", dob: "", gender: "Male", bloodGroup: "A+", phone: "", email: "", address: "", city: "", branchId: "BR-001", emergencyContactName: "", emergencyContactRelation: "", emergencyContactPhone: "" }); }}
             variant="outline" className="rounded-xl px-6 h-11">Register Another</Button>
-          <Link href="/app/patients">
+          <Link href="/patients">
             <Button className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl px-6 h-11">View All Patients</Button>
           </Link>
         </div>
@@ -89,7 +89,7 @@ export default function NewPatientPage() {
   return (
     <div className="max-w-3xl mx-auto animate-fade-in">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/app/patients">
+        <Link href="/patients">
           <Button variant="ghost" size="icon" className="text-slate-500 hover:bg-slate-100 rounded-xl">
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -199,7 +199,7 @@ export default function NewPatientPage() {
           <Button type="submit" className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-11 px-8 font-semibold">
             <UserPlus className="w-4 h-4 mr-2" /> Register Patient
           </Button>
-          <Link href="/app/patients">
+          <Link href="/patients">
             <Button type="button" variant="outline" className="rounded-xl h-11 px-6 text-slate-600">Cancel</Button>
           </Link>
         </div>
