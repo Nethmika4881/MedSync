@@ -21,7 +21,7 @@ export default function InsurancePackagesPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center gap-3">
-        <Link href="/app/insurance">
+        <Link href="/insurance">
           <Button variant="ghost" size="icon" className="text-slate-500 hover:bg-slate-100 rounded-xl">
             <ArrowLeft className="w-5 h-5" />
           </Button>

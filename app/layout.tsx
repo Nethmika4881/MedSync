@@ -1,41 +1,27 @@
-"use client";
+// Root layout — bare HTML shell only.
+// Each role-based route group ((admin), (patient), (doctor), (front-desk))
+// owns its own layout.tsx with the appropriate Sidebar or Header.
+// Auth gating is handled per route group layout and will be enforced by
+// middleware.ts when NextAuth.js is wired up (Phase 1, Task 03).
 
-// Next.js processes this global stylesheet at build time.
 // @ts-expect-error CSS modules are handled by Next.js, not TypeScript.
-import './globals.css';
-import React, { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/lib/stores/authStore";
-import { Sidebar } from "@/components/catms/Sidebar";
-import { Header } from "@/components/catms/Header";
+import "./globals.css";
+import React from "react";
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const user = useAuthStore((s) => s.user);
+export const metadata = {
+  title: "MedSync | Healthora Clinic Management",
+  description:
+    "Multi-branch clinic management system — patient booking, clinical workspace, front desk, and admin portals.",
+};
 
-  useEffect(() => {
-    if (!user) {
-      router.replace("/");
-    }
-  }, [user, router]);
-
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
-      <body>
-        {user ? (
-          <div className="min-h-screen bg-slate-50 flex">
-            <Sidebar />
-            <div className="flex-1 lg:pl-64 flex flex-col min-h-screen transition-all">
-              <Header />
-              <main className="flex-1 p-8 overflow-x-hidden">
-                {children}
-              </main>
-            </div>
-          </div>
-        ) : (
-          children
-        )}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

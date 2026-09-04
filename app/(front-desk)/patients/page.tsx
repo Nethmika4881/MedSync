@@ -40,7 +40,7 @@ export default function PatientsPage() {
             />
           </div>
           <Button
-            onClick={() => router.push("/app/patients/new")}
+            onClick={() => router.push("/patients/new")}
             className="w-full sm:w-auto bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-10 px-4 shrink-0"
           >
             <UserPlus className="w-4 h-4 mr-2" />
