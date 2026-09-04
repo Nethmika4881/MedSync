@@ -454,3 +454,4 @@ Wire three dashboard charts to real PostHog event data for current user.
 | Phase 4 — Job Details | 2        |
 | Phase 5 — Dashboard   | 4        |
 | **Total**             | **17**   |
+  
