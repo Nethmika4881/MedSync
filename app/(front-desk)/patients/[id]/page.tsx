@@ -37,7 +37,7 @@ export default function PatientProfilePage() {
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <AlertCircle className="w-12 h-12 text-slate-300" />
         <h2 className="text-xl font-semibold text-slate-700">Patient Not Found</h2>
-        <Button onClick={() => router.push("/app/patients")} variant="outline">
+        <Button onClick={() => router.push("/patients")} variant="outline">
           Back to Directory
         </Button>
       </div>
@@ -62,7 +62,7 @@ export default function PatientProfilePage() {
       {/* Header Actions */}
       <div className="flex items-center justify-between">
         <button
-          onClick={() => router.push("/app/patients")}
+          onClick={() => router.push("/patients")}
           className="flex items-center text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-1.5" />
@@ -74,7 +74,7 @@ export default function PatientProfilePage() {
           </Button>
           <Button
             className="rounded-xl h-9 text-xs bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white"
-            onClick={() => router.push("/app/appointments")}
+            onClick={() => router.push("/appointments")}
           >
             <Calendar className="w-3.5 h-3.5 mr-1.5" />
             Book Appointment

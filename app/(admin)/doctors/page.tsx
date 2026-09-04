@@ -40,7 +40,7 @@ export default function DoctorsPage() {
           <p className="text-slate-500">Find and schedule appointments with our specialists.</p>
         </div>
         {isAdmin && (
-          <Button onClick={() => router.push("/app/doctors/new")} className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-10 px-4 flex items-center gap-2">
+          <Button onClick={() => router.push("/doctors/new")} className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-10 px-4 flex items-center gap-2">
             <Plus className="w-4 h-4" />
             New Doctor
           </Button>

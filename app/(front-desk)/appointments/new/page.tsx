@@ -408,7 +408,7 @@ export default function NewAppointmentPage() {
           >
             Book Another
           </Button>
-          <Link href="/app/appointments">
+          <Link href="/appointments">
             <Button className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl px-6 h-11 shadow-md">
               View All Appointments
             </Button>
@@ -421,7 +421,7 @@ export default function NewAppointmentPage() {
   return (
     <div className="max-w-4xl mx-auto animate-fade-in pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
-        <Link href="/app/appointments">
+        <Link href="/appointments">
           <Button variant="ghost" size="icon" className="text-slate-500 hover:bg-slate-100 rounded-xl shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </Button>
