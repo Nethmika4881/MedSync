@@ -13,6 +13,7 @@ import { SafetyInfoBanner } from "@/components/catms/SafetyInfoBanner";
 import { FileText, Edit, ClipboardPlus, Calendar, ArrowRight } from "lucide-react";
 import { AvatarWithName } from "@/components/catms/AvatarWithName";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import Link from "next/link";
 
 export default function ConsultationsPage() {
   const { consultations } = useClinicalStore();
@@ -69,9 +70,11 @@ export default function ConsultationsPage() {
                         <StatusPill status={appt.status} />
                       </p>
                     </div>
-                    <Button className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-xl px-6">
-                      <ClipboardPlus className="w-4 h-4 mr-2" /> Start Consultation
-                    </Button>
+                    <Link href={`/consultations/${appt.appointmentId}`}>
+                      <Button className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-xl px-6">
+                        <ClipboardPlus className="w-4 h-4 mr-2" /> Start Consultation
+                      </Button>
+                    </Link>
                   </div>
 
                   <SafetyInfoBanner 
@@ -119,9 +122,11 @@ export default function ConsultationsPage() {
                       <td className="px-6 py-4">{record.diagnosis || "Pending Diagnosis"}</td>
                       <td className="px-6 py-4"><StatusPill status={record.followUpRequired ? "In-Progress" : "Completed"} /></td>
                       <td className="px-6 py-4 text-right">
-                        <Button size="sm" variant="outline" className="rounded-lg h-8">
-                          <Edit className="w-4 h-4 mr-2" /> View/Edit
-                        </Button>
+                        <Link href={`/consultations/${record.appointmentId}`}>
+                          <Button size="sm" variant="outline" className="rounded-lg h-8">
+                            <Edit className="w-4 h-4 mr-2" /> View/Edit
+                          </Button>
+                        </Link>
                       </td>
                     </tr>
                   ))}
