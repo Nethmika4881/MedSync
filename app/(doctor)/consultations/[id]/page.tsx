@@ -11,19 +11,21 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { StatusPill } from "@/components/catms/StatusPill";
 import { SafetyInfoBanner } from "@/components/catms/SafetyInfoBanner";
 import { AvatarWithName } from "@/components/catms/AvatarWithName";
 import { EmptyState } from "@/components/catms/EmptyState";
-import { ArrowLeft, Save, Calendar } from "lucide-react";
+import { ArrowLeft, Save, Calendar, Plus, X, Search, Minus } from "lucide-react";
 import Link from "next/link";
+import { treatmentCatalogue } from "@/lib/mockData/treatments";
 
 export default function ConsultationWorkspacePage() {
   const params = useParams<{ id: string }>();
   const appointmentId = params.id;
   const router = useRouter();
 
-  const { consultations, addConsultation, updateConsultation } = useClinicalStore();
+  const { consultations, treatments, addConsultation, updateConsultation, addTreatment, removeTreatment, updateTreatmentQuantity } = useClinicalStore();
   const { appointments } = useAppointmentStore();
   const { allergies, conditions } = usePatientStore();
   const user = useCurrentUser();
@@ -41,7 +43,8 @@ export default function ConsultationWorkspacePage() {
   const [notes, setNotes] = useState(existing?.notes ?? "");
   const [followUpRequired, setFollowUpRequired] = useState(existing?.followUpRequired ?? false);
   const [followUpDate, setFollowUpDate] = useState(existing?.followUpDate ?? "");
-  const [saved, setSaved] = useState(false);
+  const [consultationId] = useState(existing?.consultationId ?? `CON-${Date.now()}`);
+  const [catalogueSearch, setCatalogueSearch] = useState("");
 
   if (!patientId || !patientName) {
     return (
@@ -59,7 +62,37 @@ export default function ConsultationWorkspacePage() {
   const patientAllergies = allergies.filter((a) => a.patientId === patientId);
   const patientConditions = conditions.filter((c) => c.patientId === patientId);
 
+  const attachedTreatments = treatments.filter((t) => t.consultationId === consultationId);
+  const treatmentsTotal = attachedTreatments.reduce((sum, t) => sum + t.total, 0);
+
+  const filteredCatalogue = treatmentCatalogue.filter((item) =>
+    item.name.toLowerCase().includes(catalogueSearch.toLowerCase())
+  );
+
+  const handleAddTreatment = (catalogueId: string) => {
+    const item = treatmentCatalogue.find((c) => c.catalogueId === catalogueId);
+    if (!item) return;
+    addTreatment({
+      treatmentId: `TRT-${Date.now()}`,
+      consultationId,
+      patientId,
+      patientName,
+      doctorId,
+      doctorName,
+      treatmentName: item.name,
+      category: item.category,
+      description: item.description,
+      unitPrice: item.unitPrice,
+      quantity: 1,
+      total: item.unitPrice,
+      status: "Ordered",
+      orderedAt: new Date().toISOString(),
+      branchId: appt?.branchId ?? "BR-001",
+    });
+  };
+
   const handleSave = () => {
+    const treatmentIds = attachedTreatments.map((t) => t.treatmentId);
     if (existing) {
       updateConsultation(existing.consultationId, {
         symptoms,
@@ -67,10 +100,11 @@ export default function ConsultationWorkspacePage() {
         notes,
         followUpRequired,
         followUpDate: followUpRequired ? followUpDate : undefined,
+        treatmentIds,
       });
     } else {
       addConsultation({
-        consultationId: `CON-${Date.now()}`,
+        consultationId,
         appointmentId: appointmentId,
         patientId,
         patientName,
@@ -82,16 +116,15 @@ export default function ConsultationWorkspacePage() {
         notes,
         followUpRequired,
         followUpDate: followUpRequired ? followUpDate : undefined,
-        treatmentIds: [],
+        treatmentIds,
         prescriptionIds: [],
       });
     }
-    setSaved(true);
     router.push("/consultations");
   };
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-3xl">
+    <div className="space-y-6 animate-fade-in max-w-4xl">
       <Link href="/consultations" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900">
         <ArrowLeft className="w-4 h-4" /> Back to Queue
       </Link>
@@ -161,6 +194,102 @@ export default function ConsultationWorkspacePage() {
                   value={followUpDate}
                   onChange={(e) => setFollowUpDate(e.target.value)}
                 />
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-slate-200 shadow-sm">
+        <CardHeader className="border-b border-slate-100">
+          <CardTitle className="text-base font-semibold text-slate-900">Treatments &amp; Procedures</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 space-y-4">
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Input
+              placeholder="Search treatment catalogue..."
+              className="pl-9"
+              value={catalogueSearch}
+              onChange={(e) => setCatalogueSearch(e.target.value)}
+            />
+          </div>
+
+          {catalogueSearch && (
+            <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 max-h-56 overflow-y-auto custom-scrollbar">
+              {filteredCatalogue.length === 0 && (
+                <p className="p-4 text-sm text-slate-500">No matching treatments found.</p>
+              )}
+              {filteredCatalogue.map((item) => (
+                <div key={item.catalogueId} className="flex items-center justify-between p-3 hover:bg-slate-50">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">{item.name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="outline">{item.category}</Badge>
+                      <span className="text-xs text-slate-500">${item.unitPrice.toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-lg h-8"
+                    onClick={() => {
+                      handleAddTreatment(item.catalogueId);
+                      setCatalogueSearch("");
+                    }}
+                  >
+                    <Plus className="w-4 h-4 mr-1" /> Add
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="pt-2 border-t border-slate-100">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Attached ({attachedTreatments.length})</p>
+            {attachedTreatments.length === 0 ? (
+              <p className="text-sm text-slate-500">No treatments or procedures attached yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {attachedTreatments.map((t) => (
+                  <div key={t.treatmentId} className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/50">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-900 truncate">{t.treatmentName}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline">{t.category}</Badge>
+                        <span className="text-xs text-slate-500">${t.unitPrice.toFixed(2)} each</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg">
+                        <button
+                          className="p-1.5 text-slate-500 hover:text-slate-900 disabled:opacity-30"
+                          disabled={t.quantity <= 1}
+                          onClick={() => updateTreatmentQuantity(t.treatmentId, t.quantity - 1)}
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="text-sm font-semibold w-5 text-center">{t.quantity}</span>
+                        <button
+                          className="p-1.5 text-slate-500 hover:text-slate-900"
+                          onClick={() => updateTreatmentQuantity(t.treatmentId, t.quantity + 1)}
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <span className="text-sm font-bold text-slate-900 w-16 text-right">${t.total.toFixed(2)}</span>
+                      <button
+                        className="p-1.5 text-slate-400 hover:text-red-600"
+                        onClick={() => removeTreatment(t.treatmentId)}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                <div className="flex justify-end pt-2">
+                  <p className="text-sm font-bold text-slate-900">Total: ${treatmentsTotal.toFixed(2)}</p>
+                </div>
               </div>
             )}
           </div>
