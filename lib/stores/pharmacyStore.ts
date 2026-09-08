@@ -13,6 +13,9 @@ interface PharmacyStore {
   addMedication: (med: Medication) => void;
   updateMedication: (id: string, updates: Partial<Medication>) => void;
   deleteMedication: (id: string) => void;
+  addPrescription: (prescription: PrescriptionItem) => void;
+  updatePrescription: (prescriptionId: string, updates: Partial<PrescriptionItem>) => void;
+  removePrescription: (prescriptionId: string) => void;
 }
 
 export const usePharmacyStore = create<PharmacyStore>((set) => ({
@@ -51,5 +54,20 @@ export const usePharmacyStore = create<PharmacyStore>((set) => ({
   deleteMedication: (id) =>
     set((state) => ({
       medications: state.medications.filter((m) => m.medicationId !== id),
+    })),
+
+  addPrescription: (prescription) =>
+    set((state) => ({ prescriptions: [...state.prescriptions, prescription] })),
+
+  updatePrescription: (prescriptionId, updates) =>
+    set((state) => ({
+      prescriptions: state.prescriptions.map((p) =>
+        p.prescriptionId === prescriptionId ? { ...p, ...updates } : p
+      ),
+    })),
+
+  removePrescription: (prescriptionId) =>
+    set((state) => ({
+      prescriptions: state.prescriptions.filter((p) => p.prescriptionId !== prescriptionId),
     })),
 }));
