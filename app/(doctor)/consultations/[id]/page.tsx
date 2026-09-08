@@ -14,11 +14,16 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { StatusPill } from "@/components/catms/StatusPill";
 import { SafetyInfoBanner } from "@/components/catms/SafetyInfoBanner";
+import { ContraindicationBanner, ContraindicationRowBadge } from "@/components/catms/ContraindicationBanner";
 import { AvatarWithName } from "@/components/catms/AvatarWithName";
 import { EmptyState } from "@/components/catms/EmptyState";
-import { ArrowLeft, Save, Calendar, Plus, X, Search, Minus } from "lucide-react";
+import { ArrowLeft, Save, Calendar, Plus, X, Search, Minus, Pill } from "lucide-react";
 import Link from "next/link";
 import { treatmentCatalogue } from "@/lib/mockData/treatments";
+import { medications } from "@/lib/mockData/medications";
+import { usePharmacyStore } from "@/lib/stores/pharmacyStore";
+import { checkContraindication } from "@/lib/contraindication";
+import { cn } from "@/lib/utils";
 
 export default function ConsultationWorkspacePage() {
   const params = useParams<{ id: string }>();
@@ -28,6 +33,7 @@ export default function ConsultationWorkspacePage() {
   const { consultations, treatments, addConsultation, updateConsultation, addTreatment, removeTreatment, updateTreatmentQuantity } = useClinicalStore();
   const { appointments } = useAppointmentStore();
   const { allergies, conditions } = usePatientStore();
+  const { prescriptions, addPrescription, removePrescription, updatePrescription } = usePharmacyStore();
   const user = useCurrentUser();
 
   const appt = appointments.find((a) => a.appointmentId === appointmentId);
@@ -45,6 +51,8 @@ export default function ConsultationWorkspacePage() {
   const [followUpDate, setFollowUpDate] = useState(existing?.followUpDate ?? "");
   const [consultationId] = useState(existing?.consultationId ?? `CON-${Date.now()}`);
   const [catalogueSearch, setCatalogueSearch] = useState("");
+  const [medicationSearch, setMedicationSearch] = useState("");
+  const [blockedConflict, setBlockedConflict] = useState<ReturnType<typeof checkContraindication> | null>(null);
 
   if (!patientId || !patientName) {
     return (
@@ -69,6 +77,13 @@ export default function ConsultationWorkspacePage() {
     item.name.toLowerCase().includes(catalogueSearch.toLowerCase())
   );
 
+  const attachedPrescriptions = prescriptions.filter((p) => p.consultationId === consultationId);
+
+  const filteredMedications = medications.filter((m) =>
+    m.genericName.toLowerCase().includes(medicationSearch.toLowerCase()) ||
+    m.brandName.toLowerCase().includes(medicationSearch.toLowerCase())
+  );
+
   const handleAddTreatment = (catalogueId: string) => {
     const item = treatmentCatalogue.find((c) => c.catalogueId === catalogueId);
     if (!item) return;
@@ -91,8 +106,38 @@ export default function ConsultationWorkspacePage() {
     });
   };
 
+  const handleAddMedication = (medicationId: string) => {
+    const med = medications.find((m) => m.medicationId === medicationId);
+    if (!med) return;
+
+    const conflict = checkContraindication(patientAllergies, med);
+    if (conflict.conflict) {
+      setBlockedConflict(conflict);
+      return;
+    }
+
+    setBlockedConflict(null);
+    addPrescription({
+      prescriptionId: `PRESC-${Date.now()}`,
+      consultationId,
+      patientId,
+      patientName,
+      doctorId,
+      medicationId: med.medicationId,
+      medicationName: `${med.genericName} ${med.strength}`,
+      dosage: med.strength,
+      frequency: "Once daily",
+      duration: "7 days",
+      instructions: "",
+      dispensed: false,
+      pickedUp: false,
+      issuedDate: new Date().toISOString().slice(0, 10),
+    });
+  };
+
   const handleSave = () => {
     const treatmentIds = attachedTreatments.map((t) => t.treatmentId);
+    const prescriptionIds = attachedPrescriptions.map((p) => p.prescriptionId);
     if (existing) {
       updateConsultation(existing.consultationId, {
         symptoms,
@@ -101,6 +146,7 @@ export default function ConsultationWorkspacePage() {
         followUpRequired,
         followUpDate: followUpRequired ? followUpDate : undefined,
         treatmentIds,
+        prescriptionIds,
       });
     } else {
       addConsultation({
@@ -117,7 +163,7 @@ export default function ConsultationWorkspacePage() {
         followUpRequired,
         followUpDate: followUpRequired ? followUpDate : undefined,
         treatmentIds,
-        prescriptionIds: [],
+        prescriptionIds,
       });
     }
     router.push("/consultations");
@@ -290,6 +336,134 @@ export default function ConsultationWorkspacePage() {
                 <div className="flex justify-end pt-2">
                   <p className="text-sm font-bold text-slate-900">Total: ${treatmentsTotal.toFixed(2)}</p>
                 </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-slate-200 shadow-sm">
+        <CardHeader className="border-b border-slate-100">
+          <CardTitle className="text-base font-semibold text-slate-900">Medications &amp; Prescriptions</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 space-y-4">
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Input
+              placeholder="Search medications by generic or brand name..."
+              className="pl-9"
+              value={medicationSearch}
+              onChange={(e) => {
+                setMedicationSearch(e.target.value);
+                setBlockedConflict(null);
+              }}
+            />
+          </div>
+
+          {blockedConflict && <ContraindicationBanner result={blockedConflict} />}
+
+          {medicationSearch && (
+            <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 max-h-56 overflow-y-auto custom-scrollbar">
+              {filteredMedications.length === 0 && (
+                <p className="p-4 text-sm text-slate-500">No matching medications found.</p>
+              )}
+              {filteredMedications.map((med) => {
+                const conflict = checkContraindication(patientAllergies, med);
+                return (
+                  <div
+                    key={med.medicationId}
+                    className={cn(
+                      "flex items-center justify-between p-3",
+                      conflict.conflict ? "bg-red-50/50" : "hover:bg-slate-50"
+                    )}
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">
+                        {med.genericName} <span className="text-slate-400 font-normal">({med.brandName})</span>
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline">{med.strength} • {med.form}</Badge>
+                        <span className="text-xs text-slate-500">{med.category}</span>
+                      </div>
+                    </div>
+                    {conflict.conflict ? (
+                      <ContraindicationRowBadge patientName={patientName} allergyName={conflict.allergyName ?? ""} />
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-lg h-8"
+                        onClick={() => {
+                          handleAddMedication(med.medicationId);
+                          setMedicationSearch("");
+                        }}
+                      >
+                        <Plus className="w-4 h-4 mr-1" /> Add
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="pt-2 border-t border-slate-100">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Prescribed ({attachedPrescriptions.length})</p>
+            {attachedPrescriptions.length === 0 ? (
+              <p className="text-sm text-slate-500">No medications prescribed yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {attachedPrescriptions.map((p) => (
+                  <div key={p.prescriptionId} className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Pill className="w-4 h-4 text-[var(--brand-primary)] shrink-0" />
+                        <p className="text-sm font-semibold text-slate-900 truncate">{p.medicationName}</p>
+                      </div>
+                      <button
+                        className="p-1.5 text-slate-400 hover:text-red-600 shrink-0"
+                        onClick={() => removePrescription(p.prescriptionId)}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-slate-500">Dosage</Label>
+                        <Input
+                          className="h-8 text-sm"
+                          value={p.dosage}
+                          onChange={(e) => updatePrescription(p.prescriptionId, { dosage: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-slate-500">Frequency</Label>
+                        <Input
+                          className="h-8 text-sm"
+                          value={p.frequency}
+                          onChange={(e) => updatePrescription(p.prescriptionId, { frequency: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-slate-500">Duration</Label>
+                        <Input
+                          className="h-8 text-sm"
+                          value={p.duration}
+                          onChange={(e) => updatePrescription(p.prescriptionId, { duration: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-1 col-span-2 sm:col-span-1">
+                        <Label className="text-xs text-slate-500">Instructions</Label>
+                        <Input
+                          className="h-8 text-sm"
+                          placeholder="e.g. Take with food"
+                          value={p.instructions}
+                          onChange={(e) => updatePrescription(p.prescriptionId, { instructions: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
