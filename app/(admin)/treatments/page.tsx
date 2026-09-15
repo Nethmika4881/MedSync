@@ -15,7 +15,7 @@ export default function TreatmentsPage() {
   const user = useCurrentUser();
   const [activeTab, setActiveTab] = useState("pending");
 
-  if (!role || (role !== "nurse" && role !== "doctor")) return null;
+  if (!role || role !== "doctor") return null;
 
   
   const pendingTreatments = treatments.filter(t => t.status !== "Completed");
@@ -72,7 +72,7 @@ export default function TreatmentsPage() {
                     Awaiting Action
                   </span>
                   <Button 
-                    onClick={() => markTreatmentPerformed(treatment.treatmentId, user?.name || "Nurse")}
+                    onClick={() => markTreatmentPerformed(treatment.treatmentId, user?.name || "Doctor")}
                     className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-lg h-9 px-4 text-xs font-bold"
                   >
                     <ClipboardCheck className="w-3.5 h-3.5 mr-1.5" /> Mark Administered
