@@ -34,7 +34,7 @@ import {
 import { doctors } from "@/lib/mockData/doctors";
 import { patients } from "@/lib/mockData/patients";
 import { branches } from "@/lib/mockData/branches";
-import type { Appointment, VisitType } from "@/lib/mockData/appointments";
+import type { Appointment, SessionType, VisitType } from "@/lib/mockData/appointments";
 
 /* ──────────────────────────────────────────────────────────
    Confetti Canvas
@@ -234,8 +234,8 @@ function ReceiptModal({
             />
             <ReceiptRow
               icon={<Clock className="w-4 h-4" />}
-              label="Time"
-              value={`${apptDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} (${appointment.duration} min)`}
+              label="Session"
+              value={`${appointment.session} (Ticket #${appointment.ticketNumber})`}
             />
             <ReceiptRow icon={<MapPin className="w-4 h-4" />} label="Branch" value={appointment.branchName} />
             <ReceiptRow icon={<FileText className="w-4 h-4" />} label="Visit Type" value={appointment.visitType} />
@@ -294,7 +294,7 @@ function NewAppointmentModal({
   role: string;
   currentUser: { userId: string; name: string };
 }) {
-  const { addAppointment } = useAppointmentStore();
+  const { appointments, addAppointment } = useAppointmentStore();
   const isPatient = role === "patient";
   const selfPatient = isPatient
     ? patients.find((p) => p.name === currentUser.name) ?? null
@@ -345,6 +345,14 @@ function NewAppointmentModal({
     const branch = branches.find((b) => b.branchId === doctor.branchId)!;
 
     const newId = `APT-${Date.now()}`;
+    const hour = Number.parseInt(timeValue.split(":")[0] ?? "9", 10);
+    const session: SessionType = hour < 12 ? "Morning" : hour < 17 ? "Afternoon" : "Evening";
+    const ticketNumber =
+      appointments.filter((a) => {
+        if (a.doctorId !== doctor.doctorId || a.session !== session) return false;
+        const existingDate = new Date(a.dateTime).toISOString().slice(0, 10);
+        return existingDate === dateValue;
+      }).length + 1;
     const appt: Appointment = {
       appointmentId: newId,
       patientId: patient.patientId,
@@ -356,6 +364,8 @@ function NewAppointmentModal({
       branchName: branch.name,
       dateTime: new Date(`${dateValue}T${timeValue}`).toISOString(),
       duration,
+      session,
+      ticketNumber,
       visitType,
       status: "Confirmed",
       paymentStatus: "Unpaid",
@@ -694,7 +704,7 @@ export default function AppointmentsPage() {
             <table className="w-full text-sm text-left text-slate-600">
               <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="px-6 py-4 font-semibold">Date &amp; Time</th>
+                  <th className="px-6 py-4 font-semibold">Date &amp; Session</th>
                   {role !== "patient" && <th className="px-6 py-4 font-semibold">Patient</th>}
                   {role !== "doctor" && <th className="px-6 py-4 font-semibold">Doctor</th>}
                   <th className="px-6 py-4 font-semibold">Type</th>
@@ -708,7 +718,7 @@ export default function AppointmentsPage() {
                     <td className="px-6 py-4">
                       <div className="font-semibold text-slate-900">{new Date(appt.dateTime).toLocaleDateString()}</div>
                       <div className="text-slate-500 text-xs">
-                        {new Date(appt.dateTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} ({appt.duration} min)
+                        {appt.session} • Ticket #{appt.ticketNumber}
                       </div>
                     </td>
                     {role !== "patient" && (
@@ -731,7 +741,7 @@ export default function AppointmentsPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48 rounded-xl">
-                          {(role === "receptionist" || role === "admin" || role === "nurse") && appt.status === "Confirmed" && (
+                          {(role === "receptionist" || role === "admin") && appt.status === "Confirmed" && (
                             <DropdownMenuItem onClick={() => checkInAppointment(appt.appointmentId)} className="cursor-pointer">
                               <UserCheck className="w-4 h-4 mr-2 text-green-600" />
                               <span>Check-in Patient</span>
@@ -774,7 +784,7 @@ export default function AppointmentsPage() {
               <table className="w-full text-sm text-left text-slate-600">
                 <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th className="px-6 py-4 font-semibold">Date &amp; Time</th>
+                    <th className="px-6 py-4 font-semibold">Date &amp; Session</th>
                     {role !== "patient" && <th className="px-6 py-4 font-semibold">Patient</th>}
                     {role !== "doctor" && <th className="px-6 py-4 font-semibold">Doctor</th>}
                     <th className="px-6 py-4 font-semibold">Type</th>
@@ -788,7 +798,7 @@ export default function AppointmentsPage() {
                       <td className="px-6 py-4">
                         <div className="font-semibold text-slate-700">{new Date(appt.dateTime).toLocaleDateString()}</div>
                         <div className="text-slate-500 text-xs">
-                          {new Date(appt.dateTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} ({appt.duration} min)
+                          {appt.session} • Ticket #{appt.ticketNumber}
                         </div>
                       </td>
                       {role !== "patient" && (

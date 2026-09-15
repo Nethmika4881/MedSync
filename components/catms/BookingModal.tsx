@@ -6,7 +6,7 @@ import { Doctor } from "@/lib/mockData/doctors";
 import { Button } from "@/components/ui/button";
 import { X, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Appointment, VisitType } from "@/lib/mockData/appointments";
+import { Appointment, VisitType, SessionType } from "@/lib/mockData/appointments";
 
 const VISIT_TYPES: VisitType[] = [
   "General Checkup",
@@ -16,10 +16,7 @@ const VISIT_TYPES: VisitType[] = [
   "Video Consultation",
 ];
 
-const TIME_SLOTS = [
-  "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-  "14:00", "14:30", "15:00", "15:30", "16:00", "16:30",
-];
+const SESSIONS: SessionType[] = ["Morning", "Afternoon", "Evening"];
 
 export function getNextDays(count: number) {
   const days: Date[] = [];
@@ -76,7 +73,8 @@ export function BookingModal({
 
   const [step, setStep] = useState<BookingStep>("datetime");
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [selectedSession, setSelectedSession] = useState<SessionType | null>(null);
+  const [generatedTicket, setGeneratedTicket] = useState<number | null>(null);
   const [visitType, setVisitType] = useState<VisitType>("General Checkup");
   const [notes, setNotes] = useState("");
 
@@ -89,10 +87,21 @@ export function BookingModal({
   const STEPS: BookingStep[] = ["datetime", "details", "confirm"];
 
   function handleBook() {
-    if (!selectedDay || !selectedTime) return;
-    const [hh, mm] = selectedTime.split(":").map(Number);
+    if (!selectedDay || !selectedSession) return;
+    
+    // Calculate ticket number
+    const existingForSession = useAppointmentStore.getState().appointments.filter(
+      a => a.doctorId === doctor.doctorId && 
+           a.session === selectedSession && 
+           new Date(a.dateTime).toDateString() === selectedDay.toDateString()
+    );
+    const nextTicket = existingForSession.length + 1;
+    setGeneratedTicket(nextTicket);
+
     const dt = new Date(selectedDay);
-    dt.setHours(hh, mm, 0, 0);
+    if (selectedSession === "Morning") dt.setHours(9, 0, 0, 0);
+    else if (selectedSession === "Afternoon") dt.setHours(14, 0, 0, 0);
+    else dt.setHours(18, 0, 0, 0);
 
     const newAppt: Appointment = {
       appointmentId: `APT-${Date.now()}`,
@@ -104,7 +113,9 @@ export function BookingModal({
       branchId: doctor.branchId,
       branchName: doctor.branchName,
       dateTime: dt.toISOString(),
-      duration: 30,
+      duration: 30, // keeping for backward compat
+      session: selectedSession,
+      ticketNumber: nextTicket,
       visitType,
       status: "Pending",
       paymentStatus: "Unpaid",
@@ -183,7 +194,7 @@ export function BookingModal({
                       <button
                         key={day.toISOString()}
                         disabled={booked}
-                        onClick={() => { setSelectedDay(day); setSelectedTime(null); }}
+                        onClick={() => { setSelectedDay(day); setSelectedSession(null); }}
                         className={cn(
                           "flex flex-col items-center py-3 px-1 rounded-xl border text-xs font-semibold transition-all",
                           booked
@@ -210,23 +221,23 @@ export function BookingModal({
               {selectedDay && (
                 <div className="animate-fade-in-up">
                   <p className="text-xs font-semibold text-slate-500 uppercase mb-2 tracking-wide">
-                    Time Slots — {dayFmt(selectedDay)}
+                    Sessions — {dayFmt(selectedDay)}
                   </p>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                    {TIME_SLOTS.map((slot) => {
-                      const selected = selectedTime === slot;
+                  <div className="grid grid-cols-3 gap-2">
+                    {SESSIONS.map((session) => {
+                      const selected = selectedSession === session;
                       return (
                         <button
-                          key={slot}
-                          onClick={() => setSelectedTime(slot)}
+                          key={session}
+                          onClick={() => setSelectedSession(session)}
                           className={cn(
-                            "py-2 rounded-xl border text-xs font-semibold transition-all",
+                            "py-2.5 rounded-xl border text-xs font-semibold transition-all",
                             selected
                               ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white"
                               : "border-slate-200 bg-white text-slate-700 hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
                           )}
                         >
-                          {slot}
+                          {session}
                         </button>
                       );
                     })}
@@ -235,7 +246,7 @@ export function BookingModal({
               )}
 
               <Button
-                disabled={!selectedDay || !selectedTime}
+                disabled={!selectedDay || !selectedSession}
                 onClick={() => setStep("details")}
                 className="w-full bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-11 font-semibold disabled:opacity-40 transition-all"
               >
@@ -303,7 +314,7 @@ export function BookingModal({
           )}
 
           {/* Step 3 */}
-          {step === "confirm" && selectedDay && selectedTime && (
+          {step === "confirm" && selectedDay && selectedSession && (
             <div className="space-y-5 animate-fade-in">
               <h3 className="font-bold text-slate-900 text-lg">Confirm Appointment</h3>
               <div className="bg-slate-50 rounded-2xl p-4 space-y-3 border border-slate-100">
@@ -311,7 +322,7 @@ export function BookingModal({
                 <ConfirmRow label="Specialization" value={doctor.specialization} />
                 <ConfirmRow label="Branch" value={doctor.branchName} />
                 <ConfirmRow label="Date" value={dayFmt(selectedDay)} />
-                <ConfirmRow label="Time" value={selectedTime} />
+                <ConfirmRow label="Session" value={selectedSession} />
                 <ConfirmRow label="Visit Type" value={visitType} />
                 <ConfirmRow label="Consultation Fee" value={`$${doctor.consultationFee}`} highlight />
                 {notes && <ConfirmRow label="Notes" value={notes} />}
@@ -350,10 +361,13 @@ export function BookingModal({
                   has been successfully scheduled.
                 </p>
               </div>
-              <div className="w-full bg-slate-50 rounded-2xl p-4 text-sm space-y-2 border border-slate-100 text-left">
+              <div className="w-full bg-slate-50 rounded-2xl p-4 text-sm space-y-2 border border-slate-100 text-left relative overflow-hidden">
+                <div className="absolute top-0 right-0 bg-[var(--brand-primary)] text-white px-3 py-1 rounded-bl-xl font-bold">
+                  Ticket #{generatedTicket}
+                </div>
                 <p className="text-slate-500">
                   📅 <span className="font-semibold text-slate-800">{selectedDay && dayFmt(selectedDay)}</span>{" "}
-                  at <span className="font-semibold text-slate-800">{selectedTime}</span>
+                  • <span className="font-semibold text-slate-800">{selectedSession} Session</span>
                 </p>
                 <p className="text-slate-500">
                   🏥 <span className="font-semibold text-slate-800">{doctor.branchName}</span>

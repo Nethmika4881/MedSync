@@ -10,7 +10,7 @@ import { TrendingUp, Users, DollarSign, Activity } from "lucide-react";
 export default function ReportsPage() {
   const role = useRole();
 
-  if (!role || (role !== "admin" && role !== "branch_manager")) {
+  if (!role || role !== "admin") {
     return (
       <div className="flex items-center justify-center h-96 text-slate-500">
         You do not have permission to view reports.
