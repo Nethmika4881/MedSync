@@ -7,7 +7,7 @@ import { useCurrentUser } from "@/lib/stores/authStore";
 import { doctors, Doctor } from "@/lib/mockData/doctors";
 import { patients, Patient } from "@/lib/mockData/patients";
 import { branches } from "@/lib/mockData/branches";
-import { Appointment, VisitType } from "@/lib/mockData/appointments";
+import { Appointment, VisitType, SessionType } from "@/lib/mockData/appointments";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,10 +38,7 @@ const VISIT_TYPES: VisitType[] = [
 
 const DURATIONS = [15, 30, 45, 60, 90];
 
-const TIME_SLOTS = [
-  "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-  "14:00", "14:30", "15:00", "15:30", "16:00", "16:30",
-];
+const SESSIONS: SessionType[] = ["Morning", "Afternoon", "Evening"];
 
 function getNextDays(count: number) {
   const days: Date[] = [];
@@ -312,7 +309,7 @@ export default function NewAppointmentPage() {
     doctorId: "",
     branchId: "BR-001",
     selectedDay: null as Date | null,
-    selectedTime: null as string | null,
+    selectedSession: null as SessionType | null,
     duration: 30,
     visitType: "General Checkup" as VisitType,
     notes: "",
@@ -320,6 +317,7 @@ export default function NewAppointmentPage() {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [generatedTicket, setGeneratedTicket] = useState<number | null>(null);
   const [error, setError] = useState("");
 
   const selectedDoctor = doctors.find((d) => d.doctorId === form.doctorId);
@@ -330,15 +328,25 @@ export default function NewAppointmentPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.patientId || !form.doctorId || !form.selectedDay || !form.selectedTime) {
-      setError("Please complete all required fields (Patient, Doctor, Date, and Time).");
+    if (!form.patientId || !form.doctorId || !form.selectedDay || !form.selectedSession) {
+      setError("Please complete all required fields (Patient, Doctor, Date, and Session).");
       return;
     }
     setError("");
 
-    const [hh, mm] = form.selectedTime.split(":").map(Number);
+    // Calculate ticket number
+    const existingForSession = useAppointmentStore.getState().appointments.filter(
+      a => a.doctorId === form.doctorId && 
+           a.session === form.selectedSession && 
+           new Date(a.dateTime).toDateString() === form.selectedDay!.toDateString()
+    );
+    const nextTicket = existingForSession.length + 1;
+    setGeneratedTicket(nextTicket);
+
     const dt = new Date(form.selectedDay);
-    dt.setHours(hh, mm, 0, 0);
+    if (form.selectedSession === "Morning") dt.setHours(9, 0, 0, 0);
+    else if (form.selectedSession === "Afternoon") dt.setHours(14, 0, 0, 0);
+    else dt.setHours(18, 0, 0, 0);
 
     const newAppt: Appointment = {
       appointmentId: `APT-${Date.now()}`,
@@ -351,6 +359,8 @@ export default function NewAppointmentPage() {
       branchName: branches.find((b) => b.branchId === form.branchId)?.name || "Healthora Central",
       dateTime: dt.toISOString(),
       duration: form.duration,
+      session: form.selectedSession,
+      ticketNumber: nextTicket,
       visitType: form.visitType,
       status: "Confirmed",
       paymentStatus: form.paymentStatus,
@@ -378,10 +388,13 @@ export default function NewAppointmentPage() {
         <p className="text-slate-500 mb-2">
           <strong>{selectedPatient?.name}</strong> is scheduled to see <strong>{selectedDoctor?.name}</strong>
         </p>
-        <div className="w-full max-w-sm mx-auto bg-slate-50 rounded-2xl p-4 text-sm space-y-2 border border-slate-100 mb-8 mt-4">
+        <div className="w-full max-w-sm mx-auto bg-slate-50 rounded-2xl p-4 text-sm space-y-2 border border-slate-100 mb-8 mt-4 relative overflow-hidden text-left">
+          <div className="absolute top-0 right-0 bg-[var(--brand-primary)] text-white px-3 py-1 rounded-bl-xl font-bold">
+            Ticket #{generatedTicket}
+          </div>
           <p className="text-slate-500">
-            📅 <span className="font-semibold text-slate-800">{form.selectedDay && dayFmt(form.selectedDay)}</span> at{" "}
-            <span className="font-semibold text-slate-800">{form.selectedTime}</span>
+            📅 <span className="font-semibold text-slate-800">{form.selectedDay && dayFmt(form.selectedDay)}</span>{" "}
+            • <span className="font-semibold text-slate-800">{form.selectedSession} Session</span>
           </p>
           <p className="text-slate-500">
             🏥 <span className="font-semibold text-slate-800">{branches.find((b) => b.branchId === form.branchId)?.name}</span>
@@ -396,7 +409,7 @@ export default function NewAppointmentPage() {
                 doctorId: "",
                 branchId: "BR-001",
                 selectedDay: null,
-                selectedTime: null,
+                selectedSession: null,
                 duration: 30,
                 visitType: "General Checkup",
                 notes: "",
@@ -428,7 +441,7 @@ export default function NewAppointmentPage() {
         </Link>
         <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Schedule New Appointment</h2>
-          <p className="text-slate-500 text-sm mt-0.5">Select a patient, a specialist, and a convenient time.</p>
+          <p className="text-slate-500 text-sm mt-0.5">Select a patient, a specialist, and a convenient session.</p>
         </div>
       </div>
 
@@ -468,9 +481,9 @@ export default function NewAppointmentPage() {
                     setForm((f) => ({
                       ...f,
                       doctorId: id,
-                      // reset time if doctor changes as availability might differ
+                      // reset session if doctor changes as availability might differ
                       selectedDay: null,
-                      selectedTime: null,
+                      selectedSession: null,
                     }));
                   }}
                 />
@@ -534,7 +547,7 @@ export default function NewAppointmentPage() {
             <CardHeader className="pb-4 bg-slate-50/50">
               <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
                 <div className="w-6 h-6 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center text-xs">3</div>
-                Date & Time
+                Date & Session
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
@@ -565,7 +578,7 @@ export default function NewAppointmentPage() {
                             key={day.toISOString()}
                             type="button"
                             disabled={booked}
-                            onClick={() => setForm((f) => ({ ...f, selectedDay: day, selectedTime: null }))}
+                            onClick={() => setForm((f) => ({ ...f, selectedDay: day, selectedSession: null }))}
                             className={cn(
                               "flex flex-col items-center py-2.5 px-1 rounded-xl border text-xs font-semibold transition-all",
                               booked
@@ -586,25 +599,25 @@ export default function NewAppointmentPage() {
                     </div>
                   </div>
 
-                  {/* Time Picker */}
+                  {/* Session Picker */}
                   <div className={cn("transition-opacity duration-300", form.selectedDay ? "opacity-100" : "opacity-30 pointer-events-none")}>
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Available Times</p>
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Available Sessions</p>
                     <div className="grid grid-cols-3 gap-2">
-                      {TIME_SLOTS.map((slot) => {
-                        const selected = form.selectedTime === slot;
+                      {SESSIONS.map((session) => {
+                        const selected = form.selectedSession === session;
                         return (
                           <button
-                            key={slot}
+                            key={session}
                             type="button"
-                            onClick={() => setForm((f) => ({ ...f, selectedTime: slot }))}
+                            onClick={() => setForm((f) => ({ ...f, selectedSession: session }))}
                             className={cn(
-                              "py-2 rounded-xl border text-xs font-bold transition-all",
+                              "py-2.5 rounded-xl border text-xs font-bold transition-all",
                               selected
                                 ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white shadow-md shadow-teal-500/20"
                                 : "border-slate-200 bg-white text-slate-600 hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
                             )}
                           >
-                            {slot}
+                            {session}
                           </button>
                         );
                       })}
@@ -625,7 +638,7 @@ export default function NewAppointmentPage() {
 
             <Button
               type="submit"
-              disabled={!form.patientId || !form.doctorId || !form.selectedDay || !form.selectedTime}
+              disabled={!form.patientId || !form.doctorId || !form.selectedDay || !form.selectedSession}
               className="w-full bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-14 text-base font-bold shadow-lg shadow-teal-500/20 disabled:opacity-50 disabled:shadow-none transition-all hover:-translate-y-0.5"
             >
               <CheckCircle2 className="w-5 h-5 mr-2" /> 
