@@ -76,7 +76,7 @@ export default function LandingPage() {
               <Users className="w-6 h-6 text-green-600" />
             </div>
             <h3 className="text-lg font-bold text-slate-900 mb-2">Role-Based Access</h3>
-            <p className="text-sm text-slate-600">8 distinct user roles with tailored interfaces and permissions.</p>
+            <p className="text-sm text-slate-600">4 distinct user roles with tailored interfaces and permissions.</p>
           </div>
         </div>
 

@@ -15,6 +15,12 @@ type Props = {
 
 export function AuthGuard({ children }: Props) {
   const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+
+  useEffect(() => {
+    if (!user) {
+      router.replace("/");
+    }
   }, [user, router]);
 
   if (!user) return null;

@@ -2,8 +2,7 @@ export type UserRole =
   | "admin"
   | "doctor"
   | "patient"
-  | "receptionist"
- ;
+  | "receptionist";
 
 export interface MockUser {
   userId: string;
@@ -88,28 +87,5 @@ export const roleConfig: Record<
     icon: "Calendar",
     description: "Booking, check-in, patient registration",
   },
-  nurse: {
-    label: "Nurse",
-    color: "bg-pink-100 text-pink-700",
-    icon: "Heart",
-    description: "Vitals, treatments, patient care",
-  },
-  pharmacist: {
-    label: "Pharmacist",
-    color: "bg-teal-100 text-teal-700",
-    icon: "Pill",
-    description: "Prescription dispensing, medication safety",
-  },
-  lab_technician: {
-    label: "Lab Technician",
-    color: "bg-yellow-100 text-yellow-700",
-    icon: "FlaskConical",
-    description: "Lab orders, results, specimen processing",
-  },
-  branch_manager: {
-    label: "Branch Manager",
-    color: "bg-indigo-100 text-indigo-700",
-    icon: "Building2",
-    description: "Staff management, branch reporting",
-  },
+
 };
