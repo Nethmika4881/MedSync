@@ -35,6 +35,7 @@ import { doctors } from "@/lib/mockData/doctors";
 import { patients } from "@/lib/mockData/patients";
 import { branches } from "@/lib/mockData/branches";
 import type { Appointment, VisitType } from "@/lib/mockData/appointments";
+import { SESSION_META } from "@/components/catms/BookingModal";
 
 /* ──────────────────────────────────────────────────────────
    Confetti Canvas
@@ -235,7 +236,7 @@ function ReceiptModal({
             <ReceiptRow
               icon={<Clock className="w-4 h-4" />}
               label="Session"
-              value={`${appointment.session} (Ticket #${appointment.ticketNumber})`}
+              value={appointment.session ? `${SESSION_META[appointment.session].label} (Ticket #${appointment.ticketNumber})` : `Ticket #${appointment.ticketNumber}`}
             />
             <ReceiptRow icon={<MapPin className="w-4 h-4" />} label="Branch" value={appointment.branchName} />
             <ReceiptRow icon={<FileText className="w-4 h-4" />} label="Visit Type" value={appointment.visitType} />
@@ -708,7 +709,7 @@ export default function AppointmentsPage() {
                     <td className="px-6 py-4">
                       <div className="font-semibold text-slate-900">{new Date(appt.dateTime).toLocaleDateString()}</div>
                       <div className="text-slate-500 text-xs">
-                        {appt.session} • Ticket #{appt.ticketNumber}
+                        {appt.session ? SESSION_META[appt.session].label : ""} • Ticket #{appt.ticketNumber}
                       </div>
                     </td>
                     {role !== "patient" && (
@@ -788,7 +789,7 @@ export default function AppointmentsPage() {
                       <td className="px-6 py-4">
                         <div className="font-semibold text-slate-700">{new Date(appt.dateTime).toLocaleDateString()}</div>
                         <div className="text-slate-500 text-xs">
-                          {appt.session} • Ticket #{appt.ticketNumber}
+                          {appt.session ? SESSION_META[appt.session].label : ""} • Ticket #{appt.ticketNumber}
                         </div>
                       </td>
                       {role !== "patient" && (

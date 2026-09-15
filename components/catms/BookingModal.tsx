@@ -16,7 +16,63 @@ const VISIT_TYPES: VisitType[] = [
   "Video Consultation",
 ];
 
+export const SLOT_CAPACITY = 4;
+
+export const SESSION_META: Record<SessionType, {
+  label: string;
+  startHour: number;
+  endHour: number;
+  durationMinutes: number;
+  slotLabel: string;
+}> = {
+  Morning: {
+    label: "09:00 AM – 12:00 PM",
+    startHour: 9,
+    endHour: 12,
+    durationMinutes: 180,
+    slotLabel: "09:00 AM",
+  },
+  Afternoon: {
+    label: "12:00 PM – 03:00 PM",
+    startHour: 12,
+    endHour: 15,
+    durationMinutes: 180,
+    slotLabel: "12:00 PM",
+  },
+  Evening: {
+    label: "03:00 PM – 06:00 PM",
+    startHour: 15,
+    endHour: 18,
+    durationMinutes: 180,
+    slotLabel: "03:00 PM",
+  },
+};
 const SESSIONS: SessionType[] = ["Morning", "Afternoon", "Evening"];
+
+function getSlotState(doctorId: string, selectedDay: Date | null, session: SessionType | null) {
+  if (!selectedDay || !session) {
+    return { count: 0, lastTicketNumber: 0, nextTicketNumber: 1, isFull: false };
+  }
+
+  const allAppointments = useAppointmentStore.getState().appointments;
+  const slotAppointments = allAppointments.filter(
+    (a) =>
+      a.doctorId === doctorId &&
+      a.session === session &&
+      new Date(a.dateTime).toDateString() === selectedDay.toDateString()
+  );
+
+  const lastTicketNumber = slotAppointments.reduce((max, a) => Math.max(max, a.ticketNumber), 0);
+  const nextTicketNumber = lastTicketNumber + 1;
+  const isFull = slotAppointments.length >= SLOT_CAPACITY;
+
+  return {
+    count: slotAppointments.length,
+    lastTicketNumber,
+    nextTicketNumber,
+    isFull,
+  };
+}
 
 export function getNextDays(count: number) {
   const days: Date[] = [];
@@ -68,7 +124,16 @@ export function BookingModal({
   currentUserName: string;
 }) {
   const addAppointment = useAppointmentStore((s) => s.addAppointment);
+  const allAppointments = useAppointmentStore((s) => s.appointments);
   const availableDays = useMemo(() => getNextDays(7), []);
+
+  // Last appointment this patient booked (any status)
+  const lastAppointment = useMemo(() => {
+    const mine = allAppointments
+      .filter((a) => a.patientId === currentUserId)
+      .sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime());
+    return mine[0] ?? null;
+  }, [allAppointments, currentUserId]);
   const fullyBooked = doctor.fullyBookedDate;
 
   const [step, setStep] = useState<BookingStep>("datetime");
@@ -77,6 +142,8 @@ export function BookingModal({
   const [generatedTicket, setGeneratedTicket] = useState<number | null>(null);
   const [visitType, setVisitType] = useState<VisitType>("General Checkup");
   const [notes, setNotes] = useState("");
+
+  const slotState = getSlotState(doctor.doctorId, selectedDay, selectedSession);
 
   const dayFmt = (d: Date) =>
     d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
@@ -88,20 +155,17 @@ export function BookingModal({
 
   function handleBook() {
     if (!selectedDay || !selectedSession) return;
-    
-    // Calculate ticket number
-    const existingForSession = useAppointmentStore.getState().appointments.filter(
-      a => a.doctorId === doctor.doctorId && 
-           a.session === selectedSession && 
-           new Date(a.dateTime).toDateString() === selectedDay.toDateString()
-    );
-    const nextTicket = existingForSession.length + 1;
+
+    const slotStatus = getSlotState(doctor.doctorId, selectedDay, selectedSession);
+    if (slotStatus.isFull) {
+      return;
+    }
+
+    const nextTicket = slotStatus.nextTicketNumber;
     setGeneratedTicket(nextTicket);
 
     const dt = new Date(selectedDay);
-    if (selectedSession === "Morning") dt.setHours(9, 0, 0, 0);
-    else if (selectedSession === "Afternoon") dt.setHours(14, 0, 0, 0);
-    else dt.setHours(18, 0, 0, 0);
+    dt.setHours(SESSION_META[selectedSession].startHour, 0, 0, 0);
 
     const newAppt: Appointment = {
       appointmentId: `APT-${Date.now()}`,
@@ -113,7 +177,7 @@ export function BookingModal({
       branchId: doctor.branchId,
       branchName: doctor.branchName,
       dateTime: dt.toISOString(),
-      duration: 30, // keeping for backward compat
+      duration: SESSION_META[selectedSession].durationMinutes,
       session: selectedSession,
       ticketNumber: nextTicket,
       visitType,
@@ -183,7 +247,32 @@ export function BookingModal({
           {/* Step 1 */}
           {step === "datetime" && (
             <div className="space-y-5 animate-fade-in">
-              <h3 className="font-bold text-slate-900 text-lg">Select Date & Time</h3>
+              <h3 className="font-bold text-slate-900 text-lg">Select Date &amp; Session</h3>
+
+              {/* Last appointment reminder */}
+              {lastAppointment && (
+                <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
+                  <span className="text-lg mt-0.5">🕐</span>
+                  <div className="text-xs leading-relaxed">
+                    <p className="font-bold text-amber-800 mb-0.5">Your last appointment</p>
+                    <p className="text-amber-700">
+                      <span className="font-semibold">{lastAppointment.doctorName}</span>
+                      {" – "}
+                      {new Date(lastAppointment.dateTime).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                      {lastAppointment.session ? ` · ${SESSION_META[lastAppointment.session].label}` : ""}
+                    </p>
+                    <p className="text-amber-600 mt-0.5">
+                      {lastAppointment.visitType}
+                      {" · "}
+                      <span className={cn(
+                        "font-semibold",
+                        lastAppointment.status === "Completed" ? "text-emerald-600" :
+                        lastAppointment.status === "Cancelled"  ? "text-rose-600"    : "text-amber-600"
+                      )}>{lastAppointment.status}</span>
+                    </p>
+                  </div>
+                </div>
+              )}
               <div>
                 <p className="text-xs font-semibold text-slate-500 uppercase mb-2 tracking-wide">Available Days</p>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
@@ -223,7 +312,7 @@ export function BookingModal({
                   <p className="text-xs font-semibold text-slate-500 uppercase mb-2 tracking-wide">
                     Sessions — {dayFmt(selectedDay)}
                   </p>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="flex flex-col gap-2">
                     {SESSIONS.map((session) => {
                       const selected = selectedSession === session;
                       return (
@@ -231,13 +320,13 @@ export function BookingModal({
                           key={session}
                           onClick={() => setSelectedSession(session)}
                           className={cn(
-                            "py-2.5 rounded-xl border text-xs font-semibold transition-all",
+                            "py-2.5 px-4 rounded-xl border text-xs font-semibold transition-all text-left",
                             selected
                               ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white"
                               : "border-slate-200 bg-white text-slate-700 hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
                           )}
                         >
-                          {session}
+                          {SESSION_META[session].label}
                         </button>
                       );
                     })}
@@ -322,7 +411,7 @@ export function BookingModal({
                 <ConfirmRow label="Specialization" value={doctor.specialization} />
                 <ConfirmRow label="Branch" value={doctor.branchName} />
                 <ConfirmRow label="Date" value={dayFmt(selectedDay)} />
-                <ConfirmRow label="Session" value={selectedSession} />
+                <ConfirmRow label="Session" value={SESSION_META[selectedSession].label} />
                 <ConfirmRow label="Visit Type" value={visitType} />
                 <ConfirmRow label="Consultation Fee" value={`$${doctor.consultationFee}`} highlight />
                 {notes && <ConfirmRow label="Notes" value={notes} />}
@@ -367,7 +456,7 @@ export function BookingModal({
                 </div>
                 <p className="text-slate-500">
                   📅 <span className="font-semibold text-slate-800">{selectedDay && dayFmt(selectedDay)}</span>{" "}
-                  • <span className="font-semibold text-slate-800">{selectedSession} Session</span>
+                  • <span className="font-semibold text-slate-800">{selectedSession && SESSION_META[selectedSession].label}</span>
                 </p>
                 <p className="text-slate-500">
                   🏥 <span className="font-semibold text-slate-800">{doctor.branchName}</span>
