@@ -234,8 +234,8 @@ function ReceiptModal({
             />
             <ReceiptRow
               icon={<Clock className="w-4 h-4" />}
-              label="Time"
-              value={`${apptDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} (${appointment.duration} min)`}
+              label="Session"
+              value={`${appointment.session} (Ticket #${appointment.ticketNumber})`}
             />
             <ReceiptRow icon={<MapPin className="w-4 h-4" />} label="Branch" value={appointment.branchName} />
             <ReceiptRow icon={<FileText className="w-4 h-4" />} label="Visit Type" value={appointment.visitType} />
@@ -694,7 +694,7 @@ export default function AppointmentsPage() {
             <table className="w-full text-sm text-left text-slate-600">
               <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="px-6 py-4 font-semibold">Date &amp; Time</th>
+                  <th className="px-6 py-4 font-semibold">Date &amp; Session</th>
                   {role !== "patient" && <th className="px-6 py-4 font-semibold">Patient</th>}
                   {role !== "doctor" && <th className="px-6 py-4 font-semibold">Doctor</th>}
                   <th className="px-6 py-4 font-semibold">Type</th>
@@ -708,7 +708,7 @@ export default function AppointmentsPage() {
                     <td className="px-6 py-4">
                       <div className="font-semibold text-slate-900">{new Date(appt.dateTime).toLocaleDateString()}</div>
                       <div className="text-slate-500 text-xs">
-                        {new Date(appt.dateTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} ({appt.duration} min)
+                        {appt.session} • Ticket #{appt.ticketNumber}
                       </div>
                     </td>
                     {role !== "patient" && (
@@ -774,7 +774,7 @@ export default function AppointmentsPage() {
               <table className="w-full text-sm text-left text-slate-600">
                 <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th className="px-6 py-4 font-semibold">Date &amp; Time</th>
+                    <th className="px-6 py-4 font-semibold">Date &amp; Session</th>
                     {role !== "patient" && <th className="px-6 py-4 font-semibold">Patient</th>}
                     {role !== "doctor" && <th className="px-6 py-4 font-semibold">Doctor</th>}
                     <th className="px-6 py-4 font-semibold">Type</th>
@@ -788,7 +788,7 @@ export default function AppointmentsPage() {
                       <td className="px-6 py-4">
                         <div className="font-semibold text-slate-700">{new Date(appt.dateTime).toLocaleDateString()}</div>
                         <div className="text-slate-500 text-xs">
-                          {new Date(appt.dateTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} ({appt.duration} min)
+                          {appt.session} • Ticket #{appt.ticketNumber}
                         </div>
                       </td>
                       {role !== "patient" && (
