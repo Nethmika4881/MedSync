@@ -1,4 +1,4 @@
-﻿export interface Employee {
+export interface Employee {
   employeeId: string;
   name: string;
   role: string;

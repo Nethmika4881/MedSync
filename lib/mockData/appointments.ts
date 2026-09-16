@@ -1,4 +1,4 @@
-﻿export type AppointmentStatus =
+export type AppointmentStatus =
   | "Confirmed"
   | "Checked-in"
   | "Checked-out"

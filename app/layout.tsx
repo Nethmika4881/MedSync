@@ -1,4 +1,4 @@
-﻿// Root layout — bare HTML shell only.
+// Root layout — bare HTML shell only.
 // Each role-based route group ((admin), (patient), (doctor), (front-desk))
 // owns its own layout.tsx with the appropriate Sidebar or Header.
 // Auth gating is handled per route group layout and will be enforced by

@@ -1,4 +1,4 @@
-﻿This `ui-tokens.md` file defines the visual primitives extracted directly from your MedSync CATMS mockups. It is tailored specifically for your Tailwind CSS v3 and shadcn/ui stack, ensuring every component across the four portals remains visually identical.
+This `ui-tokens.md` file defines the visual primitives extracted directly from your MedSync CATMS mockups. It is tailored specifically for your Tailwind CSS v3 and shadcn/ui stack, ensuring every component across the four portals remains visually identical.
 
 # UI Tokens
 

@@ -1,4 +1,4 @@
-﻿export interface Branch {
+export interface Branch {
   branchId: string;
   name: string;
   address: string;

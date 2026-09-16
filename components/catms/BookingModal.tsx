@@ -77,10 +77,10 @@ function ConfirmRow({
 
 /** Ticket-badge badge colours per session */
 const SESSION_BADGE_CLS: Record<SessionType, string> = {
-  Morning:   "bg-amber-100 text-amber-700 border-amber-200",
-  Midday:    "bg-sky-100   text-sky-700   border-sky-200",
+  Morning: "bg-amber-100 text-amber-700 border-amber-200",
+  Midday: "bg-sky-100   text-sky-700   border-sky-200",
   Afternoon: "bg-teal-100  text-teal-700  border-teal-200",
-  Evening:   "bg-indigo-100 text-indigo-700 border-indigo-200",
+  Evening: "bg-indigo-100 text-indigo-700 border-indigo-200",
 };
 
 export function BookingModal({
@@ -209,8 +209,8 @@ export function BookingModal({
                       step === s
                         ? "bg-white text-[var(--brand-primary)]"
                         : stepIndex > i
-                        ? "bg-white/50 text-white"
-                        : "bg-white/20 text-white/60"
+                          ? "bg-white/50 text-white"
+                          : "bg-white/20 text-white/60"
                     )}
                   >
                     {stepIndex > i ? (
@@ -258,8 +258,8 @@ export function BookingModal({
                           booked
                             ? "border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed"
                             : selected
-                            ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white shadow-md"
-                            : "border-slate-200 bg-white text-slate-700 hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
+                              ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white shadow-md"
+                              : "border-slate-200 bg-white text-slate-700 hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
                         )}
                       >
                         <span className="text-[10px] uppercase opacity-70">
@@ -307,8 +307,8 @@ export function BookingModal({
                             isDisabled
                               ? "border-slate-100 bg-slate-50 cursor-not-allowed opacity-60"
                               : isSelected
-                              ? "border-[var(--brand-primary)] bg-[var(--brand-primary)]/5 shadow-md"
-                              : "border-slate-200 bg-white hover:border-[var(--brand-primary)]/50 hover:shadow-sm"
+                                ? "border-[var(--brand-primary)] bg-[var(--brand-primary)]/5 shadow-md"
+                                : "border-slate-200 bg-white hover:border-[var(--brand-primary)]/50 hover:shadow-sm"
                           )}
                         >
                           <div className="flex items-center justify-between mb-3">
@@ -396,10 +396,10 @@ export function BookingModal({
                       selectedSession === "Morning"
                         ? "linear-gradient(135deg,#fffbeb,#fef3c7)"
                         : selectedSession === "Midday"
-                        ? "linear-gradient(135deg,#eff6ff,#dbeafe)"
-                        : selectedSession === "Afternoon"
-                        ? "linear-gradient(135deg,#f0fdfa,#ccfbf1)"
-                        : "linear-gradient(135deg,#eef2ff,#e0e7ff)",
+                          ? "linear-gradient(135deg,#eff6ff,#dbeafe)"
+                          : selectedSession === "Afternoon"
+                            ? "linear-gradient(135deg,#f0fdfa,#ccfbf1)"
+                            : "linear-gradient(135deg,#eef2ff,#e0e7ff)",
                   }}
                 >
                   <Ticket className="w-6 h-6 mb-1 opacity-40" />
@@ -585,10 +585,10 @@ export function BookingModal({
                     selectedSession === "Morning"
                       ? "linear-gradient(135deg,#fffbeb,#fef3c7)"
                       : selectedSession === "Midday"
-                      ? "linear-gradient(135deg,#eff6ff,#dbeafe)"
-                      : selectedSession === "Afternoon"
-                      ? "linear-gradient(135deg,#f0fdfa,#ccfbf1)"
-                      : "linear-gradient(135deg,#eef2ff,#e0e7ff)",
+                        ? "linear-gradient(135deg,#eff6ff,#dbeafe)"
+                        : selectedSession === "Afternoon"
+                          ? "linear-gradient(135deg,#f0fdfa,#ccfbf1)"
+                          : "linear-gradient(135deg,#eef2ff,#e0e7ff)",
                 }}
               >
                 {/* Big ticket number in top-right */}

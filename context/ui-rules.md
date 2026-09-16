@@ -1,4 +1,4 @@
-﻿**UI Rules**
+**UI Rules**
 
 Concise rules for building the MedSync Clinic Management (CATMS) UI. These constraints ensure visual consistency across all four portals (Patient, Doctor, Front Desk, Admin) and dictate how shadcn/ui primitives should be implemented.
 

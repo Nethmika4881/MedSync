@@ -1,4 +1,4 @@
-﻿# Code Standards
+# Code Standards
 
 Implementation rules and conventions for MedSync Clinic Management (CATMS). The engineering team and AI collaborators must follow these rules without exception to prevent pattern drift across sessions.
 
