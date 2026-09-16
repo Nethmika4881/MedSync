@@ -9,6 +9,7 @@
     /* === CATMS Brand Tokens === */
     --brand-primary: #16A085;
     --brand-primary-dark: #0F7A66;
+    --brand-secondary: #0B5345;  /* deep teal — used for active/hover accent states */
     --brand-dark: #0B1220;
     --bg-app: #F7F8FA;
     --surface: #FFFFFF;
@@ -131,11 +132,13 @@
   .btn-secondary {
     @apply bg-white border border-[var(--border-subtle)] text-[var(--text-primary)]
            font-semibold text-sm px-5 py-2 rounded-full transition-all duration-150
-           hover:bg-gray-50 hover:shadow-sm active:scale-[0.98];
+           hover:bg-slate-800 hover:text-white hover:border-slate-800
+           hover:shadow-sm active:scale-[0.98];
   }
   .btn-ghost {
     @apply bg-transparent text-[var(--text-secondary)] font-medium text-sm
-           px-3 py-2 rounded-lg transition-colors hover:bg-gray-50;
+           px-3 py-2 rounded-lg transition-colors
+           hover:bg-slate-800 hover:text-white;
   }
 
   /* === Loading skeleton === */
