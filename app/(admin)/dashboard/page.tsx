@@ -7,6 +7,7 @@ import { Users, Calendar, Activity, CreditCard, Clock, CheckCircle2 } from "luci
 import { revenueByMonth, appointmentsByMonth } from "@/lib/mockData";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { StatusPill } from "@/components/catms/StatusPill";
+import { SessionBadge, TicketBadge } from "@/components/catms/SessionBadge";
 import { useAppointmentStore } from "@/lib/stores/appointmentStore";
 import { AvatarWithName } from "@/components/catms/AvatarWithName";
 import { ClipboardPlus } from "lucide-react";
@@ -103,8 +104,8 @@ export default function DashboardPage() {
                 <LineChart data={revenueByMonth} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                   <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748B' }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748B' }} tickFormatter={(val) => `$${val/1000}k`} />
-                  <Tooltip 
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748B' }} tickFormatter={(val) => `$${val / 1000}k`} />
+                  <Tooltip
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
                     formatter={(value: number) => [`$${value.toLocaleString()}`, 'Revenue']}
                   />
@@ -165,17 +166,20 @@ export default function DashboardPage() {
             ) : upcomingAppts.length > 0 ? (
               <div className="divide-y divide-slate-100">
                 {upcomingAppts.map(appt => (
-                  <div key={appt.appointmentId} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between">
+                  <div key={appt.appointmentId} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-blue-50 flex flex-col items-center justify-center shrink-0">
                         <span className="text-[10px] font-bold text-blue-600 uppercase leading-none">{new Date(appt.dateTime).toLocaleString('en-US', { month: 'short' })}</span>
                         <span className="text-sm font-bold text-blue-700 leading-none mt-0.5">{new Date(appt.dateTime).getDate()}</span>
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-900 truncate">
                           {role === "patient" ? appt.doctorName : appt.patientName}
                         </p>
-                        <p className="text-xs text-slate-500">{new Date(appt.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {appt.visitType}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          <SessionBadge session={appt.session} ticketNumber={appt.ticketNumber} variant="compact" />
+                          <span className="text-xs text-slate-400">{appt.visitType}</span>
+                        </div>
                       </div>
                     </div>
                     <StatusPill status={appt.status} className="hidden sm:inline-flex" />

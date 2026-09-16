@@ -57,13 +57,14 @@ export function Sidebar() {
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 )}
               >
+
                 {Icon && <Icon className={cn("w-5 h-5", isActive ? "text-white" : "text-slate-400 group-hover:text-[var(--brand-primary)]")} />}
                 {item.label}
                 {hasChildren && (
                   <ChevronDown className={cn("w-4 h-4 ml-auto", isActive ? "text-white/70" : "text-slate-400")} />
                 )}
               </Link>
-              
+
               {/* Nested Children */}
               {hasChildren && isActive && (
                 <div className="ml-9 mt-1 space-y-1 border-l border-slate-200 pl-2">
