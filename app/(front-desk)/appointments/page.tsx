@@ -34,8 +34,7 @@ import {
 import { doctors } from "@/lib/mockData/doctors";
 import { patients } from "@/lib/mockData/patients";
 import { branches } from "@/lib/mockData/branches";
-import type { Appointment, VisitType } from "@/lib/mockData/appointments";
-import { SESSION_META } from "@/components/catms/BookingModal";
+import type { Appointment, SessionType, VisitType } from "@/lib/mockData/appointments";
 
 /* ──────────────────────────────────────────────────────────
    Confetti Canvas
@@ -295,7 +294,7 @@ function NewAppointmentModal({
   role: string;
   currentUser: { userId: string; name: string };
 }) {
-  const { addAppointment } = useAppointmentStore();
+  const { appointments, addAppointment } = useAppointmentStore();
   const isPatient = role === "patient";
   const selfPatient = isPatient
     ? patients.find((p) => p.name === currentUser.name) ?? null
@@ -346,6 +345,14 @@ function NewAppointmentModal({
     const branch = branches.find((b) => b.branchId === doctor.branchId)!;
 
     const newId = `APT-${Date.now()}`;
+    const hour = Number.parseInt(timeValue.split(":")[0] ?? "9", 10);
+    const session: SessionType = hour < 12 ? "Morning" : hour < 17 ? "Afternoon" : "Evening";
+    const ticketNumber =
+      appointments.filter((a) => {
+        if (a.doctorId !== doctor.doctorId || a.session !== session) return false;
+        const existingDate = new Date(a.dateTime).toISOString().slice(0, 10);
+        return existingDate === dateValue;
+      }).length + 1;
     const appt: Appointment = {
       appointmentId: newId,
       patientId: patient.patientId,
@@ -357,6 +364,8 @@ function NewAppointmentModal({
       branchName: branch.name,
       dateTime: new Date(`${dateValue}T${timeValue}`).toISOString(),
       duration,
+      session,
+      ticketNumber,
       visitType,
       status: "Confirmed",
       paymentStatus: "Unpaid",

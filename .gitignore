@@ -44,3 +44,8 @@ node_modules/
 /.claude/
 /memory.md
 
+/.gitignore
+/context
+.neon
+/skills-lock.json
+
