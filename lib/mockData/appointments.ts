@@ -18,7 +18,23 @@ export type VisitType =
   | "Video Consultation"
   | "Pre-Visit";
 
-export type SessionType = "Morning" | "Afternoon" | "Evening";
+export type SessionType = "Morning" | "Midday" | "Afternoon" | "Evening";
+
+/** UI display metadata for each session — never show session names raw, always use this */
+export const SESSION_META: Record<SessionType, {
+  label: string;         // internal label (not shown in patient UI)
+  timeRange: string;     // shown to patients e.g. "8:00 AM – 11:00 AM"
+  startHour: number;     // used when setting dateTime
+  emoji: string;
+  color: string;         // tailwind bg color for badge
+  textColor: string;     // tailwind text color for badge
+}> = {
+  Morning:   { label: "Morning",   timeRange: "8:00 AM – 11:00 AM",  startHour: 8,  emoji: "🌅", color: "bg-amber-50  border-amber-200",  textColor: "text-amber-700" },
+  Midday:    { label: "Midday",    timeRange: "11:00 AM – 2:00 PM",  startHour: 11, emoji: "☀️", color: "bg-sky-50    border-sky-200",    textColor: "text-sky-700"   },
+  Afternoon: { label: "Afternoon", timeRange: "2:00 PM – 5:00 PM",   startHour: 14, emoji: "🌤️", color: "bg-teal-50   border-teal-200",   textColor: "text-teal-700"  },
+  Evening:   { label: "Evening",   timeRange: "5:00 PM – 8:00 PM",   startHour: 17, emoji: "🌙", color: "bg-indigo-50 border-indigo-200", textColor: "text-indigo-700"},
+};
+
 
 export type PaymentStatus = "Paid" | "Unpaid" | "Due" | "Partial" | "Insurance";
 
