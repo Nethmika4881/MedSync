@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { useRouter } from "next/navigation";
@@ -51,7 +51,7 @@ export default function LandingPage() {
           </span>
         </h1>
         <p className="text-lg md:text-xl text-slate-600 max-w-2xl mb-10 leading-relaxed">
-          Healthora is the ultimate clinic management system built with Next.js and Tailwind.
+          MedSync is the ultimate clinic management system built with Next.js and Tailwind.
           A premium, UI-driven experience with complete mock data covering appointments, billing, pharmacy, and more.
         </p>
 
@@ -87,7 +87,7 @@ export default function LandingPage() {
           <div className="flex-1">
             <h2 className="text-3xl font-bold font-outfit text-slate-900 mb-4">Experience the Demo</h2>
             <p className="text-slate-600 mb-8">
-              Select a role below to explore Healthora's specialized interfaces. Each role has unique access to appointments, billing, pharmacy, and patient records.
+              Select a role below to explore MedSync's specialized interfaces. Each role has unique access to appointments, billing, pharmacy, and patient records.
             </p>
 
             <div className="space-y-4">
@@ -134,7 +134,7 @@ export default function LandingPage() {
       </main>
 
       <footer className="py-8 text-center text-slate-500 text-sm">
-        Healthora Medical System
+        MedSync Medical System
       </footer>
     </div>
   );

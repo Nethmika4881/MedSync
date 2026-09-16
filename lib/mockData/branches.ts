@@ -1,4 +1,4 @@
-export interface Branch {
+﻿export interface Branch {
   branchId: string;
   name: string;
   address: string;
@@ -17,12 +17,12 @@ export interface Branch {
 export const branches: Branch[] = [
   {
     branchId: "BR-001",
-    name: "Healthora Central",
+    name: "MedSync Central",
     address: "1250 Medical Drive, Suite 400",
     city: "San Francisco",
     state: "CA",
     phone: "+1 (415) 555-0101",
-    email: "central@healthora.com",
+    email: "central@medsync.com",
     managerId: "EMP-009",
     managerName: "Sandra Reyes",
     doctorCount: 8,
@@ -32,12 +32,12 @@ export const branches: Branch[] = [
   },
   {
     branchId: "BR-002",
-    name: "Healthora Westside",
+    name: "MedSync Westside",
     address: "890 Oak Boulevard, Floor 2",
     city: "Oakland",
     state: "CA",
     phone: "+1 (510) 555-0202",
-    email: "westside@healthora.com",
+    email: "westside@medsync.com",
     managerId: "EMP-010",
     managerName: "Thomas Wade",
     doctorCount: 6,
@@ -47,12 +47,12 @@ export const branches: Branch[] = [
   },
   {
     branchId: "BR-003",
-    name: "Healthora South Bay",
+    name: "MedSync South Bay",
     address: "3400 Innovation Way",
     city: "San Jose",
     state: "CA",
     phone: "+1 (408) 555-0303",
-    email: "southbay@healthora.com",
+    email: "southbay@medsync.com",
     managerId: "EMP-011",
     managerName: "Priya Kapoor",
     doctorCount: 5,

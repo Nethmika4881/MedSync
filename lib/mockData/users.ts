@@ -1,4 +1,4 @@
-export type UserRole =
+﻿export type UserRole =
   | "admin"
   | "doctor"
   | "patient"
@@ -23,7 +23,7 @@ export const mockUsers: MockUser[] = [
     firstName: "Alexander",
     avatar: "AC",
     branchId: "BR-001",
-    email: "admin@healthora.com",
+    email: "admin@medsync.com",
     blurb: "System administrator — full access across all branches",
   },
   {
@@ -33,7 +33,7 @@ export const mockUsers: MockUser[] = [
     firstName: "Sarah",
     avatar: "SM",
     branchId: "BR-001",
-    email: "sarah.mitchell@healthora.com",
+    email: "sarah.mitchell@medsync.com",
     blurb: "Cardiologist — Senior Consultant, Branch 1",
   },
   {
@@ -53,7 +53,7 @@ export const mockUsers: MockUser[] = [
     firstName: "Jessica",
     avatar: "JT",
     branchId: "BR-001",
-    email: "jessica.turner@healthora.com",
+    email: "jessica.turner@medsync.com",
     blurb: "Front desk — appointment booking and patient check-in",
   },
 

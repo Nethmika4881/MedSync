@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -356,7 +356,7 @@ export default function NewAppointmentPage() {
       doctorName: selectedDoctor!.name,
       doctorSpecialization: selectedDoctor!.specialization,
       branchId: form.branchId,
-      branchName: branches.find((b) => b.branchId === form.branchId)?.name || "Healthora Central",
+      branchName: branches.find((b) => b.branchId === form.branchId)?.name || "MedSync Central",
       dateTime: dt.toISOString(),
       duration: form.duration,
       session: form.selectedSession,

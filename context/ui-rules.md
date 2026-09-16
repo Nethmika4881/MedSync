@@ -1,6 +1,6 @@
-**UI Rules**
+﻿**UI Rules**
 
-Concise rules for building the Healthora Clinic Management (CATMS) UI. These constraints ensure visual consistency across all four portals (Patient, Doctor, Front Desk, Admin) and dictate how shadcn/ui primitives should be implemented.
+Concise rules for building the MedSync Clinic Management (CATMS) UI. These constraints ensure visual consistency across all four portals (Patient, Doctor, Front Desk, Admin) and dictate how shadcn/ui primitives should be implemented.
 
 ---
 
@@ -18,7 +18,7 @@ The `--font-sans` variable must be mapped to your `fontFamily` in `tailwind.conf
 ---
 
 **Layout Systems**
-Healthora utilizes two distinct layout patterns based on user role:
+MedSync utilizes two distinct layout patterns based on user role:
 
 * **Patient Portal:** Top navigation bar only. Max-width container (e.g., `max-w-7xl`), centered, with a light gray page background (`bg-background`).
 * **Staff Portals (Doctor, Admin, Front Desk):** Fixed left sidebar (`w-64`, `bg-card`, `border-r`) with a fluid main content area.
@@ -82,7 +82,7 @@ All status indicators must use a pill shape (`rounded-full`) and combine a low-o
 
 * **Inputs/Selects:** `bg-card border border-border text-foreground rounded-md px-3 py-2 text-sm`.
 * **Placeholder:** `text-muted-foreground`.
-* **Focus State:** Must strictly use `focus-visible:ring-1 focus-visible:ring-ring` (Healthora Teal). Never use default blue browser focus rings.
+* **Focus State:** Must strictly use `focus-visible:ring-1 focus-visible:ring-ring` (MedSync Teal). Never use default blue browser focus rings.
 
 ---
 
@@ -95,7 +95,7 @@ All status indicators must use a pill shape (`rounded-full`) and combine a low-o
 ---
 
 **Modals (Dialogs)**
-Healthora booking and confirmation modals feature a distinctive two-tone architecture:
+MedSync booking and confirmation modals feature a distinctive two-tone architecture:
 
 * **Header Section:** The top half containing the title and close button must use `bg-primary text-primary-foreground`.
 * **Content Section:** The bottom half containing the form/details uses `bg-card`.

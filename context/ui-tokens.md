@@ -1,8 +1,8 @@
-This `ui-tokens.md` file defines the visual primitives extracted directly from your Healthora CATMS mockups. It is tailored specifically for your Tailwind CSS v3 and shadcn/ui stack, ensuring every component across the four portals remains visually identical.
+﻿This `ui-tokens.md` file defines the visual primitives extracted directly from your MedSync CATMS mockups. It is tailored specifically for your Tailwind CSS v3 and shadcn/ui stack, ensuring every component across the four portals remains visually identical.
 
 # UI Tokens
 
-Design tokens for Healthora Clinic Management (CATMS). All colors, typography, and spacing must use these semantic Tailwind variables. Hardcoded hex values (e.g., `bg-[#10b981]`) and generic color scales (e.g., `text-gray-500`) are strictly prohibited.
+Design tokens for MedSync Clinic Management (CATMS). All colors, typography, and spacing must use these semantic Tailwind variables. Hardcoded hex values (e.g., `bg-[#10b981]`) and generic color scales (e.g., `text-gray-500`) are strictly prohibited.
 
 ---
 
@@ -28,7 +28,7 @@ Define these HSL variables in your `@layer base` to power the shadcn/ui theme co
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    /* Brand Primary (Healthora Teal) */
+    /* Brand Primary (MedSync Teal) */
     --primary: 164 78% 38%; /* Teal/Emerald used for active states and primary buttons */
     --primary-foreground: 0 0% 100%; /* White text on primary */
     
@@ -79,7 +79,7 @@ Define these HSL variables in your `@layer base` to power the shadcn/ui theme co
 | **Dividers & Lines** | `border-border` | Subtle lines separating table rows and sidebar sections. |
 | **Modal Headers** | `bg-primary` | The top portion of booking/confirmation modals uses a solid teal fill. |
 
-### Brand & Interactive (Healthora Teal)
+### Brand & Interactive (MedSync Teal)
 
 | Element | Tailwind Class | Usage |
 | --- | --- | --- |

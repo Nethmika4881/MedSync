@@ -1,6 +1,6 @@
-# Library Docs
+﻿# Library Docs
 
-Project-specific usage patterns and constraints for third-party libraries utilized in Healthora Clinic Management (CATMS). This file defines the explicit rules for interacting with the Neon PostgreSQL driver, NextAuth.js, Tailwind, and supporting utilities.
+Project-specific usage patterns and constraints for third-party libraries utilized in MedSync Clinic Management (CATMS). This file defines the explicit rules for interacting with the Neon PostgreSQL driver, NextAuth.js, Tailwind, and supporting utilities.
 
 ---
 

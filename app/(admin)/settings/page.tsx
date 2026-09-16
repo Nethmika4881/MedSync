@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { useAuthStore, useCurrentUser, useRole } from "@/lib/stores/authStore";
@@ -97,7 +97,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Email Address</label>
-                  <input defaultValue={user.email || `${user.userId.toLowerCase()}@healthora.com`} className="w-full h-10 px-4 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:bg-white focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none transition-all" />
+                  <input defaultValue={user.email || `${user.userId.toLowerCase()}@medsync.com`} className="w-full h-10 px-4 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:bg-white focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Role</label>
