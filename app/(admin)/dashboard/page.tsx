@@ -9,6 +9,9 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { StatusPill } from "@/components/catms/StatusPill";
 import { useAppointmentStore } from "@/lib/stores/appointmentStore";
 import { AvatarWithName } from "@/components/catms/AvatarWithName";
+import { ClipboardPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function DashboardPage() {
   const role = useRole();
@@ -17,14 +20,23 @@ export default function DashboardPage() {
 
   if (!role || !user) return null;
 
+  // Doctor's queue follows the same status-based convention as /consultations and /schedule
+  // (Confirmed/Checked-in = still in today's queue, Completed = done) since mock appointment
+  // dates aren't pinned to "today".
+  const doctorQueue = appointments
+    .filter((a) => a.doctorId === user.userId && (a.status === "Confirmed" || a.status === "Checked-in"))
+    .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
+  const doctorCheckedIn = appointments.filter((a) => a.doctorId === user.userId && a.status === "Checked-in");
+  const doctorCompleted = appointments.filter((a) => a.doctorId === user.userId && a.status === "Completed");
+
   // Generic metrics based on role
   const getMetrics = () => {
     switch (role) {
       case "doctor":
         return [
-          { title: "Today's Patients", value: "12", icon: Users, color: "text-blue-600", bg: "bg-blue-100" },
-          { title: "Pending Consultations", value: "3", icon: Clock, color: "text-amber-600", bg: "bg-amber-100" },
-          { title: "Completed Today", value: "8", icon: CheckCircle2, color: "text-green-600", bg: "bg-green-100" },
+          { title: "Today's Patients", value: String(doctorQueue.length), icon: Users, color: "text-blue-600", bg: "bg-blue-100" },
+          { title: "Pending Consultations", value: String(doctorCheckedIn.length), icon: Clock, color: "text-amber-600", bg: "bg-amber-100" },
+          { title: "Completed Today", value: String(doctorCompleted.length), icon: CheckCircle2, color: "text-green-600", bg: "bg-green-100" },
         ];
       case "patient":
         return [
@@ -112,13 +124,45 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Upcoming List */}
+        {/* Upcoming List / Doctor's Today's Queue */}
         <Card className="border-slate-200 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold text-slate-900">Upcoming Appointments</CardTitle>
+            <CardTitle className="text-lg font-semibold text-slate-900">
+              {role === "doctor" ? "Today's Schedule Queue" : "Upcoming Appointments"}
+            </CardTitle>
           </CardHeader>
           <CardContent className="px-0">
-            {upcomingAppts.length > 0 ? (
+            {role === "doctor" ? (
+              doctorQueue.length > 0 ? (
+                <div className="divide-y divide-slate-100">
+                  {doctorQueue.map((appt) => (
+                    <div key={appt.appointmentId} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-blue-50 flex flex-col items-center justify-center shrink-0">
+                          <span className="text-[10px] font-bold text-blue-600 uppercase leading-none">{new Date(appt.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-slate-900 truncate">{appt.patientName}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-xs text-slate-500">{appt.visitType}</span>
+                            <StatusPill status={appt.status} />
+                          </div>
+                        </div>
+                      </div>
+                      <Link href={`/consultations/${appt.appointmentId}`} className="shrink-0">
+                        <Button size="sm" className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-lg h-8">
+                          <ClipboardPlus className="w-3.5 h-3.5 mr-1.5" /> Start
+                        </Button>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-8 text-center text-slate-500 text-sm">
+                  No patients queued for today.
+                </div>
+              )
+            ) : upcomingAppts.length > 0 ? (
               <div className="divide-y divide-slate-100">
                 {upcomingAppts.map(appt => (
                   <div key={appt.appointmentId} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between">
