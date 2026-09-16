@@ -83,7 +83,7 @@ export default function LandingPage() {
         {/* Demo Login Section */}
         <div id="demo" className="w-full max-w-4xl bg-white border border-slate-200 rounded-3xl p-8 md:p-12 shadow-xl shadow-slate-200/50 flex flex-col md:flex-row gap-12 items-center text-left relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-secondary)]" />
-          
+
           <div className="flex-1">
             <h2 className="text-3xl font-bold font-outfit text-slate-900 mb-4">Experience the Demo</h2>
             <p className="text-slate-600 mb-8">
@@ -109,6 +109,7 @@ export default function LandingPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {mockUsers.filter(u => u.role !== 'patient').map(user => {
                   const roleCfg = roleConfig[user.role as UserRole];
+                  console.log(roleCfg);
                   return (
                     <button
                       key={user.userId}
@@ -133,7 +134,7 @@ export default function LandingPage() {
       </main>
 
       <footer className="py-8 text-center text-slate-500 text-sm">
-        Built by Antigravity for CATMS | Healthora Medical System
+        Healthora Medical System
       </footer>
     </div>
   );
