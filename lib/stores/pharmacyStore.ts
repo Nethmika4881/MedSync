@@ -1,12 +1,18 @@
 "use client";
+// lib/stores/pharmacyStore.ts
+// Temporary Zustand store — will be replaced by Server Action calls once DB is connected.
+
 import { create } from "zustand";
-import { prescriptionItems as initialPrescriptions, type PrescriptionItem } from "@/lib/mockData/consultations";
-import { medications as initialMedications, medicationStock as initialStock, type Medication, type MedicationStock } from "@/lib/mockData/medications";
+import type { PrescriptionItem, Medication, MedicationStock } from "@/lib/types";
 
 interface PharmacyStore {
   prescriptions: PrescriptionItem[];
   medications: Medication[];
   stock: MedicationStock[];
+
+  setPrescriptions: (prescriptions: PrescriptionItem[]) => void;
+  setMedications: (medications: Medication[]) => void;
+  setStock: (stock: MedicationStock[]) => void;
 
   dispensePrescription: (prescriptionId: string, dispensedBy: string) => void;
   restockMedication: (stockId: string, qty: number) => void;
@@ -19,9 +25,13 @@ interface PharmacyStore {
 }
 
 export const usePharmacyStore = create<PharmacyStore>((set) => ({
-  prescriptions: initialPrescriptions,
-  medications: initialMedications,
-  stock: initialStock,
+  prescriptions: [],
+  medications: [],
+  stock: [],
+
+  setPrescriptions: (prescriptions) => set({ prescriptions }),
+  setMedications: (medications) => set({ medications }),
+  setStock: (stock) => set({ stock }),
 
   dispensePrescription: (prescriptionId, dispensedBy) =>
     set((state) => ({

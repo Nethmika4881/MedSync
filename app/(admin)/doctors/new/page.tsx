@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDoctorStore } from "@/lib/stores/doctorStore";
-import { branches } from "@/lib/mockData/branches";
+import { branches } from "@/lib/constants";;
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserPlus, ArrowLeft, CheckCircle2 } from "lucide-react";
