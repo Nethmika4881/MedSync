@@ -179,12 +179,21 @@ export default function PatientDashboardPage() {
       <section id="upcoming-appointments">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-slate-900">Upcoming Appointments</h2>
-          <Link
-            href="/find-doctors"
-            className="text-sm font-medium text-[var(--brand-primary)] hover:underline flex items-center gap-1"
-          >
-            Book New <ChevronRight className="w-3.5 h-3.5" />
-          </Link>
+          <div className="flex items-center gap-3 text-sm font-medium">
+            <Link
+              href="/my-appointments"
+              className="text-slate-600 hover:text-slate-900 flex items-center gap-1"
+            >
+              Manage All <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+            <span className="text-slate-300">|</span>
+            <Link
+              href="/find-doctors"
+              className="text-[var(--brand-primary)] hover:underline flex items-center gap-1 font-semibold"
+            >
+              Book New <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
 
         {upcoming.length === 0 ? (

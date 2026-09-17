@@ -37,6 +37,7 @@ function sessionToEndTime(session: SessionType): string {
 // ─── Queries ──────────────────────────────────────────────────────────────────
 
 export async function getAppointments(branchId?: string): Promise<Appointment[]> {
+  if (!process.env.DATABASE_URL) return [];
   const rows = branchId
     ? await sql`
         SELECT
@@ -87,6 +88,7 @@ export async function getAppointments(branchId?: string): Promise<Appointment[]>
 }
 
 export async function getAppointmentsByDoctor(doctorId: string): Promise<Appointment[]> {
+  if (!process.env.DATABASE_URL) return [];
   const rows = await sql`
     SELECT
       a.appointment_id        AS "appointmentId",
@@ -111,6 +113,7 @@ export async function getAppointmentsByDoctor(doctorId: string): Promise<Appoint
 }
 
 export async function getAppointmentsByPatient(patientId: string): Promise<Appointment[]> {
+  if (!process.env.DATABASE_URL) return [];
   const rows = await sql`
     SELECT
       a.appointment_id        AS "appointmentId",
@@ -145,6 +148,16 @@ export async function getSlotAvailability(
   date: string, // ISO date string e.g. "2026-09-20"
 ): Promise<SlotAvailability[]> {
   const ALL_SESSIONS: SessionType[] = ["Morning", "Midday", "Afternoon", "Evening"];
+
+  if (!process.env.DATABASE_URL) {
+    return ALL_SESSIONS.map((session) => ({
+      session,
+      maxTickets: 4,
+      currentCount: 0,
+      lastTicketNumber: 0,
+      isFull: false,
+    }));
+  }
 
   const rows = await sql`
     SELECT
@@ -358,6 +371,7 @@ export async function bookAppointment(data: {
     revalidatePath("/find-doctors");
     revalidatePath("/dashboard");
     revalidatePath("/appointments");
+    revalidatePath("/my-appointments");
 
     return { success: true, appointmentId, ticketNumber: nextTicket };
   } catch (err: unknown) {
@@ -406,4 +420,226 @@ export async function checkInAppointment(appointmentId: string): Promise<void> {
   `;
   revalidatePath("/appointments");
 }
+
+/**
+ * Reschedule an appointment to a new date & session.
+ * Enforces the 24-hour window restriction.
+ */
+export async function rescheduleAppointment(data: {
+  appointmentId: string;
+  date: string;
+  session: SessionType;
+}): Promise<BookingResult> {
+  if (!data.appointmentId || !data.date || !data.session) {
+    return { success: false, error: "INVALID_INPUT", message: "Missing required fields for rescheduling." };
+  }
+
+  const apptRows = await sql`
+    SELECT appointment_id, doctor_id, branch_id, appointment_date_time, session, ticket_number, status
+    FROM appointment
+    WHERE appointment_id = ${data.appointmentId}
+  `;
+
+  if (apptRows.length === 0) {
+    return { success: false, error: "INVALID_INPUT", message: "Appointment not found." };
+  }
+
+  const appt = apptRows[0] as {
+    appointment_id: string;
+    doctor_id: string;
+    branch_id: string;
+    appointment_date_time: string;
+    session: SessionType;
+    ticket_number: number;
+    status: string;
+  };
+
+  if (appt.status === "Cancelled" || appt.status === "Completed") {
+    return { success: false, error: "INVALID_INPUT", message: `Cannot reschedule a ${appt.status.toLowerCase()} appointment.` };
+  }
+
+  const currentApptTime = new Date(appt.appointment_date_time).getTime();
+  const hoursRemaining = (currentApptTime - Date.now()) / (1000 * 60 * 60);
+
+  if (hoursRemaining < 24) {
+    return {
+      success: false,
+      error: "INVALID_INPUT",
+      message: "Rescheduling is only allowed up to 24 hours prior to the scheduled appointment.",
+    };
+  }
+
+  const startTime = sessionToStartTime(data.session);
+  const endTime = sessionToEndTime(data.session);
+  const startHour = SESSION_META[data.session].startHour;
+
+  const dt = new Date(data.date);
+  dt.setHours(startHour, 0, 0, 0);
+  const dateTimeISO = dt.toISOString();
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    if (appt.session && appt.appointment_date_time) {
+      const oldDate = new Date(appt.appointment_date_time).toISOString().split("T")[0];
+      const oldStartTime = sessionToStartTime(appt.session);
+      await client.query(
+        `UPDATE time_slot
+         SET current_ticket_count = GREATEST(0, current_ticket_count - 1),
+             updated_at           = NOW()
+         WHERE doctor_id      = $1
+           AND available_date  = $2::DATE
+           AND slot_start_time = $3::TIME`,
+        [appt.doctor_id, oldDate, oldStartTime]
+      );
+    }
+
+    const slotHash = `TS-${appt.doctor_id}-${data.date}-${startTime}`.replace(/[^a-zA-Z0-9-]/g, "").slice(0, 10);
+    await client.query(
+      `INSERT INTO time_slot (
+        time_slot_id, doctor_id, branch_id, available_date,
+        slot_start_time, slot_end_time, max_tickets,
+        current_ticket_count, last_ticket_number
+      )
+      VALUES ($1, $2, $3, $4::DATE, $5::TIME, $6::TIME, 4, 0, 0)
+      ON CONFLICT (doctor_id, available_date, slot_start_time) DO NOTHING`,
+      [slotHash, appt.doctor_id, appt.branch_id, data.date, startTime, endTime]
+    );
+
+    const slotResult = await client.query(
+      `SELECT max_tickets        AS "maxTickets",
+              current_ticket_count AS "currentCount",
+              last_ticket_number   AS "lastTicketNumber"
+       FROM time_slot
+       WHERE doctor_id      = $1
+         AND available_date  = $2::DATE
+         AND slot_start_time = $3::TIME
+       FOR UPDATE`,
+      [appt.doctor_id, data.date, startTime]
+    );
+
+    const slot = slotResult.rows[0];
+    const maxTickets: number = slot?.maxTickets ?? 4;
+    const currentCount: number = slot?.currentCount ?? 0;
+    const lastTicket: number = slot?.lastTicketNumber ?? 0;
+
+    if (currentCount >= maxTickets) {
+      await client.query("ROLLBACK");
+      return {
+        success: false,
+        error: "SLOT_FULL",
+        message: "Target session is fully booked. Please select another date or session.",
+      };
+    }
+
+    const nextTicket = lastTicket + 1;
+
+    await client.query(
+      `UPDATE time_slot
+       SET current_ticket_count = current_ticket_count + 1,
+           last_ticket_number   = $1,
+           updated_at           = NOW()
+       WHERE doctor_id      = $2
+         AND available_date  = $3::DATE
+         AND slot_start_time = $4::TIME`,
+      [nextTicket, appt.doctor_id, data.date, startTime]
+    );
+
+    await client.query(
+      `UPDATE appointment
+       SET appointment_date_time = $1,
+           session               = $2,
+           ticket_number         = $3,
+           status                = 'Rescheduled',
+           updated_at            = NOW()
+       WHERE appointment_id = $4`,
+      [dateTimeISO, data.session, nextTicket, data.appointmentId]
+    );
+
+    await client.query("COMMIT");
+
+    revalidatePath("/appointments");
+    revalidatePath("/my-appointments");
+    revalidatePath("/dashboard");
+
+    return { success: true, appointmentId: data.appointmentId, ticketNumber: nextTicket };
+  } catch (err) {
+    await client.query("ROLLBACK").catch(() => {});
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[rescheduleAppointment] Error:", msg);
+    return { success: false, error: "UNKNOWN", message: "Failed to reschedule appointment." };
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * Cancel an appointment with 24-hour window validation.
+ */
+export async function cancelAppointment(data: {
+  appointmentId: string;
+  cancelReason?: string;
+}): Promise<{ success: boolean; message: string }> {
+  if (!data.appointmentId) {
+    return { success: false, message: "Missing appointment ID." };
+  }
+
+  const apptRows = await sql`
+    SELECT appointment_id, doctor_id, appointment_date_time, session, status
+    FROM appointment
+    WHERE appointment_id = ${data.appointmentId}
+  `;
+
+  if (apptRows.length === 0) {
+    return { success: false, message: "Appointment not found." };
+  }
+
+  const appt = apptRows[0] as {
+    appointment_id: string;
+    doctor_id: string;
+    appointment_date_time: string;
+    session: SessionType;
+    status: string;
+  };
+
+  const currentApptTime = new Date(appt.appointment_date_time).getTime();
+  const hoursRemaining = (currentApptTime - Date.now()) / (1000 * 60 * 60);
+
+  if (hoursRemaining < 24) {
+    return {
+      success: false,
+      message: "Cancellations are only allowed up to 24 hours prior to the scheduled appointment.",
+    };
+  }
+
+  await sql`
+    UPDATE appointment
+    SET status        = 'Cancelled',
+        cancel_reason = ${data.cancelReason ?? 'Cancelled by patient'},
+        updated_at    = NOW()
+    WHERE appointment_id = ${data.appointmentId}
+  `;
+
+  if (appt.session && appt.appointment_date_time) {
+    const oldDate = new Date(appt.appointment_date_time).toISOString().split("T")[0];
+    const oldStartTime = sessionToStartTime(appt.session);
+    await sql`
+      UPDATE time_slot
+      SET current_ticket_count = GREATEST(0, current_ticket_count - 1),
+          updated_at           = NOW()
+      WHERE doctor_id      = ${appt.doctor_id}
+        AND available_date  = ${oldDate}::DATE
+        AND slot_start_time = ${oldStartTime}::TIME
+    `;
+  }
+
+  revalidatePath("/appointments");
+  revalidatePath("/my-appointments");
+  revalidatePath("/dashboard");
+
+  return { success: true, message: "Appointment cancelled successfully." };
+}
+
 

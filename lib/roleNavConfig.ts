@@ -47,6 +47,7 @@ export const roleNavConfig: Record<UserRole, NavItem[]> = {
   patient: [
     { label: "Dashboard",       href: "/dashboard",    icon: "LayoutDashboard" },
     { label: "Find Doctors",    href: "/find-doctors", icon: "Search" },
+    { label: "Appointments",    href: "/my-appointments", icon: "Calendar" },
     { label: "Medical Records", href: "/records",      icon: "FileText" },
     { label: "Prescriptions",   href: "/prescriptions",icon: "Pill" },
   ],
