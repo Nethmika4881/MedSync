@@ -4,10 +4,14 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppointmentStore } from "@/lib/stores/appointmentStore";
 import { useCurrentUser } from "@/lib/stores/authStore";
-import { doctors, Doctor } from "@/lib/mockData/doctors";
-import { patients, Patient } from "@/lib/mockData/patients";
-import { branches } from "@/lib/mockData/branches";
-import { Appointment, VisitType, SessionType } from "@/lib/mockData/appointments";
+import type { Doctor } from "@/lib/types";
+import { doctors,   } from "@/lib/constants";;
+import type { Patient } from "@/lib/types";
+import { patients,   } from "@/lib/constants";;
+import { branches } from "@/lib/constants";;
+import type { VisitType } from "@/lib/types";
+import type { Appointment } from "@/lib/types";
+import { SessionType } from "@/lib/constants";;
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -356,7 +360,7 @@ export default function NewAppointmentPage() {
       doctorName: selectedDoctor!.name,
       doctorSpecialization: selectedDoctor!.specialization,
       branchId: form.branchId,
-      branchName: branches.find((b) => b.branchId === form.branchId)?.name || "Healthora Central",
+      branchName: branches.find((b) => b.branchId === form.branchId)?.name || "MedSync Central",
       dateTime: dt.toISOString(),
       duration: form.duration,
       session: form.selectedSession,

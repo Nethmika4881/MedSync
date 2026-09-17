@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { employees } from "@/lib/mockData/employees";
-import { branches } from "@/lib/mockData/branches";
+import { employees } from "@/lib/constants";;
+import { branches } from "@/lib/constants";;
 import { useRole } from "@/lib/stores/authStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

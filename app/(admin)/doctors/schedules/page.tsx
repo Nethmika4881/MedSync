@@ -1,15 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { doctors } from "@/lib/mockData/doctors";
-import { Doctor } from "@/lib/mockData/doctors";
+import { doctors } from "@/lib/constants";;
+import type { Doctor } from "@/lib/types";
+import {   } from "@/lib/constants";;
 import { useRole } from "@/lib/stores/authStore";
 import { useAppointmentStore } from "@/lib/stores/appointmentStore";
 import { useSessionConfigStore } from "@/lib/stores/sessionConfigStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Star, ToggleLeft, ToggleRight, Settings2, Users, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SESSION_META, SessionType } from "@/lib/mockData/appointments";
+import { SESSION_META, SessionType } from "@/lib/constants";;
 
 const ALL_SESSIONS: SessionType[] = ["Morning", "Midday", "Afternoon", "Evening"];
 
