@@ -4,7 +4,6 @@
 // Auth gating is handled per route group layout and will be enforced by
 // middleware.ts when NextAuth.js is wired up (Phase 1, Task 03).
 
-// @ts-expect-error CSS modules are handled by Next.js, not TypeScript.
 import "./globals.css";
 import React from "react";
 

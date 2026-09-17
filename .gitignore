@@ -37,12 +37,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-
-/context
-
-
+node_modules/
+node_modules/
 # AI / local tooling
 /.agents/
 /.claude/
 /memory.md
+
+/.gitignore
+/context
+.neon
+/skills-lock.json
+
