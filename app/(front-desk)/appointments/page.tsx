@@ -31,11 +31,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { doctors } from "@/lib/mockData/doctors";
-import { patients } from "@/lib/mockData/patients";
-import { branches } from "@/lib/mockData/branches";
-import type { Appointment, SessionType, VisitType } from "@/lib/mockData/appointments";
-import { SESSION_META } from "@/lib/mockData/appointments";
+import { doctors } from "@/lib/constants";;
+import { patients } from "@/lib/constants";;
+import { branches } from "@/lib/constants";;
+import type { Appointment, SessionType, VisitType } from "@/lib/types";;
+import { SESSION_META } from "@/lib/constants";;
 import { SessionBadge } from "@/components/catms/SessionBadge";
 
 /* ──────────────────────────────────────────────────────────

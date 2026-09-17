@@ -1,6 +1,6 @@
 "use client";
 import { create } from "zustand";
-import { doctorSchedules as initialSchedules, type DoctorScheduleSlot } from "@/lib/mockData/doctorSchedules";
+import { doctorSchedules as initialSchedules, DoctorScheduleSlot } from "@/lib/constants";;
 import { nanoid } from "nanoid";
 
 interface DoctorScheduleStore {

@@ -6,7 +6,7 @@ import { useAppointmentStore } from "@/lib/stores/appointmentStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusPill } from "@/components/catms/StatusPill";
 import { SessionBadge } from "@/components/catms/SessionBadge";
-import { SESSION_META } from "@/lib/mockData/appointments";
+import { SESSION_META } from "@/lib/constants";;
 import { Clock, Calendar as CalendarIcon, FileText, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 

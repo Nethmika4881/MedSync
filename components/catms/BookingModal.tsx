@@ -3,16 +3,14 @@
 import React, { useState, useMemo } from "react";
 import { useAppointmentStore } from "@/lib/stores/appointmentStore";
 import { useSessionConfigStore } from "@/lib/stores/sessionConfigStore";
-import { Doctor } from "@/lib/mockData/doctors";
+import type { Doctor } from "@/lib/types";
+import {   } from "@/lib/constants";;
 import { Button } from "@/components/ui/button";
 import { X, Check, ChevronLeft, ChevronRight, Ticket, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  Appointment,
-  VisitType,
-  SessionType,
-  SESSION_META,
-} from "@/lib/mockData/appointments";
+import type { VisitType, SessionType } from "@/lib/types";
+import type { Appointment } from "@/lib/types";
+import { SESSION_META, } from "@/lib/constants";;
 
 const VISIT_TYPES: VisitType[] = [
   "General Checkup",

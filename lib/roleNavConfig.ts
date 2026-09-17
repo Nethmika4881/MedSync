@@ -1,4 +1,4 @@
-import type { UserRole } from "@/lib/mockData/users";
+import type { UserRole } from "@/lib/types";;
 
 export interface NavItem {
   label: string;

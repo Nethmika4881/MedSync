@@ -2,7 +2,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { SESSION_META, SessionType } from "@/lib/mockData/appointments";
+import { SESSION_META, SessionType } from "@/lib/constants";;
 
 const SESSION_BADGE_CLS: Record<SessionType, string> = {
   Morning:   "bg-amber-50  border-amber-200  text-amber-700",

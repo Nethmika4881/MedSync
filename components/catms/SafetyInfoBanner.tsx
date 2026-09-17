@@ -2,8 +2,8 @@
 
 import React from "react";
 import { AlertTriangle, ShieldAlert } from "lucide-react";
-import type { PatientAllergy } from "@/lib/mockData/patientAllergies";
-import type { PatientCondition } from "@/lib/mockData/conditions";
+import type { PatientAllergy } from "@/lib/types";;
+import type { PatientCondition } from "@/lib/types";;
 
 interface SafetyInfoBannerProps {
   patientName: string;

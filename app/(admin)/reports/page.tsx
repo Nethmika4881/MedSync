@@ -4,7 +4,7 @@ import React from "react";
 import { useRole } from "@/lib/stores/authStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from "recharts";
-import { revenueByMonth, appointmentsByMonth } from "@/lib/mockData";
+import { revenueByMonth, appointmentsByMonth } from "@/lib/constants";;
 import { TrendingUp, Users, DollarSign, Activity } from "lucide-react";
 
 export default function ReportsPage() {

@@ -4,7 +4,7 @@ import React from "react";
 import { useRole, useCurrentUser } from "@/lib/stores/authStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Calendar, Activity, CreditCard, Clock, CheckCircle2 } from "lucide-react";
-import { revenueByMonth, appointmentsByMonth } from "@/lib/mockData";
+import { revenueByMonth, appointmentsByMonth } from "@/lib/constants";;
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { StatusPill } from "@/components/catms/StatusPill";
 import { SessionBadge, TicketBadge } from "@/components/catms/SessionBadge";

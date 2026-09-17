@@ -1,9 +1,11 @@
 "use client";
+import { DEMO_USERS } from "@/lib/stores/authStore";
 
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/stores/authStore";
-import { roleConfig, mockUsers, UserRole } from "@/lib/mockData/users";
+import { roleConfig } from "@/lib/mockData/users";
+import type { UserRole } from "@/lib/types";
 import { ChevronRight, HeartPulse, Sparkles, Shield, Clock, Users, ArrowRight } from "lucide-react";
 import { AvatarWithName } from "@/components/catms/AvatarWithName";
 import { cn } from "@/lib/utils";
@@ -18,7 +20,7 @@ export default function LandingPage() {
     router.push("/dashboard");
   };
 
-  const patientDemo = mockUsers.find(u => u.userId === "USR-003"); // Abraham Brakering
+  const patientDemo = DEMO_USERS.find(u => u.userId === "USR-003"); // Abraham Brakering
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
@@ -26,7 +28,7 @@ export default function LandingPage() {
       <header className="fixed top-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 z-50 flex items-center px-8 justify-between shadow-sm">
         <div className="flex items-center gap-2 text-2xl font-bold font-outfit text-slate-900 tracking-tight">
           <HeartPulse className="w-8 h-8 text-[var(--brand-primary)]" />
-          Health<span className="text-[var(--brand-primary)]">ora</span>
+          Med<span className="text-[var(--brand-primary)]">Sync</span>
         </div>
         <div className="flex gap-4">
           <a href="#demo" className="text-sm font-medium text-slate-600 hover:text-slate-900 flex items-center h-10 px-4 transition-colors">
@@ -51,7 +53,7 @@ export default function LandingPage() {
           </span>
         </h1>
         <p className="text-lg md:text-xl text-slate-600 max-w-2xl mb-10 leading-relaxed">
-          Healthora is the ultimate clinic management system built with Next.js and Tailwind.
+          MedSync is the ultimate clinic management system built with Next.js and Tailwind.
           A premium, UI-driven experience with complete mock data covering appointments, billing, pharmacy, and more.
         </p>
 
@@ -87,7 +89,7 @@ export default function LandingPage() {
           <div className="flex-1">
             <h2 className="text-3xl font-bold font-outfit text-slate-900 mb-4">Experience the Demo</h2>
             <p className="text-slate-600 mb-8">
-              Select a role below to explore Healthora's specialized interfaces. Each role has unique access to appointments, billing, pharmacy, and patient records.
+              Select a role below to explore MedSync's specialized interfaces. Each role has unique access to appointments, billing, pharmacy, and patient records.
             </p>
 
             <div className="space-y-4">
@@ -107,7 +109,7 @@ export default function LandingPage() {
               )}
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {mockUsers.filter(u => u.role !== 'patient').map(user => {
+                {DEMO_USERS.filter(u => u.role !== 'patient').map(user => {
                   const roleCfg = roleConfig[user.role as UserRole];
                   console.log(roleCfg);
                   return (
@@ -134,7 +136,7 @@ export default function LandingPage() {
       </main>
 
       <footer className="py-8 text-center text-slate-500 text-sm">
-        Healthora Medical System
+        MedSync Medical System
       </footer>
     </div>
   );
