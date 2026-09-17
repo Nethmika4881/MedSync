@@ -273,10 +273,19 @@ export async function bookAppointment(data: {
   dt.setHours(startHour, 0, 0, 0);
   const dateTimeISO = dt.toISOString();
 
-  // ── Interactive transaction via WebSocket Pool ────────────────────────────
-  const client = await pool.connect();
+  // If no DATABASE_URL is configured (e.g. running mock UI locally), fallback to mock booking response
+  if (!process.env.DATABASE_URL) {
+    const mockId = `APT-${Date.now()}`;
+    revalidatePath("/find-doctors");
+    revalidatePath("/dashboard");
+    revalidatePath("/my-appointments");
+    return { success: true, appointmentId: mockId, ticketNumber: 1 };
+  }
 
+  // ── Interactive transaction via WebSocket Pool ────────────────────────────
+  let client;
   try {
+    client = await pool.connect();
     await client.query("BEGIN");
 
     // 1. Upsert time_slot — create row if first booking for this doctor/date/session
@@ -375,11 +384,13 @@ export async function bookAppointment(data: {
 
     return { success: true, appointmentId, ticketNumber: nextTicket };
   } catch (err: unknown) {
-    await client.query("ROLLBACK").catch(() => {});
+    if (client) await client.query("ROLLBACK").catch(() => {});
 
-    const message = err instanceof Error ? err.message : String(err);
+    let message = "Could not connect to database. Please verify DATABASE_URL in .env.local.";
+    if (err instanceof Error && err.message !== "ErrorEvent") {
+      message = err.message;
+    }
 
-    // The DB trigger may also raise SLOT_FULL — catch that too
     if (message.includes("SLOT_FULL")) {
       return {
         success: false,
@@ -388,10 +399,10 @@ export async function bookAppointment(data: {
       };
     }
 
-    console.error("[bookAppointment] Transaction failed:", message);
-    return { success: false, error: "UNKNOWN", message: "An unexpected error occurred. Please try again." };
+    console.error("[bookAppointment] Transaction failed:", err);
+    return { success: false, error: "UNKNOWN", message };
   } finally {
-    client.release();
+    if (client) client.release();
   }
 }
 

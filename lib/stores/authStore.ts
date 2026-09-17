@@ -5,6 +5,7 @@
 // They are NOT imported from mock data files.
 
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import type { UserRole, AuthUser } from "@/lib/types";
 import { mockUsers } from "@/lib/mockData/users";
 import { useBranchStore } from "@/hooks/use-branch-store";
@@ -19,23 +20,27 @@ interface AuthState {
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  login: (userId: string) => {
-    const user = DEMO_USERS.find((u) => u.userId === userId) ?? null;
-    set({ user });
-    // Auto-seed the branch store from the user's assigned branch so that
-    // every Front Desk page is immediately branch-scoped without extra setup.
-    if (user?.branchId) {
-      useBranchStore.getState().setActiveBranch(user.branchId);
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      user: DEMO_USERS.find((u) => u.userId === "USR-004") ?? DEMO_USERS[0],
+      login: (userId: string) => {
+        const user = DEMO_USERS.find((u) => u.userId === userId) ?? null;
+        set({ user });
+        if (user?.branchId) {
+          useBranchStore.getState().setActiveBranch(user.branchId);
+        }
+      },
+      logout: () => {
+        set({ user: null });
+        useBranchStore.getState().clearBranch();
+      },
+    }),
+    {
+      name: "medsync-auth",
     }
-  },
-  logout: () => {
-    set({ user: null });
-    // Clear branch scope on logout so the next user starts fresh.
-    useBranchStore.getState().clearBranch();
-  },
-}));
+  )
+);
 
 export function useRole(): UserRole | null {
   return useAuthStore((s) => s.user?.role ?? null);
