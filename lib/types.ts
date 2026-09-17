@@ -235,7 +235,7 @@ export interface Medication {
 
 // ─── Billing ──────────────────────────────────────────────────────────────────
 
-export type InvoiceStatus = "Draft" | "Unpaid" | "Partial" | "Paid" | "Overdue" | "Cancelled";
+export type InvoiceStatus = "Draft" | "Unpaid" | "Partial" | "Paid" | "Overdue" | "Cancelled" | "Overpaid";
 export type ClaimStatus = "Submitted" | "UnderReview" | "Approved" | "Rejected" | "Settled";
 
 export interface Invoice {
@@ -247,11 +247,25 @@ export interface Invoice {
   totalAmount: number;
   paidAmount: number;
   balanceDue: number;
+  creditBalance?: number;
   status: InvoiceStatus | "Due";
   issuedAt: string;
   issueDate?: string;
   dueDate: string;
   paidAt?: string;
+}
+
+export interface RefundTask {
+  taskId: string;
+  invoiceId: string;
+  patientId: string;
+  patientName: string;
+  refundAmount: number;
+  reason: string;
+  status: "Pending" | "Processed" | "Dismissed";
+  createdAt: string;
+  processedAt?: string;
+  processedBy?: string;
 }
 
 export interface Payment {

@@ -40,6 +40,7 @@ function getStatusClass(status: StatusType): string {
     case "Ordered":
     case "Partial":
     case "PartiallyApproved":
+    case "Overpaid":
       return "pill-warning";
     case "Checked-in":
     case "Checked-out":
