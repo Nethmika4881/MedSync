@@ -6,8 +6,8 @@
  * Never duplicated — always imported from this single file.
  */
 
-import type { PatientAllergy } from "@/lib/mockData/patientAllergies";
-import type { Medication } from "@/lib/mockData/medications";
+import type { PatientAllergy } from "@/lib/types";;
+import type { Medication } from "@/lib/types";;
 
 export interface ContraindicationResult {
   conflict: boolean;

@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { User, Bell, Lock, Monitor, CheckCircle2, HeartPulse, Shield, Clock, Plus, Trash2 } from "lucide-react";
 import { getInitials, getAvatarColor, cn } from "@/lib/utils";
-import { roleConfig, UserRole } from "@/lib/mockData/users";
+import { roleConfig } from "@/lib/mockData/users";
+import type { UserRole } from "@/lib/types";;
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { branches } from "@/lib/mockData/branches";
-import { DAYS_OF_WEEK, type DayOfWeek } from "@/lib/mockData/doctorSchedules";
+import { branches } from "@/lib/constants";;
+import { DAYS_OF_WEEK, DayOfWeek } from "@/lib/constants";;
 import { useDoctorScheduleStore } from "@/lib/stores/doctorScheduleStore";
 
 const NOTIFICATION_SETTINGS = [
@@ -125,7 +126,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Email Address</label>
-                  <input defaultValue={user.email || `${user.userId.toLowerCase()}@healthora.com`} className="w-full h-10 px-4 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:bg-white focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none transition-all" />
+                  <input defaultValue={user.email || `${user.userId.toLowerCase()}@medsync.com`} className="w-full h-10 px-4 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:bg-white focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Role</label>
