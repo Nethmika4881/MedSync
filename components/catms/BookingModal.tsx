@@ -31,6 +31,13 @@ export const SESSION_META: Record<SessionType, {
     durationMinutes: 180,
     slotLabel: "09:00 AM",
   },
+  Midday: {
+    label: "11:00 AM – 02:00 PM",
+    startHour: 11,
+    endHour: 14,
+    durationMinutes: 180,
+    slotLabel: "11:00 AM",
+  },
   Afternoon: {
     label: "12:00 PM – 03:00 PM",
     startHour: 12,
@@ -46,7 +53,7 @@ export const SESSION_META: Record<SessionType, {
     slotLabel: "03:00 PM",
   },
 };
-const SESSIONS: SessionType[] = ["Morning", "Afternoon", "Evening"];
+const SESSIONS: SessionType[] = ["Morning", "Midday", "Afternoon", "Evening"];
 
 function getSlotState(doctorId: string, selectedDay: Date | null, session: SessionType | null) {
   if (!selectedDay || !session) {

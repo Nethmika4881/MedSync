@@ -4,6 +4,7 @@
 
 import { create } from "zustand";
 import type { Doctor } from "@/lib/types";
+import { doctors as initialDoctors } from "@/lib/constants";
 
 interface DoctorStore {
   doctors: Doctor[];
@@ -14,7 +15,7 @@ interface DoctorStore {
 }
 
 export const useDoctorStore = create<DoctorStore>((set) => ({
-  doctors: [],
+  doctors: initialDoctors,
 
   setDoctors: (doctors) => set({ doctors }),
 
