@@ -78,53 +78,5 @@ export const roleNavConfig: Record<UserRole, NavItem[]> = {
     },
     { label: "Settings", href: "/settings", icon: "Settings" },
   ],
-
-  nurse: [
-    { label: "Dashboard",    href: "/dashboard",    icon: "LayoutDashboard" },
-    { label: "Consultations",href: "/consultations",icon: "FileText" },
-    { label: "Settings",     href: "/settings",     icon: "Settings" },
-  ],
-
-  // Pharmacist and lab_technician are legacy roles not in the final architecture.
-  // They fall back to the admin dashboard until their portals are scoped.
-  pharmacist: [
-    { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
-    { label: "Settings",  href: "/settings",  icon: "Settings" },
-  ],
-
-  lab_technician: [
-    { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
-    { label: "Settings",  href: "/settings",  icon: "Settings" },
-  ],
-
-  branch_manager: [
-    { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
-    {
-      label: "Appointments", href: "/appointments", icon: "Calendar",
-      children: [
-        { label: "All Appointments", href: "/appointments",     icon: "CalendarDays" },
-        { label: "New Appointment",  href: "/appointments/new", icon: "CalendarPlus" },
-      ],
-    },
-    {
-      label: "Patients", href: "/patients", icon: "Users",
-      children: [
-        { label: "Patient List",     href: "/patients",     icon: "Users" },
-        { label: "Register Patient", href: "/patients/new", icon: "UserPlus" },
-      ],
-    },
-    { label: "Staff",   href: "/staff",   icon: "UserCog" },
-    { label: "Doctors", href: "/doctors", icon: "Stethoscope" },
-    {
-      label: "Billing", href: "/billing", icon: "Receipt",
-      children: [
-        { label: "Invoices", href: "/billing",          icon: "Receipt" },
-        { label: "Payments", href: "/billing/payments", icon: "CreditCard" },
-        { label: "Claims",   href: "/billing/claims",   icon: "FileCheck" },
-      ],
-    },
-    { label: "Reports",  href: "/reports",  icon: "BarChart3" },
-    { label: "Branches", href: "/branches", icon: "MapPin" },
-    { label: "Settings", href: "/settings", icon: "Settings" },
-  ],
 };
+

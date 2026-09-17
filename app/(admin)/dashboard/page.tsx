@@ -82,12 +82,12 @@ export default function DashboardPage() {
         <Card className="lg:col-span-2 border-slate-200 shadow-sm">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-slate-900">
-              {role === "admin" || role === "branch_manager" ? "Revenue & Appointments Overview" : "Activity Overview"}
+              {role === "admin" ? "Revenue & Appointments Overview" : "Activity Overview"}
             </CardTitle>
           </CardHeader>
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              {(role === "admin" || role === "branch_manager") ? (
+              {role === "admin" ? (
                 <LineChart data={revenueByMonth} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                   <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748B' }} />

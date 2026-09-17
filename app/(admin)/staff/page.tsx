@@ -44,7 +44,7 @@ export default function StaffPage() {
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Staff Management</h2>
           <p className="text-slate-500">View, filter, and manage all clinic staff members.</p>
         </div>
-        {(role === "admin" || role === "branch_manager") && (
+        {role === "admin" && (
           <Button className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-xl h-10 px-5">
             <UserPlus className="w-4 h-4 mr-2" /> Add Staff Member
           </Button>
