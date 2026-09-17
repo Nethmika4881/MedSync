@@ -82,7 +82,7 @@ export const roleConfig: Record<
     description: "Appointments, records, billing",
   },
   receptionist: {
-    label: "Receptionist",
+    label: "Front Reception",
     color: "bg-orange-100 text-orange-700",
     icon: "Calendar",
     description: "Booking, check-in, patient registration",
