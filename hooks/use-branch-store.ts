@@ -20,7 +20,8 @@
 "use client";
 
 import { create } from "zustand";
-import { branches, type Branch } from "@/lib/mockData/branches";
+import { type Branch } from "@/lib/types";
+import { branches } from "@/lib/constants";
 
 // ─── State Shape ────────────────────────────────────────────────────────────
 

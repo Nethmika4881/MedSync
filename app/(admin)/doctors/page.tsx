@@ -4,8 +4,9 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useRole, useCurrentUser } from "@/lib/stores/authStore";
 import { useDoctorStore } from "@/lib/stores/doctorStore";
-import { Doctor } from "@/lib/mockData/doctors";
-import { branches } from "@/lib/mockData/branches";
+import type { Doctor } from "@/lib/types";
+import {   } from "@/lib/constants";;
+import { branches } from "@/lib/constants";;
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, MapPin, Calendar, Clock, Star, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ export default function DoctorsPage() {
   const role = useRole();
   const user = useCurrentUser();
   const { doctors, deleteDoctor } = useDoctorStore();
-  
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>("All");
 
@@ -27,7 +28,7 @@ export default function DoctorsPage() {
 
   const specialties: string[] = ["All", ...Array.from(new Set(doctors.map((d: Doctor) => d.specialization)))];
 
-  const filteredDoctors = doctors.filter((d: Doctor) => 
+  const filteredDoctors = doctors.filter((d: Doctor) =>
     (selectedSpecialty === "All" || d.specialization === selectedSpecialty) &&
     (d.name.toLowerCase().includes(searchTerm.toLowerCase()) || d.specialization.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -48,8 +49,8 @@ export default function DoctorsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1 md:max-w-md">
+      <div className="flex flex-col md:flex-row gap-4 min-w-0">
+        <div className="relative flex-1 md:max-w-md min-w-0">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
@@ -59,16 +60,18 @@ export default function DoctorsPage() {
             className="w-full h-11 pl-9 pr-4 rounded-xl border border-slate-200 text-sm focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none transition-all bg-white shadow-sm"
           />
         </div>
-        <div className="flex overflow-x-auto custom-scrollbar gap-2 pb-2 md:pb-0">
-          {specialties.map((spec: string) => (
-            <button
-              key={spec}
-              onClick={() => setSelectedSpecialty(spec)}
-              className={`shrink-0 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${selectedSpecialty === spec ? 'bg-[var(--brand-primary)] text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-            >
-              {spec}
-            </button>
-          ))}
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <div className="flex overflow-x-auto custom-scrollbar gap-2 pb-3" style={{ height: "52px" }}>
+            {specialties.map((spec: string) => (
+              <button
+                key={spec}
+                onClick={() => setSelectedSpecialty(spec)}
+                className={`shrink-0 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${selectedSpecialty === spec ? 'bg-[var(--brand-primary)] text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+              >
+                {spec}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -78,11 +81,11 @@ export default function DoctorsPage() {
           {filteredDoctors.map((doctor: Doctor) => {
             const branch = branches.find(b => b.branchId === doctor.branchId);
             const gradient = getAvatarGradient(doctor.avatar);
-            
+
             return (
               <Card key={doctor.doctorId} className="border-slate-200 shadow-sm hover:shadow-md transition-all group overflow-hidden flex flex-col relative">
                 {isAdmin && (
-                  <button 
+                  <button
                     onClick={(e) => { e.stopPropagation(); deleteDoctor(doctor.doctorId); }}
                     className="absolute top-2 left-2 z-10 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-colors shadow-sm"
                     title="Delete Doctor"
@@ -114,7 +117,7 @@ export default function DoctorsPage() {
                   <div className="space-y-2.5 mb-6 flex-1">
                     <div className="flex items-start gap-2.5 text-sm text-slate-600">
                       <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                      <span className="leading-tight">{branch?.name || "Main Clinic"}<br/><span className="text-xs text-slate-400">{branch?.address}</span></span>
+                      <span className="leading-tight">{branch?.name || "Main Clinic"}<br /><span className="text-xs text-slate-400">{branch?.address}</span></span>
                     </div>
                     <div className="flex items-center gap-2.5 text-sm text-slate-600">
                       <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
@@ -128,11 +131,11 @@ export default function DoctorsPage() {
 
                   <div className="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
                     <div className="text-sm">
-                      <span className="text-slate-500">Consultation Fee</span><br/>
+                      <span className="text-slate-500">Consultation Fee</span><br />
                       <span className="font-bold text-slate-900">${doctor.consultationFee}</span>
                     </div>
-                    <Button 
-                      onClick={() => router.push(`/app/doctors/${doctor.doctorId}`)}
+                    <Button
+                      onClick={() => router.push(`/doctors/${doctor.doctorId}`)}
                       className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-all"
                     >
                       View Profile
@@ -150,7 +153,7 @@ export default function DoctorsPage() {
           </div>
           <h3 className="text-lg font-bold text-slate-900">No doctors found</h3>
           <p className="text-slate-500 text-sm max-w-sm mt-1">Try adjusting your filters or search terms, or add a new doctor.</p>
-          <Button variant="outline" onClick={() => {setSearchTerm(""); setSelectedSpecialty("All");}} className="mt-6 rounded-xl">Clear Filters</Button>
+          <Button variant="outline" onClick={() => { setSearchTerm(""); setSelectedSpecialty("All"); }} className="mt-6 rounded-xl">Clear Filters</Button>
         </div>
       )}
 

@@ -7,11 +7,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Pill, AlertCircle, CheckCircle2, RotateCcw } from "lucide-react";
 
 
+import { doctors } from "@/lib/constants";
+
 export default function MyPrescriptionsPage() {
   const user = useCurrentUser();
   const role = useRole();
   const { prescriptions } = usePharmacyStore();
-  const { doctors } = require("@/lib/mockData/doctors"); // import doctors for lookup
   
   if (!user || role !== "patient") return null;
 

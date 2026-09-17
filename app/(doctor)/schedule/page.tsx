@@ -5,6 +5,8 @@ import { useCurrentUser, useRole } from "@/lib/stores/authStore";
 import { useAppointmentStore } from "@/lib/stores/appointmentStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusPill } from "@/components/catms/StatusPill";
+import { SessionBadge } from "@/components/catms/SessionBadge";
+import { SESSION_META } from "@/lib/constants";;
 import { Clock, Calendar as CalendarIcon, FileText, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -57,9 +59,9 @@ export default function MySchedulePage() {
                 <div key={appt.appointmentId} className="p-4 hover:bg-slate-50 transition-colors">
                   <div className="flex justify-between items-start mb-2">
                     <p className="font-bold text-slate-900">{appt.patientName}</p>
-                    <span className="text-xs font-semibold text-slate-500">{new Date(appt.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <SessionBadge session={appt.session} ticketNumber={appt.ticketNumber} variant="compact" />
                   </div>
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2">
                     <StatusPill status={appt.status} />
                     <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">{appt.visitType}</span>
                   </div>
@@ -104,11 +106,14 @@ export default function MySchedulePage() {
                           <div className="absolute -left-[21px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-blue-500 shadow-[0_0_0_4px_white]" 
                             style={{ clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" }} />
                           
-                          <div className="flex justify-between items-start mb-1">
+                          <div className="flex justify-between items-start mb-2">
                             <h4 className="font-bold text-slate-900">{slotAppt.patientName}</h4>
                             <StatusPill status={slotAppt.status} />
                           </div>
-                          <p className="text-sm text-slate-600 mb-3">{slotAppt.visitType} • {slotAppt.duration} mins</p>
+                          <div className="flex items-center gap-2 mb-3 flex-wrap">
+                            <SessionBadge session={slotAppt.session} ticketNumber={slotAppt.ticketNumber} variant="full" />
+                            <span className="text-xs text-slate-500">{slotAppt.visitType}</span>
+                          </div>
                           <div className="flex gap-2">
                             <button className="flex items-center gap-1.5 text-xs font-semibold text-[var(--brand-primary)] bg-white border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50">
                               <User className="w-3.5 h-3.5" /> View Patient

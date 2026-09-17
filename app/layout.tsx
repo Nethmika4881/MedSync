@@ -8,7 +8,7 @@ import "./globals.css";
 import React from "react";
 
 export const metadata = {
-  title: "MedSync | Healthora Clinic Management",
+  title: "MedSync | Clinic Management",
   description:
     "Multi-branch clinic management system — patient booking, clinical workspace, front desk, and admin portals.",
 };

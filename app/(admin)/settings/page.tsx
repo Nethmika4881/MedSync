@@ -5,9 +5,15 @@ import { useAuthStore, useCurrentUser, useRole } from "@/lib/stores/authStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { User, Bell, Lock, Monitor, CheckCircle2, HeartPulse, Shield } from "lucide-react";
+import { User, Bell, Lock, Monitor, CheckCircle2, HeartPulse, Shield, Clock, Plus, Trash2 } from "lucide-react";
 import { getInitials, getAvatarColor, cn } from "@/lib/utils";
-import { roleConfig, UserRole } from "@/lib/mockData/users";
+import { roleConfig } from "@/lib/mockData/users";
+import type { UserRole } from "@/lib/types";;
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { branches } from "@/lib/constants";;
+import { DAYS_OF_WEEK, DayOfWeek } from "@/lib/constants";;
+import { useDoctorScheduleStore } from "@/lib/stores/doctorScheduleStore";
 
 const NOTIFICATION_SETTINGS = [
   { id: "appt_confirm", label: "Appointment Confirmations", desc: "Receive alerts when appointments are confirmed or rescheduled.", defaultOn: true },
@@ -26,6 +32,7 @@ export default function SettingsPage() {
     Object.fromEntries(NOTIFICATION_SETTINGS.map(n => [n.id, n.defaultOn]))
   );
   const [saved, setSaved] = useState(false);
+  const { schedules, addSlot, updateSlot, removeSlot } = useDoctorScheduleStore();
 
   if (!user || !role) return null;
   const rConfig = roleConfig[role];
@@ -34,6 +41,23 @@ export default function SettingsPage() {
   const handleSave = () => {
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
+  };
+
+  const mySchedule = schedules
+    .filter((s) => s.doctorId === user.userId)
+    .sort((a, b) => DAYS_OF_WEEK.indexOf(a.dayOfWeek) - DAYS_OF_WEEK.indexOf(b.dayOfWeek));
+
+  const handleAddSlot = () => {
+    const defaultBranch = branches.find((b) => b.branchId === user.branchId) ?? branches[0];
+    addSlot({
+      doctorId: user.userId,
+      branchId: defaultBranch.branchId,
+      branchName: defaultBranch.name,
+      dayOfWeek: "Monday",
+      startTime: "09:00",
+      endTime: "13:00",
+      slotDurationMinutes: 30,
+    });
   };
 
   return (
@@ -54,6 +78,11 @@ export default function SettingsPage() {
           <TabsTrigger value="security" className="rounded-lg px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm">
             <Lock className="w-4 h-4 mr-2" /> Security
           </TabsTrigger>
+          {role === "doctor" && (
+            <TabsTrigger value="working-hours" className="rounded-lg px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <Clock className="w-4 h-4 mr-2" /> Working Hours
+            </TabsTrigger>
+          )}
           <TabsTrigger value="appearance" className="rounded-lg px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm">
             <Monitor className="w-4 h-4 mr-2" /> Appearance
           </TabsTrigger>
@@ -97,7 +126,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Email Address</label>
-                  <input defaultValue={user.email || `${user.userId.toLowerCase()}@healthora.com`} className="w-full h-10 px-4 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:bg-white focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none transition-all" />
+                  <input defaultValue={user.email || `${user.userId.toLowerCase()}@medsync.com`} className="w-full h-10 px-4 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:bg-white focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Role</label>
@@ -198,6 +227,94 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Working Hours & Branch Allocation Tab (doctor only) */}
+        {role === "doctor" && (
+          <TabsContent value="working-hours" className="mt-6 space-y-4">
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className="border-b border-slate-100 pb-4 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-base font-semibold text-slate-900">Weekly Working Hours</CardTitle>
+                  <p className="text-sm text-slate-500 mt-1">Recurring time slots you're available for consultations, per branch.</p>
+                </div>
+                <Button onClick={handleAddSlot} size="sm" className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-xl">
+                  <Plus className="w-4 h-4 mr-1.5" /> Add Slot
+                </Button>
+              </CardHeader>
+              <CardContent className="p-0 divide-y divide-slate-100">
+                {mySchedule.length === 0 && (
+                  <div className="p-8 text-center text-slate-500 text-sm">
+                    No working hours set yet. Click "Add Slot" to define your weekly availability.
+                  </div>
+                )}
+                {mySchedule.map((slot) => (
+                  <div key={slot.scheduleId} className="p-4 grid grid-cols-2 md:grid-cols-6 gap-3 items-end">
+                    <div className="col-span-2 md:col-span-1">
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Day</label>
+                      <Select value={slot.dayOfWeek} onValueChange={(v) => updateSlot(slot.scheduleId, { dayOfWeek: v as DayOfWeek })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {DAYS_OF_WEEK.map((d) => (
+                            <SelectItem key={d} value={d}>{d}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="col-span-2 md:col-span-2">
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Branch</label>
+                      <Select
+                        value={slot.branchId}
+                        onValueChange={(v) => {
+                          const b = branches.find((br) => br.branchId === v);
+                          if (b) updateSlot(slot.scheduleId, { branchId: b.branchId, branchName: b.name });
+                        }}
+                      >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {branches.map((b) => (
+                            <SelectItem key={b.branchId} value={b.branchId}>{b.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Start</label>
+                      <Input type="time" value={slot.startTime} onChange={(e) => updateSlot(slot.scheduleId, { startTime: e.target.value })} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">End</label>
+                      <Input type="time" value={slot.endTime} onChange={(e) => updateSlot(slot.scheduleId, { endTime: e.target.value })} />
+                    </div>
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1">
+                        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Slot (min)</label>
+                        <Input
+                          type="number"
+                          min={5}
+                          step={5}
+                          value={slot.slotDurationMinutes}
+                          onChange={(e) => updateSlot(slot.scheduleId, { slotDurationMinutes: Number(e.target.value) })}
+                        />
+                      </div>
+                      <button
+                        onClick={() => removeSlot(slot.scheduleId)}
+                        className="h-9 w-9 shrink-0 flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Remove slot"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+            <div className="flex justify-end">
+              <Button onClick={handleSave} className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-xl h-10 px-6">
+                {saved ? <><CheckCircle2 className="w-4 h-4 mr-2" /> Saved!</> : "Save Working Hours"}
+              </Button>
+            </div>
+          </TabsContent>
+        )}
 
         {/* Appearance Tab */}
         <TabsContent value="appearance" className="mt-6">

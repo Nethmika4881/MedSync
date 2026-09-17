@@ -2,11 +2,10 @@
 
 import React, { useState, useMemo } from "react";
 import { useAppointmentStore } from "@/lib/stores/appointmentStore";
-import { Doctor } from "@/lib/mockData/doctors";
 import { Button } from "@/components/ui/button";
 import { X, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Appointment, VisitType, SessionType } from "@/lib/mockData/appointments";
+import type { Doctor, Appointment, VisitType, SessionType } from "@/lib/types";
 
 const VISIT_TYPES: VisitType[] = [
   "General Checkup",
@@ -62,7 +61,7 @@ function getSlotState(doctorId: string, selectedDay: Date | null, session: Sessi
       new Date(a.dateTime).toDateString() === selectedDay.toDateString()
   );
 
-  const lastTicketNumber = slotAppointments.reduce((max, a) => Math.max(max, a.ticketNumber), 0);
+  const lastTicketNumber = slotAppointments.reduce((max, a) => Math.max(max, a.ticketNumber ?? 0), 0);
   const nextTicketNumber = lastTicketNumber + 1;
   const isFull = slotAppointments.length >= SLOT_CAPACITY;
 
@@ -184,6 +183,7 @@ export function BookingModal({
       status: "Pending",
       paymentStatus: "Unpaid",
       source: "Booked",
+      fee: doctor.consultationFee ?? 0,
       notes: notes || undefined,
     };
 
@@ -259,7 +259,7 @@ export function BookingModal({
                       <span className="font-semibold">{lastAppointment.doctorName}</span>
                       {" – "}
                       {new Date(lastAppointment.dateTime).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
-                      {lastAppointment.session ? ` · ${SESSION_META[lastAppointment.session].label}` : ""}
+                      {lastAppointment.session && SESSION_META[lastAppointment.session as SessionType] ? ` · ${SESSION_META[lastAppointment.session as SessionType].label}` : ""}
                     </p>
                     <p className="text-amber-600 mt-0.5">
                       {lastAppointment.visitType}
@@ -450,21 +450,47 @@ export function BookingModal({
                   has been successfully scheduled.
                 </p>
               </div>
-              <div className="w-full bg-slate-50 rounded-2xl p-4 text-sm space-y-2 border border-slate-100 text-left relative overflow-hidden">
-                <div className="absolute top-0 right-0 bg-[var(--brand-primary)] text-white px-3 py-1 rounded-bl-xl font-bold">
-                  Ticket #{generatedTicket}
+              {/* Prominent ticket display */}
+              <div
+                className="w-full rounded-2xl p-5 text-left relative overflow-hidden border-2"
+                style={{
+                  background:
+                    selectedSession === "Morning"
+                      ? "linear-gradient(135deg,#fffbeb,#fef3c7)"
+                      : selectedSession === "Afternoon"
+                      ? "linear-gradient(135deg,#f0fdfa,#ccfbf1)"
+                      : "linear-gradient(135deg,#eef2ff,#e0e7ff)",
+                  borderColor:
+                    selectedSession === "Morning"
+                      ? "#fde68a"
+                      : selectedSession === "Afternoon"
+                      ? "#99f6e4"
+                      : "#c7d2fe",
+                }}
+              >
+                {/* Big ticket number in top-right */}
+                <div className="flex items-start justify-between mb-3 text-slate-800">
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest opacity-60">
+                      Confirmed Ticket
+                    </p>
+                    <p className="text-5xl font-black leading-none mt-1">#{generatedTicket}</p>
+                  </div>
+                  <div className="text-4xl">
+                    {selectedSession === "Morning" ? "🌅" : selectedSession === "Afternoon" ? "☀️" : "🌙"}
+                  </div>
                 </div>
-                <p className="text-slate-500">
-                  📅 <span className="font-semibold text-slate-800">{selectedDay && dayFmt(selectedDay)}</span>{" "}
-                  • <span className="font-semibold text-slate-800">{selectedSession && SESSION_META[selectedSession].label}</span>
-                </p>
-                <p className="text-slate-500">
-                  🏥 <span className="font-semibold text-slate-800">{doctor.branchName}</span>
-                </p>
-                <p className="text-slate-500">
-                  📋 Status:{" "}
-                  <span className="font-semibold text-amber-600">Pending Confirmation</span>
-                </p>
+                <div className="space-y-1 text-sm text-slate-800">
+                  <p className="font-semibold">
+                    {selectedSession && SESSION_META[selectedSession]?.label}
+                  </p>
+                  <p className="opacity-70">📅 {selectedDay && dayFmt(selectedDay)}</p>
+                  <p className="opacity-70">🏥 {doctor.branchName}</p>
+                  <p className="opacity-70 mt-2">
+                    📋 Status:{" "}
+                    <span className="font-semibold text-amber-600">Pending Confirmation</span>
+                  </p>
+                </div>
               </div>
               <Button
                 onClick={onClose}

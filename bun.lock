@@ -8,6 +8,7 @@
         "@hookform/resolvers": "^3.9.1",
         "@neon/config": "^1.5.0",
         "@neon/env": "^1.3.4",
+        "@neondatabase/serverless": "^1.1.0",
         "@radix-ui/react-accordion": "^1.2.3",
         "@radix-ui/react-alert-dialog": "^1.1.6",
         "@radix-ui/react-avatar": "^1.1.3",
@@ -196,6 +197,8 @@
     "@neon/env": ["@neon/env@1.3.4", "", { "dependencies": { "@neon/config": "1.5.0", "yargs": "^18.0.0", "zod": "^4.4.3" }, "optionalDependencies": { "@napi-rs/keyring": "1.3.0" }, "bin": { "neon-env": "dist/cli.js" } }, "sha512-o5WaQrNNrrMh6xC9ZQjnDtoENg8/tFBXjyNv+quDKVWqktgf0MaqjE35/xCvrGNVfjGuuS80Z0TAUV1Do/tThQ=="],
 
     "@neon/sdk": ["@neon/sdk@5.0.0", "", {}, "sha512-rPi1lapbg2MtKn0jgzdWmHz6l23eJUw9CYZsBLYW8YbZk/eGsOaf7NmG6nMVmV1gSU0n+dpPedmw5Cc+zvEVug=="],
+
+    "@neondatabase/serverless": ["@neondatabase/serverless@1.1.0", "", {}, "sha512-r3ZZhRjEcfEdKIZnoB1RusNgvHuaBRqfCzV4Gi+5A9yUX0S4HTws/ASWqt13wL4y4I+0rqsWGdA2w7EQXHi3+Q=="],
 
     "@next/env": ["@next/env@15.3.4", "", {}, "sha512-ZkdYzBseS6UjYzz6ylVKPOK+//zLWvD6Ta+vpoye8cW11AjiQjGYVibF0xuvT4L0iJfAPfZLFidaEzAOywyOAQ=="],
 

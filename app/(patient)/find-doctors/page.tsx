@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { doctors, Doctor } from "@/lib/mockData/doctors";
-import { branches } from "@/lib/mockData/branches";
+import type { Doctor } from "@/lib/types";
+import { doctors, branches } from "@/lib/constants";
 import { useAppointmentStore } from "@/lib/stores/appointmentStore";
 import { useCurrentUser } from "@/lib/stores/authStore";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ import {
   Filter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Appointment, VisitType } from "@/lib/mockData/appointments";
+import type { VisitType } from "@/lib/types";
 import { BookingModal, getAvatarGradient } from "@/components/catms/BookingModal";
 
 // ─── Info Pill ────────────────────────────────────────────────────────────────

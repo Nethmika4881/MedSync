@@ -1,27 +1,35 @@
 "use client";
+// lib/stores/patientStore.ts
+// Temporary Zustand store — will be replaced by Server Action calls once DB is connected.
+
 import { create } from "zustand";
-import { patients as initialPatients, type Patient } from "@/lib/mockData/patients";
-import { patientAllergies as initialAllergies, type PatientAllergy } from "@/lib/mockData/patientAllergies";
-import { patientConditions as initialConditions, type PatientCondition } from "@/lib/mockData/conditions";
-import { nanoid } from "nanoid";
+import type { Patient, PatientAllergy, PatientCondition } from "@/lib/types";
 
 interface PatientStore {
   patients: Patient[];
   allergies: PatientAllergy[];
   conditions: PatientCondition[];
 
+  setPatients: (patients: Patient[]) => void;
+  setAllergies: (allergies: PatientAllergy[]) => void;
+  setConditions: (conditions: PatientCondition[]) => void;
+
   addPatient: (p: Patient) => void;
   updatePatient: (id: string, updates: Partial<Patient>) => void;
-  addAllergy: (allergy: Omit<PatientAllergy, "allergyId">) => void;
+  addAllergy: (allergy: PatientAllergy) => void;
   removeAllergy: (allergyId: string) => void;
-  addCondition: (condition: Omit<PatientCondition, "pcId">) => void;
-  updateCondition: (pcId: string, updates: Partial<PatientCondition>) => void;
+  addCondition: (condition: PatientCondition) => void;
+  updateCondition: (conditionId: string, updates: Partial<PatientCondition>) => void;
 }
 
 export const usePatientStore = create<PatientStore>((set) => ({
-  patients: initialPatients,
-  allergies: initialAllergies,
-  conditions: initialConditions,
+  patients: [],
+  allergies: [],
+  conditions: [],
+
+  setPatients: (patients) => set({ patients }),
+  setAllergies: (allergies) => set({ allergies }),
+  setConditions: (conditions) => set({ conditions }),
 
   addPatient: (p) =>
     set((state) => ({ patients: [p, ...state.patients] })),
@@ -34,12 +42,7 @@ export const usePatientStore = create<PatientStore>((set) => ({
     })),
 
   addAllergy: (allergy) =>
-    set((state) => ({
-      allergies: [
-        ...state.allergies,
-        { ...allergy, allergyId: `ALG-${nanoid(4)}` },
-      ],
-    })),
+    set((state) => ({ allergies: [...state.allergies, allergy] })),
 
   removeAllergy: (allergyId) =>
     set((state) => ({
@@ -47,17 +50,12 @@ export const usePatientStore = create<PatientStore>((set) => ({
     })),
 
   addCondition: (condition) =>
-    set((state) => ({
-      conditions: [
-        ...state.conditions,
-        { ...condition, pcId: `PC-${nanoid(4)}` },
-      ],
-    })),
+    set((state) => ({ conditions: [...state.conditions, condition] })),
 
-  updateCondition: (pcId, updates) =>
+  updateCondition: (conditionId, updates) =>
     set((state) => ({
       conditions: state.conditions.map((c) =>
-        c.pcId === pcId ? { ...c, ...updates } : c
+        c.conditionId === conditionId ? { ...c, ...updates } : c
       ),
     })),
 }));

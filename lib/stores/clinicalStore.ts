@@ -1,7 +1,6 @@
 "use client";
 import { create } from "zustand";
-import { treatments as initialTreatments, type Treatment } from "@/lib/mockData/treatments";
-import { consultationRecords as initialConsultations, type ConsultationRecord } from "@/lib/mockData/consultations";
+import type { Treatment, ConsultationRecord } from "@/lib/types";
 
 interface ClinicalStore {
   treatments: Treatment[];
@@ -17,8 +16,8 @@ interface ClinicalStore {
 }
 
 export const useClinicalStore = create<ClinicalStore>((set) => ({
-  treatments: initialTreatments,
-  consultations: initialConsultations,
+  treatments: [],
+  consultations: [],
 
   markTreatmentPerformed: (treatmentId, performedBy, resultFile) =>
     set((state) => ({
