@@ -731,7 +731,7 @@ export default function AppointmentsPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48 rounded-xl">
-                          {(role === "receptionist" || role === "admin" || role === "nurse") && appt.status === "Confirmed" && (
+                          {(role === "receptionist" || role === "admin") && appt.status === "Confirmed" && (
                             <DropdownMenuItem onClick={() => checkInAppointment(appt.appointmentId)} className="cursor-pointer">
                               <UserCheck className="w-4 h-4 mr-2 text-green-600" />
                               <span>Check-in Patient</span>

@@ -151,7 +151,7 @@ export default function BillingPage() {
                       <td className="px-6 py-4 font-semibold text-green-600">${claim.approvedAmount.toFixed(2)}</td>
                       <td className="px-6 py-4"><StatusPill status={claim.status} /></td>
                       <td className="px-6 py-4 text-right">
-                        {claim.status === "UnderReview" && (role === "admin" || role === "branch_manager") ? (
+                        {claim.status === "UnderReview" && role === "admin" ? (
                           <div className="flex gap-2 justify-end">
                             <Button size="sm" onClick={() => updateClaimStatus(claim.claimId, "Approved")} className="bg-green-600 hover:bg-green-700 text-white rounded-lg h-8">Approve</Button>
                             <Button size="sm" onClick={() => updateClaimStatus(claim.claimId, "Rejected")} className="bg-red-600 hover:bg-red-700 text-white rounded-lg h-8">Reject</Button>
