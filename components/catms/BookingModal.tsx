@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useAppointmentStore } from "@/lib/stores/appointmentStore";
 import { useSessionConfigStore } from "@/lib/stores/sessionConfigStore";
 import type { Doctor, Appointment, VisitType, SessionType } from "@/lib/types";
 import { SESSION_META } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
-import { X, Check, ChevronLeft, ChevronRight, Ticket, AlertCircle } from "lucide-react";
+import { X, Check, ChevronLeft, ChevronRight, Ticket, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { bookAppointment, getSlotAvailability, type SlotAvailability } from "@/lib/actions/appointments";
 
 const VISIT_TYPES: VisitType[] = [
   "General Checkup",
@@ -105,6 +106,24 @@ export function BookingModal({
   const [generatedTicket, setGeneratedTicket] = useState<number | null>(null);
   const [visitType, setVisitType] = useState<VisitType>("General Checkup");
   const [notes, setNotes] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [dbSlots, setDbSlots] = useState<SlotAvailability[]>([]);
+
+  // Fetch slot availability from database whenever selectedDay changes
+  useEffect(() => {
+    if (!selectedDay) return;
+    let active = true;
+    const dateStr = selectedDay.toISOString().split("T")[0];
+    getSlotAvailability(doctor.doctorId, dateStr)
+      .then((res) => {
+        if (active) setDbSlots(res);
+      })
+      .catch((err) => console.error("Failed to fetch slots", err));
+    return () => {
+      active = false;
+    };
+  }, [doctor.doctorId, selectedDay]);
 
   const dayFmt = (d: Date) =>
     d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
@@ -112,8 +131,10 @@ export function BookingModal({
   const isFullyBooked = (d: Date) =>
     fullyBooked ? d.toISOString().startsWith(fullyBooked) : false;
 
-  /** Count existing (non-cancelled) bookings for a doctor×session×date */
+  /** Count existing bookings (falling back to store if db unavailable) */
   function getSessionBookingCount(session: SessionType, day: Date): number {
+    const dbSlot = dbSlots.find((s) => s.session === session);
+    if (dbSlot) return dbSlot.currentCount;
     return appointments.filter(
       (a) =>
         a.doctorId === doctor.doctorId &&
@@ -128,43 +149,67 @@ export function BookingModal({
     if (!selectedDay || !selectedSession) return null;
     return getSessionBookingCount(selectedSession, selectedDay) + 1;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDay, selectedSession, appointments]);
+  }, [selectedDay, selectedSession, appointments, dbSlots]);
 
-  function handleBook() {
+  async function handleBook() {
     if (!selectedDay || !selectedSession) return;
+    setIsSubmitting(true);
+    setBookingError(null);
 
-    // Assign ticket at booking time
-    const existingCount = getSessionBookingCount(selectedSession, selectedDay);
-    const nextTicket = existingCount + 1;
-    setGeneratedTicket(nextTicket);
+    const dateStr = selectedDay.toISOString().split("T")[0];
 
-    const meta = SESSION_META[selectedSession];
-    const dt = new Date(selectedDay);
-    dt.setHours(meta?.startHour ?? 9, 0, 0, 0);
+    try {
+      const res = await bookAppointment({
+        patientId: currentUserId,
+        doctorId: doctor.doctorId,
+        branchId: doctor.branchId,
+        date: dateStr,
+        session: selectedSession,
+        visitType,
+        fee: doctor.consultationFee ?? 2500,
+        notes: notes || undefined,
+      });
 
-    const newAppt: Appointment = {
-      appointmentId: `APT-${Date.now()}`,
-      patientId: currentUserId,
-      patientName: currentUserName,
-      doctorId: doctor.doctorId,
-      doctorName: doctor.name,
-      doctorSpecialization: doctor.specialization,
-      branchId: doctor.branchId,
-      branchName: doctor.branchName,
-      dateTime: dt.toISOString(),
-      duration: 30,
-      session: selectedSession,
-      ticketNumber: nextTicket,
-      visitType,
-      status: "Pending",
-      paymentStatus: "Unpaid",
-      source: "Booked",
-      fee: doctor.consultationFee ?? 0,
-      notes: notes || undefined,
-    };
+      setIsSubmitting(false);
 
-    addAppointment(newAppt);
-    setStep("success");
+      if (!res.success) {
+        setBookingError(res.message);
+        return;
+      }
+
+      setGeneratedTicket(res.ticketNumber);
+
+      const meta = SESSION_META[selectedSession];
+      const dt = new Date(selectedDay);
+      dt.setHours(meta?.startHour ?? 9, 0, 0, 0);
+
+      const newAppt: Appointment = {
+        appointmentId: res.appointmentId,
+        patientId: currentUserId,
+        patientName: currentUserName,
+        doctorId: doctor.doctorId,
+        doctorName: doctor.name,
+        doctorSpecialization: doctor.specialization,
+        branchId: doctor.branchId,
+        branchName: doctor.branchName,
+        dateTime: dt.toISOString(),
+        duration: 30,
+        session: selectedSession,
+        ticketNumber: res.ticketNumber,
+        visitType,
+        status: "Pending",
+        paymentStatus: "Unpaid",
+        source: "Booked",
+        fee: doctor.consultationFee ?? 2500,
+        notes: notes || undefined,
+      };
+
+      addAppointment(newAppt);
+      setStep("success");
+    } catch (err) {
+      setIsSubmitting(false);
+      setBookingError(err instanceof Error ? err.message : "An unexpected error occurred.");
+    }
   }
 
   const gradient = getAvatarGradient(doctor.avatar || doctor.name.slice(0, 2));
@@ -536,9 +581,26 @@ export function BookingModal({
                 {notes && <ConfirmRow label="Notes" value={notes} />}
               </div>
 
+              {bookingError && (
+                <div className="flex items-start gap-3 p-4 bg-rose-50 rounded-2xl border border-rose-200 animate-fade-in">
+                  <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-rose-800">Booking Failed</p>
+                    <p className="text-xs text-rose-700 leading-relaxed mt-0.5">{bookingError}</p>
+                    <button
+                      onClick={() => setStep("datetime")}
+                      className="text-xs text-rose-800 font-semibold underline mt-1 hover:text-rose-900"
+                    >
+                      Choose another date or session
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-3">
                 <Button
                   variant="outline"
+                  disabled={isSubmitting}
                   onClick={() => setStep("details")}
                   className="flex-1 rounded-xl h-11 border-slate-200"
                 >
@@ -546,11 +608,21 @@ export function BookingModal({
                   Back
                 </Button>
                 <Button
+                  disabled={isSubmitting}
                   onClick={handleBook}
-                  className="flex-1 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-11 font-semibold"
+                  className="flex-1 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-11 font-semibold disabled:opacity-60"
                 >
-                  <Check className="w-4 h-4 mr-1.5" />
-                  Confirm Booking
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Booking...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4 mr-1.5" />
+                      Confirm Booking
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
