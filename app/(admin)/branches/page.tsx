@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { branches } from "@/lib/mockData/branches";
-import { employees } from "@/lib/mockData/employees";
+import { branches } from "@/lib/constants";;
+import { employees } from "@/lib/constants";;
 import { useRole } from "@/lib/stores/authStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ export default function BranchesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Branches</h2>
-          <p className="text-slate-500">Manage all Healthora clinic branches and locations.</p>
+          <p className="text-slate-500">Manage all MedSync clinic branches and locations.</p>
         </div>
         {role === "admin" && (
           <Button className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-xl h-10 px-5">

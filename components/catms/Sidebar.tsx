@@ -6,7 +6,8 @@ import { usePathname } from "next/navigation";
 import { HeartPulse, LogOut, ChevronDown } from "lucide-react";
 import { useAuthStore, useRole, useCurrentUser } from "@/lib/stores/authStore";
 import { roleNavConfig } from "@/lib/roleNavConfig";
-import { roleConfig, UserRole } from "@/lib/mockData/users";
+import { roleConfig } from "@/lib/mockData/users";
+import type { UserRole } from "@/lib/types";;
 import { cn } from "@/lib/utils";
 import * as Icons from "lucide-react";
 
@@ -27,7 +28,7 @@ export function Sidebar() {
       <div className="h-16 flex items-center px-6 border-b border-slate-100 shrink-0">
         <Link href="/dashboard" className="flex items-center gap-2 text-xl font-bold font-outfit text-slate-900 tracking-tight">
           <HeartPulse className="w-7 h-7 text-[var(--brand-primary)]" />
-          Health<span className="text-[var(--brand-primary)]">ora</span>
+          Med<span className="text-[var(--brand-primary)]">Sync</span>
         </Link>
       </div>
 

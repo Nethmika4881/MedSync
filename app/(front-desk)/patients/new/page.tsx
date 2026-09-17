@@ -3,9 +3,10 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePatientStore } from "@/lib/stores/patientStore";
-import { branches } from "@/lib/mockData/branches";
-import { patients } from "@/lib/mockData/patients";
-import { Patient } from "@/lib/mockData/patients";
+import { branches } from "@/lib/constants";;
+import { patients } from "@/lib/constants";;
+import type { Patient } from "@/lib/types";
+import {   } from "@/lib/constants";;
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserPlus, ArrowLeft, CheckCircle2 } from "lucide-react";
