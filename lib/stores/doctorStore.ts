@@ -1,25 +1,25 @@
 "use client";
+// lib/stores/doctorStore.ts
+// Temporary Zustand store — will be replaced by Server Action calls once DB is connected.
+
 import { create } from "zustand";
-import { doctors as initialDoctors, type Doctor } from "@/lib/mockData/doctors";
-import { nanoid } from "nanoid";
+import type { Doctor } from "@/lib/types";
 
 interface DoctorStore {
   doctors: Doctor[];
-  addDoctor: (d: Omit<Doctor, "doctorId">) => void;
+  setDoctors: (doctors: Doctor[]) => void;
+  addDoctor: (d: Doctor) => void;
   updateDoctor: (id: string, updates: Partial<Doctor>) => void;
   deleteDoctor: (id: string) => void;
 }
 
 export const useDoctorStore = create<DoctorStore>((set) => ({
-  doctors: initialDoctors,
+  doctors: [],
+
+  setDoctors: (doctors) => set({ doctors }),
 
   addDoctor: (d) =>
-    set((state) => ({
-      doctors: [
-        { ...d, doctorId: `DOC-${nanoid(4)}` },
-        ...state.doctors,
-      ],
-    })),
+    set((state) => ({ doctors: [d, ...state.doctors] })),
 
   updateDoctor: (id, updates) =>
     set((state) => ({

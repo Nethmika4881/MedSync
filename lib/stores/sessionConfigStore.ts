@@ -1,7 +1,7 @@
 "use client";
 import { create } from "zustand";
-import { sessionConfigs, type SessionConfig } from "@/lib/mockData/sessionConfig";
-import type { SessionType } from "@/lib/mockData/appointments";
+import { sessionConfigs, SessionConfig } from "@/lib/constants";;
+import type { SessionType } from "@/lib/types";;
 
 interface SessionConfigStore {
   configs: SessionConfig[];

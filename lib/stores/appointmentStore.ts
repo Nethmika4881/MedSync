@@ -1,18 +1,23 @@
 "use client";
+// lib/stores/appointmentStore.ts
+// Temporary Zustand store — will be replaced by Server Action calls once DB is connected.
+
 import { create } from "zustand";
-import { appointments as initialAppointments, type Appointment } from "@/lib/mockData/appointments";
+import type { Appointment, AppointmentStatus } from "@/lib/types";
 
 interface AppointmentStore {
   appointments: Appointment[];
+  setAppointments: (appointments: Appointment[]) => void;
   addAppointment: (appt: Appointment) => void;
   updateAppointment: (id: string, updates: Partial<Appointment>) => void;
   cancelAppointment: (id: string, reason: string) => void;
-  rescheduleAppointment: (oldId: string, newAppt: Appointment) => void;
   checkInAppointment: (id: string) => void;
 }
 
 export const useAppointmentStore = create<AppointmentStore>((set) => ({
-  appointments: initialAppointments,
+  appointments: [],
+
+  setAppointments: (appointments) => set({ appointments }),
 
   addAppointment: (appt) =>
     set((state) => ({ appointments: [appt, ...state.appointments] })),
@@ -28,22 +33,15 @@ export const useAppointmentStore = create<AppointmentStore>((set) => ({
     set((state) => ({
       appointments: state.appointments.map((a) =>
         a.appointmentId === id
-          ? { ...a, status: "Cancelled" as const, cancelReason: reason }
+          ? { ...a, status: "Cancelled" as AppointmentStatus, cancelReason: reason }
           : a
       ),
-    })),
-
-  rescheduleAppointment: (oldId, newAppt) =>
-    set((state) => ({
-      appointments: state.appointments.map((a) =>
-        a.appointmentId === oldId ? { ...a, status: "Rescheduled" as const } : a
-      ).concat([newAppt]),
     })),
 
   checkInAppointment: (id) =>
     set((state) => ({
       appointments: state.appointments.map((a) =>
-        a.appointmentId === id ? { ...a, status: "Checked-in" as const } : a
+        a.appointmentId === id ? { ...a, status: "Checked-in" as AppointmentStatus } : a
       ),
     })),
 }));

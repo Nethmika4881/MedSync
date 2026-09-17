@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useClinicalStore } from "@/lib/stores/clinicalStore";
 import { useRole, useCurrentUser } from "@/lib/stores/authStore";
-import { treatmentCatalogue } from "@/lib/mockData/treatments";
+import { treatmentCatalogue } from "@/lib/constants";;
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/catms/StatusPill";

@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { insurancePackages } from "@/lib/mockData/insurance";
-import { insuranceProviders } from "@/lib/mockData/insurance";
+import { insurancePackages } from "@/lib/constants";;
+import { insuranceProviders } from "@/lib/constants";;
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";

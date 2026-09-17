@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { insuranceProviders, insurancePackages } from "@/lib/mockData/insurance";
+import { insuranceProviders, insurancePackages } from "@/lib/constants";;
 import { useRole } from "@/lib/stores/authStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
