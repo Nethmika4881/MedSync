@@ -31,10 +31,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { doctors } from "@/lib/mockData/doctors";
-import { patients } from "@/lib/mockData/patients";
-import { branches } from "@/lib/mockData/branches";
-import type { Appointment, SessionType, VisitType } from "@/lib/mockData/appointments";
+import { doctors, patients, branches, SESSION_META } from "@/lib/constants";
+import type { Appointment, SessionType, VisitType } from "@/lib/types";
+import { SessionBadge } from "@/components/catms/SessionBadge";
 
 /* ──────────────────────────────────────────────────────────
    Confetti Canvas
@@ -235,7 +234,7 @@ function ReceiptModal({
             <ReceiptRow
               icon={<Clock className="w-4 h-4" />}
               label="Session"
-              value={appointment.session ? `${SESSION_META[appointment.session].label} (Ticket #${appointment.ticketNumber})` : `Ticket #${appointment.ticketNumber}`}
+              value={appointment.session && SESSION_META[appointment.session] ? `${SESSION_META[appointment.session].emoji} ${appointment.session} · ${SESSION_META[appointment.session].timeRange} (Ticket #${appointment.ticketNumber})` : `Ticket #${appointment.ticketNumber}`}
             />
             <ReceiptRow icon={<MapPin className="w-4 h-4" />} label="Branch" value={appointment.branchName} />
             <ReceiptRow icon={<FileText className="w-4 h-4" />} label="Visit Type" value={appointment.visitType} />
@@ -346,7 +345,8 @@ function NewAppointmentModal({
 
     const newId = `APT-${Date.now()}`;
     const hour = Number.parseInt(timeValue.split(":")[0] ?? "9", 10);
-    const session: SessionType = hour < 12 ? "Morning" : hour < 17 ? "Afternoon" : "Evening";
+    const session: SessionType =
+      hour < 11 ? "Morning" : hour < 14 ? "Midday" : hour < 17 ? "Afternoon" : "Evening";
     const ticketNumber =
       appointments.filter((a) => {
         if (a.doctorId !== doctor.doctorId || a.session !== session) return false;
@@ -717,8 +717,8 @@ export default function AppointmentsPage() {
                   <tr key={appt.appointmentId} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="font-semibold text-slate-900">{new Date(appt.dateTime).toLocaleDateString()}</div>
-                      <div className="text-slate-500 text-xs">
-                        {appt.session ? SESSION_META[appt.session].label : ""} • Ticket #{appt.ticketNumber}
+                      <div className="mt-1">
+                        <SessionBadge session={appt.session} ticketNumber={appt.ticketNumber} variant="compact" />
                       </div>
                     </td>
                     {role !== "patient" && (
@@ -797,8 +797,8 @@ export default function AppointmentsPage() {
                     <tr key={appt.appointmentId} className="hover:bg-slate-50/50 transition-colors opacity-75">
                       <td className="px-6 py-4">
                         <div className="font-semibold text-slate-700">{new Date(appt.dateTime).toLocaleDateString()}</div>
-                        <div className="text-slate-500 text-xs">
-                          {appt.session ? SESSION_META[appt.session].label : ""} • Ticket #{appt.ticketNumber}
+                        <div className="mt-1">
+                          <SessionBadge session={appt.session} ticketNumber={appt.ticketNumber} variant="compact" />
                         </div>
                       </td>
                       {role !== "patient" && (

@@ -4,11 +4,8 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppointmentStore } from "@/lib/stores/appointmentStore";
 import { useCurrentUser } from "@/lib/stores/authStore";
-import { doctors, Doctor } from "@/lib/mockData/doctors";
-import { patients, Patient } from "@/lib/mockData/patients";
-import { branches } from "@/lib/mockData/branches";
-import { Appointment, VisitType, SessionType } from "@/lib/mockData/appointments";
-import { SESSION_META } from "@/components/catms/BookingModal";
+import type { Doctor, Patient, VisitType, SessionType, Appointment } from "@/lib/types";
+import { doctors, patients, branches, SESSION_META } from "@/lib/constants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,7 +38,6 @@ const DURATIONS = [15, 30, 45, 60, 90];
 const SLOT_CAPACITY = 4;
 
 const SESSIONS: SessionType[] = ["Morning", "Afternoon", "Evening"];
-
 function getSlotState(doctorId: string, selectedDay: Date | null, session: SessionType | null) {
   if (!selectedDay || !session) {
     return { count: 0, lastTicketNumber: 0, nextTicketNumber: 1, isFull: false };
@@ -54,7 +50,7 @@ function getSlotState(doctorId: string, selectedDay: Date | null, session: Sessi
       new Date(a.dateTime).toDateString() === selectedDay.toDateString()
   );
 
-  const lastTicketNumber = slotAppointments.reduce((max, a) => Math.max(max, a.ticketNumber), 0);
+  const lastTicketNumber = slotAppointments.reduce((max, a) => Math.max(max, a.ticketNumber ?? 0), 0);
   const nextTicketNumber = lastTicketNumber + 1;
   const isFull = slotAppointments.length >= SLOT_CAPACITY;
 
@@ -375,9 +371,9 @@ export default function NewAppointmentPage() {
       doctorName: selectedDoctor!.name,
       doctorSpecialization: selectedDoctor!.specialization,
       branchId: form.branchId,
-      branchName: branches.find((b) => b.branchId === form.branchId)?.name || "Healthora Central",
+      branchName: branches.find((b) => b.branchId === form.branchId)?.name || "MedSync Central",
       dateTime: dt.toISOString(),
-      duration: SESSION_META[form.selectedSession].durationMinutes,
+      duration: 30,
       session: form.selectedSession,
       ticketNumber: nextTicket,
       visitType: form.visitType,
@@ -413,7 +409,7 @@ export default function NewAppointmentPage() {
           </div>
           <p className="text-slate-500">
             📅 <span className="font-semibold text-slate-800">{form.selectedDay && dayFmt(form.selectedDay)}</span>{" "}
-            • <span className="font-semibold text-slate-800">{form.selectedSession && SESSION_META[form.selectedSession].label}</span>
+            • <span className="font-semibold text-slate-800">{form.selectedSession && SESSION_META[form.selectedSession]?.label}</span>
           </p>
           <p className="text-slate-500">
             🏥 <span className="font-semibold text-slate-800">{branches.find((b) => b.branchId === form.branchId)?.name}</span>
@@ -633,6 +629,7 @@ export default function NewAppointmentPage() {
                         const selected = form.selectedSession === session;
                         const slotStatus = getSlotState(form.doctorId, form.selectedDay, session);
                         const isFull = slotStatus.isFull;
+
                         return (
                           <button
                             key={session}
@@ -650,7 +647,7 @@ export default function NewAppointmentPage() {
                           >
                             <div className="flex items-center justify-between gap-2">
                               <div>
-                                <p className="font-bold text-sm">{SESSION_META[session].label}</p>
+                                <p className="font-bold text-sm">{SESSION_META[session]?.label ?? session}</p>
                                 <p className={cn("text-[10px] mt-1 font-medium", selected ? "text-white/80" : "text-slate-500")}>
                                   Last ticket #{slotStatus.lastTicketNumber || 0} • Next #{slotStatus.nextTicketNumber}
                                 </p>

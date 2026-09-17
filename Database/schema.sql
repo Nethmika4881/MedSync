@@ -61,6 +61,7 @@ CREATE TABLE time_slot (
     slot_duration_minutes INT NOT NULL DEFAULT 180,
     max_tickets INT NOT NULL DEFAULT 4,
     current_ticket_count INT NOT NULL DEFAULT 0,
+    current_serving_number INT NOT NULL DEFAULT 0,
     last_ticket_number INT NOT NULL DEFAULT 0,
     is_overbooked BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

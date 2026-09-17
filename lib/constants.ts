@@ -190,7 +190,6 @@ export const doctors: Doctor[] = [
     email: "malini.s@medsync.lk",
   },
 ];
-
 export const patients: any[] = [];
 export const employees: any[] = [];
 export const medications: any[] = [];

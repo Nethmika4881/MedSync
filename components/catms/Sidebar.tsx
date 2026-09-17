@@ -36,7 +36,8 @@ import { useAuthStore, useRole, useCurrentUser } from "@/lib/stores/authStore";
 import { useActiveBranch } from "@/hooks/use-branch-store";
 import { useSidebarStore } from "@/hooks/use-sidebar-store";
 import { roleNavConfig } from "@/lib/roleNavConfig";
-import { roleConfig, UserRole } from "@/lib/mockData/users";
+import { roleConfig } from "@/lib/mockData/users";
+import type { UserRole } from "@/lib/types";;
 import { cn } from "@/lib/utils";
 import * as Icons from "lucide-react";
 
@@ -125,7 +126,7 @@ export function Sidebar() {
               isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
             )}
           >
-            Health<span className="text-[var(--brand-primary)]">ora</span>
+            Med<span className="text-[var(--brand-primary)]">Sync</span>
           </span>
         </Link>
 

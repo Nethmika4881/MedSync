@@ -1,18 +1,15 @@
-export type UserRole =
-  | "admin"
-  | "doctor"
-  | "patient"
-  | "receptionist";
+// lib/mockData/users.ts
+import type { AuthUser } from "@/lib/types";
 
-export interface MockUser {
-  userId: string;
-  role: UserRole;
-  name: string;
-  firstName: string;
-  avatar: string;
-  branchId: string;
-  email: string;
-  blurb: string;
+export type UserRole = "admin" | "doctor" | "patient" | "receptionist";
+
+export type MockUser = AuthUser;
+
+export interface RoleConfigEntry {
+  label: string;
+  color: string;
+  description: string;
+  icon?: string;
 }
 
 export const mockUsers: MockUser[] = [
@@ -23,7 +20,7 @@ export const mockUsers: MockUser[] = [
     firstName: "Alexander",
     avatar: "AC",
     branchId: "BR-001",
-    email: "admin@healthora.com",
+    email: "admin@medsync.lk",
     blurb: "System administrator — full access across all branches",
   },
   {
@@ -33,7 +30,7 @@ export const mockUsers: MockUser[] = [
     firstName: "Sarah",
     avatar: "SM",
     branchId: "BR-001",
-    email: "sarah.mitchell@healthora.com",
+    email: "sarah.mitchell@medsync.lk",
     blurb: "Cardiologist — Senior Consultant, Branch 1",
   },
   {
@@ -53,39 +50,30 @@ export const mockUsers: MockUser[] = [
     firstName: "Jessica",
     avatar: "JT",
     branchId: "BR-001",
-    email: "jessica.turner@healthora.com",
+    email: "jessica.turner@medsync.lk",
     blurb: "Front desk — appointment booking and patient check-in",
   },
-
 ];
 
-export const roleConfig: Record<
-  UserRole,
-  { label: string; color: string; icon: string; description: string }
-> = {
+export const roleConfig: Record<UserRole, RoleConfigEntry> = {
   admin: {
-    label: "Admin",
+    label: "Administrator",
     color: "bg-purple-100 text-purple-700",
-    icon: "Shield",
     description: "Full system access across all branches",
   },
   doctor: {
     label: "Doctor",
     color: "bg-blue-100 text-blue-700",
-    icon: "Stethoscope",
-    description: "Consultations, prescriptions, patient care",
+    description: "Clinical consultation and patient care",
   },
   patient: {
     label: "Patient",
     color: "bg-green-100 text-green-700",
-    icon: "User",
-    description: "Appointments, records, billing",
+    description: "Patient self-service portal",
   },
   receptionist: {
-    label: "Receptionist",
-    color: "bg-orange-100 text-orange-700",
-    icon: "Calendar",
-    description: "Booking, check-in, patient registration",
+    label: "Front Reception",
+    color: "bg-amber-100 text-amber-700",
+    description: "Branch front desk operations",
   },
-
 };

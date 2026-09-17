@@ -1,5 +1,5 @@
 "use client";
-import { mockUsers } from "@/lib/mockData/users";
+import { DEMO_USERS } from "@/lib/stores/authStore";
 
 import React from "react";
 import { useRouter } from "next/navigation";
@@ -16,7 +16,7 @@ export default function LandingPage() {
 
   const handleLogin = (userId: string) => {
     login(userId);
-    const user = mockUsers.find((u) => u.userId === userId);
+    const user = DEMO_USERS.find((u) => u.userId === userId);
     if (user?.role === "admin") {
       router.push("/admin-dashboard");
     } else if (user?.role === "receptionist") {
@@ -28,7 +28,7 @@ export default function LandingPage() {
     }
   };
 
-  const patientDemo = mockUsers.find(u => u.userId === "USR-003"); // Abraham Brakering
+  const patientDemo = DEMO_USERS.find(u => u.userId === "USR-003"); // Abraham Brakering
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
@@ -117,7 +117,7 @@ export default function LandingPage() {
               )}
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {mockUsers.filter(u => u.role !== 'patient').map(user => {
+                {DEMO_USERS.filter(u => u.role !== 'patient').map(user => {
                   const roleCfg = roleConfig[user.role as UserRole];
                   console.log(roleCfg);
                   return (
