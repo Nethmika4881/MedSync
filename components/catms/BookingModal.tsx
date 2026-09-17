@@ -2,11 +2,17 @@
 
 import React, { useState, useMemo } from "react";
 import { useAppointmentStore } from "@/lib/stores/appointmentStore";
+import { useSessionConfigStore } from "@/lib/stores/sessionConfigStore";
 import { Doctor } from "@/lib/mockData/doctors";
 import { Button } from "@/components/ui/button";
-import { X, Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Check, ChevronLeft, ChevronRight, Ticket, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Appointment, VisitType } from "@/lib/mockData/appointments";
+import {
+  Appointment,
+  VisitType,
+  SessionType,
+  SESSION_META,
+} from "@/lib/mockData/appointments";
 
 const VISIT_TYPES: VisitType[] = [
   "General Checkup",
@@ -16,10 +22,7 @@ const VISIT_TYPES: VisitType[] = [
   "Video Consultation",
 ];
 
-const TIME_SLOTS = [
-  "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-  "14:00", "14:30", "15:00", "15:30", "16:00", "16:30",
-];
+const ALL_SESSIONS: SessionType[] = ["Morning", "Midday", "Afternoon", "Evening"];
 
 export function getNextDays(count: number) {
   const days: Date[] = [];
@@ -46,18 +49,39 @@ export function getAvatarGradient(initials: string) {
   return gradients[idx];
 }
 
-type BookingStep = "datetime" | "details" | "confirm" | "success";
+type BookingStep = "datetime" | "preview" | "details" | "confirm" | "success";
 
-function ConfirmRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+function ConfirmRow({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
   return (
     <div className="flex items-center justify-between gap-3">
       <span className="text-xs text-slate-500 shrink-0">{label}</span>
-      <span className={cn("text-sm font-semibold text-right", highlight ? "text-[var(--brand-primary)]" : "text-slate-800")}>
+      <span
+        className={cn(
+          "text-sm font-semibold text-right",
+          highlight ? "text-[var(--brand-primary)]" : "text-slate-800"
+        )}
+      >
         {value}
       </span>
     </div>
   );
 }
+
+/** Ticket-badge badge colours per session */
+const SESSION_BADGE_CLS: Record<SessionType, string> = {
+  Morning:   "bg-amber-100 text-amber-700 border-amber-200",
+  Midday:    "bg-sky-100   text-sky-700   border-sky-200",
+  Afternoon: "bg-teal-100  text-teal-700  border-teal-200",
+  Evening:   "bg-indigo-100 text-indigo-700 border-indigo-200",
+};
 
 export function BookingModal({
   doctor,
@@ -71,12 +95,18 @@ export function BookingModal({
   currentUserName: string;
 }) {
   const addAppointment = useAppointmentStore((s) => s.addAppointment);
+  const appointments = useAppointmentStore((s) => s.appointments);
+  const getConfig = useSessionConfigStore((s) => s.getConfig);
+
   const availableDays = useMemo(() => getNextDays(7), []);
   const fullyBooked = doctor.fullyBookedDate;
 
+  const STEPS: BookingStep[] = ["datetime", "preview", "details", "confirm"];
+
   const [step, setStep] = useState<BookingStep>("datetime");
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [selectedSession, setSelectedSession] = useState<SessionType | null>(null);
+  const [generatedTicket, setGeneratedTicket] = useState<number | null>(null);
   const [visitType, setVisitType] = useState<VisitType>("General Checkup");
   const [notes, setNotes] = useState("");
 
@@ -86,13 +116,35 @@ export function BookingModal({
   const isFullyBooked = (d: Date) =>
     fullyBooked ? d.toISOString().startsWith(fullyBooked) : false;
 
-  const STEPS: BookingStep[] = ["datetime", "details", "confirm"];
+  /** Count existing (non-cancelled) bookings for a doctor×session×date */
+  function getSessionBookingCount(session: SessionType, day: Date): number {
+    return appointments.filter(
+      (a) =>
+        a.doctorId === doctor.doctorId &&
+        a.session === session &&
+        new Date(a.dateTime).toDateString() === day.toDateString() &&
+        a.status !== "Cancelled"
+    ).length;
+  }
+
+  /** Approximate ticket the patient would receive (live count + 1) */
+  const approxTicket = useMemo(() => {
+    if (!selectedDay || !selectedSession) return null;
+    return getSessionBookingCount(selectedSession, selectedDay) + 1;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDay, selectedSession, appointments]);
 
   function handleBook() {
-    if (!selectedDay || !selectedTime) return;
-    const [hh, mm] = selectedTime.split(":").map(Number);
+    if (!selectedDay || !selectedSession) return;
+
+    // Assign ticket at booking time (may differ from approxTicket by 0–1 in practice)
+    const existingCount = getSessionBookingCount(selectedSession, selectedDay);
+    const nextTicket = existingCount + 1;
+    setGeneratedTicket(nextTicket);
+
+    const meta = SESSION_META[selectedSession];
     const dt = new Date(selectedDay);
-    dt.setHours(hh, mm, 0, 0);
+    dt.setHours(meta.startHour, 0, 0, 0);
 
     const newAppt: Appointment = {
       appointmentId: `APT-${Date.now()}`,
@@ -105,6 +157,8 @@ export function BookingModal({
       branchName: doctor.branchName,
       dateTime: dt.toISOString(),
       duration: 30,
+      session: selectedSession,
+      ticketNumber: nextTicket,
       visitType,
       status: "Pending",
       paymentStatus: "Unpaid",
@@ -118,11 +172,14 @@ export function BookingModal({
 
   const gradient = getAvatarGradient(doctor.avatar);
 
+  const stepIndex = STEPS.indexOf(step);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in-up">
-        {/* Header */}
+
+        {/* ── Header ─────────────────────────────────────────────── */}
         <div className={`bg-gradient-to-r ${gradient} p-6 text-white`}>
           <button
             onClick={onClose}
@@ -141,41 +198,50 @@ export function BookingModal({
             </div>
           </div>
 
-          {/* Step indicator */}
-          <div className="flex items-center gap-2 mt-5">
-            {STEPS.map((s, i) => (
-              <React.Fragment key={s}>
-                <div
-                  className={cn(
-                    "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all",
-                    step === s
-                      ? "bg-white text-[var(--brand-primary)]"
-                      : STEPS.indexOf(step) > i || step === "success"
-                      ? "bg-white/50 text-white"
-                      : "bg-white/20 text-white/60"
+          {/* Step indicator — 4 steps */}
+          {step !== "success" && (
+            <div className="flex items-center gap-2 mt-5">
+              {STEPS.map((s, i) => (
+                <React.Fragment key={s}>
+                  <div
+                    className={cn(
+                      "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all",
+                      step === s
+                        ? "bg-white text-[var(--brand-primary)]"
+                        : stepIndex > i
+                        ? "bg-white/50 text-white"
+                        : "bg-white/20 text-white/60"
+                    )}
+                  >
+                    {stepIndex > i ? (
+                      <Check className="w-3.5 h-3.5" />
+                    ) : (
+                      i + 1
+                    )}
+                  </div>
+                  {i < STEPS.length - 1 && (
+                    <div className="flex-1 h-0.5 bg-white/30 rounded-full" />
                   )}
-                >
-                  {(STEPS.indexOf(step) > i || step === "success") && step !== s ? (
-                    <Check className="w-3.5 h-3.5" />
-                  ) : (
-                    i + 1
-                  )}
-                </div>
-                {i < 2 && <div className="flex-1 h-0.5 bg-white/30 rounded-full" />}
-              </React.Fragment>
-            ))}
-          </div>
+                </React.Fragment>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Body */}
+        {/* ── Body ─────────────────────────────────────────────── */}
         <div className="p-6 max-h-[70vh] overflow-y-auto">
-          {/* Step 1 */}
+
+          {/* ── Step 1: Date & Session ─────────────────────────── */}
           {step === "datetime" && (
             <div className="space-y-5 animate-fade-in">
-              <h3 className="font-bold text-slate-900 text-lg">Select Date & Time</h3>
+              <h3 className="font-bold text-slate-900 text-lg">Select Date &amp; Session</h3>
+
+              {/* Day picker */}
               <div>
-                <p className="text-xs font-semibold text-slate-500 uppercase mb-2 tracking-wide">Available Days</p>
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                <p className="text-xs font-semibold text-slate-500 uppercase mb-2 tracking-wide">
+                  Available Days
+                </p>
+                <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
                   {availableDays.map((day) => {
                     const booked = isFullyBooked(day);
                     const selected = selectedDay?.toDateString() === day.toDateString();
@@ -183,7 +249,10 @@ export function BookingModal({
                       <button
                         key={day.toISOString()}
                         disabled={booked}
-                        onClick={() => { setSelectedDay(day); setSelectedTime(null); }}
+                        onClick={() => {
+                          setSelectedDay(day);
+                          setSelectedSession(null);
+                        }}
                         className={cn(
                           "flex flex-col items-center py-3 px-1 rounded-xl border text-xs font-semibold transition-all",
                           booked
@@ -207,26 +276,80 @@ export function BookingModal({
                 </div>
               </div>
 
+              {/* Session cards — only shown after day is selected */}
               {selectedDay && (
-                <div className="animate-fade-in-up">
-                  <p className="text-xs font-semibold text-slate-500 uppercase mb-2 tracking-wide">
-                    Time Slots — {dayFmt(selectedDay)}
+                <div className="animate-fade-in-up space-y-2">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Sessions — {dayFmt(selectedDay)}
                   </p>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                    {TIME_SLOTS.map((slot) => {
-                      const selected = selectedTime === slot;
+                  <div className="grid grid-cols-1 gap-3">
+                    {ALL_SESSIONS.map((session) => {
+                      const meta = SESSION_META[session];
+                      const config = getConfig(doctor.doctorId, session);
+                      const maxTickets = config?.maxTickets ?? 12;
+                      const isEnabled = config?.isEnabled ?? true;
+                      const booked = getSessionBookingCount(session, selectedDay);
+                      const isFull = booked >= maxTickets;
+                      const isDisabled = !isEnabled || isFull;
+                      const isSelected = selectedSession === session;
+                      const pct = Math.min((booked / maxTickets) * 100, 100);
+
+                      const progressColor =
+                        pct >= 90 ? "bg-rose-400" : pct >= 60 ? "bg-amber-400" : "bg-emerald-400";
+
                       return (
                         <button
-                          key={slot}
-                          onClick={() => setSelectedTime(slot)}
+                          key={session}
+                          disabled={isDisabled}
+                          onClick={() => setSelectedSession(session)}
                           className={cn(
-                            "py-2 rounded-xl border text-xs font-semibold transition-all",
-                            selected
-                              ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white"
-                              : "border-slate-200 bg-white text-slate-700 hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
+                            "w-full rounded-2xl border-2 p-4 text-left transition-all duration-200",
+                            isDisabled
+                              ? "border-slate-100 bg-slate-50 cursor-not-allowed opacity-60"
+                              : isSelected
+                              ? "border-[var(--brand-primary)] bg-[var(--brand-primary)]/5 shadow-md"
+                              : "border-slate-200 bg-white hover:border-[var(--brand-primary)]/50 hover:shadow-sm"
                           )}
                         >
-                          {slot}
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xl">{meta.emoji}</span>
+                              <div>
+                                <p
+                                  className={cn(
+                                    "font-bold text-sm",
+                                    isSelected ? "text-[var(--brand-primary)]" : "text-slate-800"
+                                  )}
+                                >
+                                  {meta.label}
+                                </p>
+                                <p className="text-xs text-slate-500">{meta.timeRange}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              {isFull ? (
+                                <span className="text-xs font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
+                                  Full
+                                </span>
+                              ) : !isEnabled ? (
+                                <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                                  Closed
+                                </span>
+                              ) : (
+                                <span className="text-xs font-semibold text-slate-600">
+                                  🎫 {booked} / {maxTickets}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Capacity progress bar */}
+                          <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                            <div
+                              className={cn("h-full rounded-full transition-all", progressColor)}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
                         </button>
                       );
                     })}
@@ -235,8 +358,8 @@ export function BookingModal({
               )}
 
               <Button
-                disabled={!selectedDay || !selectedTime}
-                onClick={() => setStep("details")}
+                disabled={!selectedDay || !selectedSession}
+                onClick={() => setStep("preview")}
                 className="w-full bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-11 font-semibold disabled:opacity-40 transition-all"
               >
                 Continue
@@ -245,7 +368,84 @@ export function BookingModal({
             </div>
           )}
 
-          {/* Step 2 */}
+          {/* ── Step 2: Approximate Ticket Preview ─────────────── */}
+          {step === "preview" && selectedDay && selectedSession && (
+            <div className="space-y-5 animate-fade-in">
+              <h3 className="font-bold text-slate-900 text-lg">Your Estimated Ticket</h3>
+              <p className="text-sm text-slate-500">
+                Here's your <strong>approximate position</strong> in the queue for{" "}
+                <span className="text-slate-700 font-semibold">
+                  {SESSION_META[selectedSession].emoji} {SESSION_META[selectedSession].label}
+                </span>{" "}
+                on <span className="text-slate-700 font-semibold">{dayFmt(selectedDay)}</span>.
+              </p>
+
+              {/* Ticket mockup */}
+              <div className="relative flex items-center justify-center py-4">
+                {/* Outer decorative ring */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-48 h-48 rounded-full border-4 border-dashed border-slate-100 animate-spin-slow" />
+                </div>
+                <div
+                  className={cn(
+                    "relative w-40 h-40 rounded-3xl flex flex-col items-center justify-center shadow-xl border-2",
+                    SESSION_BADGE_CLS[selectedSession]
+                  )}
+                  style={{
+                    background:
+                      selectedSession === "Morning"
+                        ? "linear-gradient(135deg,#fffbeb,#fef3c7)"
+                        : selectedSession === "Midday"
+                        ? "linear-gradient(135deg,#eff6ff,#dbeafe)"
+                        : selectedSession === "Afternoon"
+                        ? "linear-gradient(135deg,#f0fdfa,#ccfbf1)"
+                        : "linear-gradient(135deg,#eef2ff,#e0e7ff)",
+                  }}
+                >
+                  <Ticket className="w-6 h-6 mb-1 opacity-40" />
+                  <p className="text-[10px] font-semibold uppercase tracking-widest opacity-60 mb-1">
+                    Est. Ticket
+                  </p>
+                  <p className="text-5xl font-black leading-none">
+                    #{approxTicket}
+                  </p>
+                  <p className="text-[10px] font-semibold mt-2 opacity-50">
+                    {SESSION_META[selectedSession].timeRange}
+                  </p>
+                </div>
+              </div>
+
+              {/* Warning note */}
+              <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-200">
+                <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-700 leading-relaxed">
+                  This is an <strong>estimate</strong>. If others book at the same time, your
+                  actual ticket number may shift by ±1. Your confirmed number will be shown after
+                  you complete the booking.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setStep("datetime")}
+                  className="flex-1 rounded-xl h-11 border-slate-200"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Back
+                </Button>
+                <Button
+                  onClick={() => setStep("details")}
+                  className="flex-1 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-11 font-semibold"
+                >
+                  I Understand, Proceed
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Step 3: Visit Details ───────────────────────────── */}
           {step === "details" && (
             <div className="space-y-5 animate-fade-in">
               <h3 className="font-bold text-slate-900 text-lg">Visit Details</h3>
@@ -285,7 +485,7 @@ export function BookingModal({
               <div className="flex gap-3">
                 <Button
                   variant="outline"
-                  onClick={() => setStep("datetime")}
+                  onClick={() => setStep("preview")}
                   className="flex-1 rounded-xl h-11 border-slate-200"
                 >
                   <ChevronLeft className="w-4 h-4 mr-1" />
@@ -302,20 +502,43 @@ export function BookingModal({
             </div>
           )}
 
-          {/* Step 3 */}
-          {step === "confirm" && selectedDay && selectedTime && (
+          {/* ── Step 4: Confirm ─────────────────────────────────── */}
+          {step === "confirm" && selectedDay && selectedSession && (
             <div className="space-y-5 animate-fade-in">
               <h3 className="font-bold text-slate-900 text-lg">Confirm Appointment</h3>
+
+              {/* Session badge */}
+              <div
+                className={cn(
+                  "inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold",
+                  SESSION_BADGE_CLS[selectedSession]
+                )}
+              >
+                <span>{SESSION_META[selectedSession].emoji}</span>
+                <span>
+                  {SESSION_META[selectedSession].label} · {SESSION_META[selectedSession].timeRange}
+                </span>
+                <span className="ml-1 opacity-60">~Ticket #{approxTicket}</span>
+              </div>
+
               <div className="bg-slate-50 rounded-2xl p-4 space-y-3 border border-slate-100">
                 <ConfirmRow label="Doctor" value={doctor.name} />
                 <ConfirmRow label="Specialization" value={doctor.specialization} />
                 <ConfirmRow label="Branch" value={doctor.branchName} />
                 <ConfirmRow label="Date" value={dayFmt(selectedDay)} />
-                <ConfirmRow label="Time" value={selectedTime} />
+                <ConfirmRow
+                  label="Session"
+                  value={`${SESSION_META[selectedSession].emoji} ${selectedSession} (${SESSION_META[selectedSession].timeRange})`}
+                />
                 <ConfirmRow label="Visit Type" value={visitType} />
-                <ConfirmRow label="Consultation Fee" value={`$${doctor.consultationFee}`} highlight />
+                <ConfirmRow
+                  label="Consultation Fee"
+                  value={`$${doctor.consultationFee}`}
+                  highlight
+                />
                 {notes && <ConfirmRow label="Notes" value={notes} />}
               </div>
+
               <div className="flex gap-3">
                 <Button
                   variant="outline"
@@ -336,8 +559,8 @@ export function BookingModal({
             </div>
           )}
 
-          {/* Success */}
-          {step === "success" && (
+          {/* ── Success ─────────────────────────────────────────── */}
+          {step === "success" && selectedDay && selectedSession && (
             <div className="flex flex-col items-center text-center gap-4 py-4 animate-fade-in">
               <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center">
                 <Check className="w-10 h-10 text-emerald-600 stroke-[2.5]" />
@@ -346,23 +569,52 @@ export function BookingModal({
                 <h3 className="text-xl font-bold text-slate-900">Appointment Booked!</h3>
                 <p className="text-slate-500 text-sm mt-1">
                   Your appointment with{" "}
-                  <span className="font-semibold text-slate-700">{doctor.name}</span>{" "}
-                  has been successfully scheduled.
+                  <span className="font-semibold text-slate-700">{doctor.name}</span> has been
+                  successfully scheduled.
                 </p>
               </div>
-              <div className="w-full bg-slate-50 rounded-2xl p-4 text-sm space-y-2 border border-slate-100 text-left">
-                <p className="text-slate-500">
-                  📅 <span className="font-semibold text-slate-800">{selectedDay && dayFmt(selectedDay)}</span>{" "}
-                  at <span className="font-semibold text-slate-800">{selectedTime}</span>
-                </p>
-                <p className="text-slate-500">
-                  🏥 <span className="font-semibold text-slate-800">{doctor.branchName}</span>
-                </p>
-                <p className="text-slate-500">
-                  📋 Status:{" "}
-                  <span className="font-semibold text-amber-600">Pending Confirmation</span>
-                </p>
+
+              {/* Prominent ticket display */}
+              <div
+                className={cn(
+                  "w-full rounded-2xl p-5 text-left relative overflow-hidden border-2",
+                  SESSION_BADGE_CLS[selectedSession]
+                )}
+                style={{
+                  background:
+                    selectedSession === "Morning"
+                      ? "linear-gradient(135deg,#fffbeb,#fef3c7)"
+                      : selectedSession === "Midday"
+                      ? "linear-gradient(135deg,#eff6ff,#dbeafe)"
+                      : selectedSession === "Afternoon"
+                      ? "linear-gradient(135deg,#f0fdfa,#ccfbf1)"
+                      : "linear-gradient(135deg,#eef2ff,#e0e7ff)",
+                }}
+              >
+                {/* Big ticket number in top-right */}
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest opacity-60">
+                      Confirmed Ticket
+                    </p>
+                    <p className="text-5xl font-black leading-none mt-1">#{generatedTicket}</p>
+                  </div>
+                  <div className="text-4xl">{SESSION_META[selectedSession].emoji}</div>
+                </div>
+                <div className="space-y-1 text-sm">
+                  <p className="font-semibold">
+                    {SESSION_META[selectedSession].label} Session ·{" "}
+                    {SESSION_META[selectedSession].timeRange}
+                  </p>
+                  <p className="opacity-70">📅 {dayFmt(selectedDay)}</p>
+                  <p className="opacity-70">🏥 {doctor.branchName}</p>
+                  <p className="opacity-70">
+                    📋 Status:{" "}
+                    <span className="font-semibold text-amber-600">Pending Confirmation</span>
+                  </p>
+                </div>
               </div>
+
               <Button
                 onClick={onClose}
                 className="w-full bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-11 font-semibold"
