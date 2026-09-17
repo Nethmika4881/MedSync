@@ -56,6 +56,7 @@ export const mockUsers: MockUser[] = [
     email: "jessica.turner@healthora.com",
     blurb: "Front desk — appointment booking and patient check-in",
   },
+
 ];
 
 export const roleConfig: Record<
@@ -86,4 +87,5 @@ export const roleConfig: Record<
     icon: "Calendar",
     description: "Booking, check-in, patient registration",
   },
+
 };

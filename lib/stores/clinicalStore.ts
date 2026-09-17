@@ -11,6 +11,9 @@ interface ClinicalStore {
   uploadResult: (treatmentId: string, filename: string) => void;
   addConsultation: (consultation: ConsultationRecord) => void;
   updateConsultation: (id: string, updates: Partial<ConsultationRecord>) => void;
+  addTreatment: (treatment: Treatment) => void;
+  removeTreatment: (treatmentId: string) => void;
+  updateTreatmentQuantity: (treatmentId: string, quantity: number) => void;
 }
 
 export const useClinicalStore = create<ClinicalStore>((set) => ({
@@ -48,6 +51,25 @@ export const useClinicalStore = create<ClinicalStore>((set) => ({
     set((state) => ({
       consultations: state.consultations.map((c) =>
         c.consultationId === id ? { ...c, ...updates } : c
+      ),
+    })),
+
+  addTreatment: (treatment) =>
+    set((state) => ({
+      treatments: [...state.treatments, treatment],
+    })),
+
+  removeTreatment: (treatmentId) =>
+    set((state) => ({
+      treatments: state.treatments.filter((t) => t.treatmentId !== treatmentId),
+    })),
+
+  updateTreatmentQuantity: (treatmentId, quantity) =>
+    set((state) => ({
+      treatments: state.treatments.map((t) =>
+        t.treatmentId === treatmentId
+          ? { ...t, quantity, total: t.unitPrice * quantity }
+          : t
       ),
     })),
 }));
