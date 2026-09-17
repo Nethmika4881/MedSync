@@ -13,6 +13,12 @@
 //   controlled by useSidebarStore.isCollapsed.
 //   Mobile:  the sidebar is hidden off-screen and slides in as a fixed overlay
 //   when useSidebarStore.isMobileOpen is true.
+//
+// HYDRATION MODEL:
+//   The auth store is client-side Zustand — role/user can be null on first render.
+//   Rather than returning null (which collapses the flex layout permanently), we
+//   render a skeleton placeholder that preserves the sidebar's physical space until
+//   the store hydrates and the real sidebar content can mount.
 
 import React from "react";
 import Link from "next/link";
@@ -34,6 +40,50 @@ import { roleConfig, UserRole } from "@/lib/mockData/users";
 import { cn } from "@/lib/utils";
 import * as Icons from "lucide-react";
 
+// ─── Skeleton (shown while auth store hydrates) ───────────────────────────────
+
+function SidebarSkeleton({ isCollapsed }: { isCollapsed: boolean }) {
+  return (
+    <aside
+      className={cn(
+        "hidden lg:flex flex-col shrink-0",
+        "bg-white border-r border-slate-200",
+        "shadow-[4px_0_24px_rgba(0,0,0,0.02)]",
+        "transition-[width] duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
+        "sticky top-0 h-screen z-40",
+        isCollapsed ? "w-16" : "w-64"
+      )}
+    >
+      <div className="w-full h-full overflow-hidden flex flex-col">
+        {/* Brand row */}
+        <div className="h-16 flex items-center px-4 border-b border-slate-100 shrink-0">
+          <div className="w-7 h-7 rounded-full bg-slate-200 animate-pulse shrink-0" />
+          {!isCollapsed && (
+            <div className="ml-2 h-4 w-24 rounded bg-slate-200 animate-pulse" />
+          )}
+        </div>
+        {/* Nav item placeholders */}
+        <div className="flex-1 px-2 py-4 space-y-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl",
+                isCollapsed ? "justify-center" : ""
+              )}
+            >
+              <div className="w-5 h-5 rounded bg-slate-200 animate-pulse shrink-0" />
+              {!isCollapsed && (
+                <div className="h-3 rounded bg-slate-200 animate-pulse flex-1" />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </aside>
+  );
+}
+
 // ─── Sidebar Shell ────────────────────────────────────────────────────────────
 
 export function Sidebar() {
@@ -46,15 +96,17 @@ export function Sidebar() {
   const { isCollapsed, isMobileOpen, toggleCollapsed, closeMobile } =
     useSidebarStore();
 
-  if (!role || !user) return null;
+  // ── Hydration guard ────────────────────────────────────────────────────────
+  if (!role || !user) {
+    return <SidebarSkeleton isCollapsed={isCollapsed} />;
+  }
 
   const navItems = roleNavConfig[role] || [];
   const rConfig = roleConfig[role];
 
   // ─── Shared inner content (rendered in both desktop and mobile) ────────────
   const sidebarContent = (
-    <div className="flex flex-col h-full">
-
+    <div className="flex flex-col h-full w-full">
       {/* Brand + Mobile close button */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-slate-100 shrink-0">
         <Link
@@ -105,8 +157,7 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Branch Pill — only for receptionists, hidden when collapsed.
-           In production this comes from the JWT session claim. */}
+      {/* Branch Pill — only for receptionists, hidden when collapsed. */}
       {role === "receptionist" && activeBranch && (
         <div
           className={cn(
@@ -212,30 +263,6 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Collapse toggle button — desktop only */}
-      <div className="hidden lg:block px-3 py-2 border-t border-slate-100 shrink-0">
-        <button
-          onClick={toggleCollapsed}
-          title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className={cn(
-            "w-full flex items-center px-3 py-2 rounded-xl text-xs font-medium text-slate-500",
-            "hover:bg-slate-50 hover:text-slate-800 transition-colors group",
-            isCollapsed && "justify-center"
-          )}
-        >
-          {isCollapsed ? (
-            <ChevronRight className="w-4 h-4 shrink-0" />
-          ) : (
-            <>
-              <ChevronLeft className="w-4 h-4 shrink-0 mr-2" />
-              <span className="whitespace-nowrap overflow-hidden">
-                Collapse
-              </span>
-            </>
-          )}
-        </button>
-      </div>
-
       {/* Sign Out footer */}
       <div className={cn("p-3 border-t border-slate-100 shrink-0", isCollapsed && "flex justify-center")}>
         <button
@@ -276,13 +303,31 @@ export function Sidebar() {
           "bg-white border-r border-slate-200",
           "shadow-[4px_0_24px_rgba(0,0,0,0.02)]",
           "transition-[width] duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
-          "overflow-hidden",
-          // Sticky: sidebar stays in view while content scrolls
-          "sticky top-0 h-screen",
+          "sticky top-0 h-screen z-40 relative",
           isCollapsed ? "w-16" : "w-64"
         )}
       >
-        {sidebarContent}
+        <div className="w-full h-full overflow-hidden flex flex-col">
+          {sidebarContent}
+        </div>
+
+        {/* Floating Collapse Toggle at the Top */}
+        <button
+          onClick={toggleCollapsed}
+          title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className={cn(
+            "hidden lg:flex absolute top-5 -right-3 z-50 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition-colors duration-150",
+            "text-slate-400 hover:text-slate-700 hover:bg-slate-50",
+            "w-6 h-6"
+          )}
+        >
+          {isCollapsed ? (
+            <ChevronRight className="w-3.5 h-3.5" />
+          ) : (
+            <ChevronLeft className="w-3.5 h-3.5" />
+          )}
+        </button>
       </aside>
 
       {/* ── MOBILE OVERLAY DRAWER ─────────────────────────────────────────────
@@ -309,6 +354,7 @@ export function Sidebar() {
             "absolute left-0 top-0 bottom-0 w-72 bg-white",
             "shadow-[8px_0_32px_rgba(0,0,0,0.12)]",
             "transition-transform duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
+            "overflow-hidden",
             isMobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
