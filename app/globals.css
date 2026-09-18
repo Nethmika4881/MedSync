@@ -15,6 +15,11 @@
     --surface: #FFFFFF;
     --border-subtle: #EAECEF;
 
+    /* === Sidebar Layout Tokens === */
+    /* Used by Sidebar.tsx and all staff portal layouts to keep widths in sync. */
+    --sidebar-w: 16rem;           /* 256px — expanded sidebar width */
+    --sidebar-collapsed-w: 4rem;  /* 64px  — collapsed icon-only rail width */
+
     /* Status colors */
     --success: #16A34A;
     --success-bg: #E9F9EF;

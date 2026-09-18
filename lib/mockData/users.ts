@@ -1,15 +1,59 @@
 // lib/mockData/users.ts
-// Only role UI config and the UserRole type remain here.
-// Actual user data is in the database (Neon PostgreSQL).
-// Import UserRole from here or from @/lib/types — both are the same.
+import type { AuthUser } from "@/lib/types";
 
 export type UserRole = "admin" | "doctor" | "patient" | "receptionist";
+
+export type MockUser = AuthUser;
 
 export interface RoleConfigEntry {
   label: string;
   color: string;
   description: string;
+  icon?: string;
 }
+
+export const mockUsers: MockUser[] = [
+  {
+    userId: "USR-001",
+    role: "admin",
+    name: "Alexander Chen",
+    firstName: "Alexander",
+    avatar: "AC",
+    branchId: "BR-001",
+    email: "admin@medsync.lk",
+    blurb: "System administrator — full access across all branches",
+  },
+  {
+    userId: "USR-002",
+    role: "doctor",
+    name: "Dr. Sarah Mitchell",
+    firstName: "Sarah",
+    avatar: "SM",
+    branchId: "BR-001",
+    email: "sarah.mitchell@medsync.lk",
+    blurb: "Cardiologist — Senior Consultant, Branch 1",
+  },
+  {
+    userId: "USR-003",
+    role: "patient",
+    name: "Abraham Brakering",
+    firstName: "Abraham",
+    avatar: "AB",
+    branchId: "BR-001",
+    email: "abraham@email.com",
+    blurb: "Patient account — book appointments and view records",
+  },
+  {
+    userId: "USR-004",
+    role: "receptionist",
+    name: "Jessica Turner",
+    firstName: "Jessica",
+    avatar: "JT",
+    branchId: "BR-001",
+    email: "jessica.turner@medsync.lk",
+    blurb: "Front desk — appointment booking and patient check-in",
+  },
+];
 
 export const roleConfig: Record<UserRole, RoleConfigEntry> = {
   admin: {

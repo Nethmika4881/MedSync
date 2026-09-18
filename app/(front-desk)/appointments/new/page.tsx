@@ -4,14 +4,8 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppointmentStore } from "@/lib/stores/appointmentStore";
 import { useCurrentUser } from "@/lib/stores/authStore";
-import type { Doctor } from "@/lib/types";
-import { doctors,   } from "@/lib/constants";;
-import type { Patient } from "@/lib/types";
-import { patients,   } from "@/lib/constants";;
-import { branches } from "@/lib/constants";;
-import type { VisitType } from "@/lib/types";
-import type { Appointment } from "@/lib/types";
-import { SessionType } from "@/lib/constants";;
+import type { Doctor, Patient, VisitType, SessionType, Appointment } from "@/lib/types";
+import { doctors, patients, branches, SESSION_META } from "@/lib/constants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,8 +35,27 @@ const VISIT_TYPES: VisitType[] = [
 ];
 
 const DURATIONS = [15, 30, 45, 60, 90];
+const SLOT_CAPACITY = 4;
 
 const SESSIONS: SessionType[] = ["Morning", "Afternoon", "Evening"];
+function getSlotState(doctorId: string, selectedDay: Date | null, session: SessionType | null) {
+  if (!selectedDay || !session) {
+    return { count: 0, lastTicketNumber: 0, nextTicketNumber: 1, isFull: false };
+  }
+
+  const slotAppointments = useAppointmentStore.getState().appointments.filter(
+    (a) =>
+      a.doctorId === doctorId &&
+      a.session === session &&
+      new Date(a.dateTime).toDateString() === selectedDay.toDateString()
+  );
+
+  const lastTicketNumber = slotAppointments.reduce((max, a) => Math.max(max, a.ticketNumber ?? 0), 0);
+  const nextTicketNumber = lastTicketNumber + 1;
+  const isFull = slotAppointments.length >= SLOT_CAPACITY;
+
+  return { count: slotAppointments.length, lastTicketNumber, nextTicketNumber, isFull };
+}
 
 function getNextDays(count: number) {
   const days: Date[] = [];
@@ -338,19 +351,17 @@ export default function NewAppointmentPage() {
     }
     setError("");
 
-    // Calculate ticket number
-    const existingForSession = useAppointmentStore.getState().appointments.filter(
-      a => a.doctorId === form.doctorId && 
-           a.session === form.selectedSession && 
-           new Date(a.dateTime).toDateString() === form.selectedDay!.toDateString()
-    );
-    const nextTicket = existingForSession.length + 1;
+    const slotStatus = getSlotState(form.doctorId, form.selectedDay, form.selectedSession);
+    if (slotStatus.isFull) {
+      setError("This time slot is already full. Please choose another slot.");
+      return;
+    }
+
+    const nextTicket = slotStatus.nextTicketNumber;
     setGeneratedTicket(nextTicket);
 
     const dt = new Date(form.selectedDay);
-    if (form.selectedSession === "Morning") dt.setHours(9, 0, 0, 0);
-    else if (form.selectedSession === "Afternoon") dt.setHours(14, 0, 0, 0);
-    else dt.setHours(18, 0, 0, 0);
+    dt.setHours(SESSION_META[form.selectedSession].startHour, 0, 0, 0);
 
     const newAppt: Appointment = {
       appointmentId: `APT-${Date.now()}`,
@@ -362,7 +373,7 @@ export default function NewAppointmentPage() {
       branchId: form.branchId,
       branchName: branches.find((b) => b.branchId === form.branchId)?.name || "MedSync Central",
       dateTime: dt.toISOString(),
-      duration: form.duration,
+      duration: 30,
       session: form.selectedSession,
       ticketNumber: nextTicket,
       visitType: form.visitType,
@@ -398,7 +409,7 @@ export default function NewAppointmentPage() {
           </div>
           <p className="text-slate-500">
             📅 <span className="font-semibold text-slate-800">{form.selectedDay && dayFmt(form.selectedDay)}</span>{" "}
-            • <span className="font-semibold text-slate-800">{form.selectedSession} Session</span>
+            • <span className="font-semibold text-slate-800">{form.selectedSession && SESSION_META[form.selectedSession]?.label}</span>
           </p>
           <p className="text-slate-500">
             🏥 <span className="font-semibold text-slate-800">{branches.find((b) => b.branchId === form.branchId)?.name}</span>
@@ -605,23 +616,49 @@ export default function NewAppointmentPage() {
 
                   {/* Session Picker */}
                   <div className={cn("transition-opacity duration-300", form.selectedDay ? "opacity-100" : "opacity-30 pointer-events-none")}>
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Available Sessions</p>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Available Sessions</p>
+                      {form.selectedDay && form.doctorId && (
+                        <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                          3-hour slots
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
                       {SESSIONS.map((session) => {
                         const selected = form.selectedSession === session;
+                        const slotStatus = getSlotState(form.doctorId, form.selectedDay, session);
+                        const isFull = slotStatus.isFull;
+
                         return (
                           <button
                             key={session}
                             type="button"
+                            disabled={isFull}
                             onClick={() => setForm((f) => ({ ...f, selectedSession: session }))}
                             className={cn(
-                              "py-2.5 rounded-xl border text-xs font-bold transition-all",
+                              "w-full rounded-xl border px-3 py-3 text-left transition-all disabled:cursor-not-allowed disabled:opacity-60",
                               selected
                                 ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white shadow-md shadow-teal-500/20"
-                                : "border-slate-200 bg-white text-slate-600 hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
+                                : isFull
+                                  ? "border-rose-200 bg-rose-50 text-rose-700"
+                                  : "border-slate-200 bg-white text-slate-600 hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
                             )}
                           >
-                            {session}
+                            <div className="flex items-center justify-between gap-2">
+                              <div>
+                                <p className="font-bold text-sm">{SESSION_META[session]?.label ?? session}</p>
+                                <p className={cn("text-[10px] mt-1 font-medium", selected ? "text-white/80" : "text-slate-500")}>
+                                  Last ticket #{slotStatus.lastTicketNumber || 0} • Next #{slotStatus.nextTicketNumber}
+                                </p>
+                              </div>
+                              <span className={cn(
+                                "text-[10px] px-2 py-1 rounded-full font-bold",
+                                selected ? "bg-white/20 text-white" : isFull ? "bg-rose-100 text-rose-700" : "bg-slate-100 text-slate-600"
+                              )}>
+                                {isFull ? "Full" : `${slotStatus.count}/${SLOT_CAPACITY}`}
+                              </span>
+                            </div>
                           </button>
                         );
                       })}

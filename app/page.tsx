@@ -16,8 +16,16 @@ export default function LandingPage() {
 
   const handleLogin = (userId: string) => {
     login(userId);
-    // Route groups are URL-transparent — the dashboard lives at /dashboard, not /app/dashboard.
-    router.push("/dashboard");
+    const user = DEMO_USERS.find((u) => u.userId === userId);
+    if (user?.role === "admin") {
+      router.push("/admin-dashboard");
+    } else if (user?.role === "receptionist") {
+      router.push("/front-desk-dashboard");
+    } else if (user?.role === "doctor") {
+      router.push("/schedule");
+    } else {
+      router.push("/dashboard");
+    }
   };
 
   const patientDemo = DEMO_USERS.find(u => u.userId === "USR-003"); // Abraham Brakering

@@ -31,11 +31,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { doctors } from "@/lib/constants";;
-import { patients } from "@/lib/constants";;
-import { branches } from "@/lib/constants";;
-import type { Appointment, SessionType, VisitType } from "@/lib/types";;
-import { SESSION_META } from "@/lib/constants";;
+import { doctors, patients, branches, SESSION_META } from "@/lib/constants";
+import type { Appointment, SessionType, VisitType } from "@/lib/types";
 import { SessionBadge } from "@/components/catms/SessionBadge";
 
 /* ──────────────────────────────────────────────────────────
@@ -237,7 +234,7 @@ function ReceiptModal({
             <ReceiptRow
               icon={<Clock className="w-4 h-4" />}
               label="Session"
-              value={`${SESSION_META[appointment.session].emoji} ${appointment.session} · ${SESSION_META[appointment.session].timeRange} (Ticket #${appointment.ticketNumber})`}
+              value={appointment.session && SESSION_META[appointment.session] ? `${SESSION_META[appointment.session].emoji} ${appointment.session} · ${SESSION_META[appointment.session].timeRange} (Ticket #${appointment.ticketNumber})` : `Ticket #${appointment.ticketNumber}`}
             />
             <ReceiptRow icon={<MapPin className="w-4 h-4" />} label="Branch" value={appointment.branchName} />
             <ReceiptRow icon={<FileText className="w-4 h-4" />} label="Visit Type" value={appointment.visitType} />

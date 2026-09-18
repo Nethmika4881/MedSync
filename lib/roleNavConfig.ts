@@ -12,7 +12,7 @@ export interface NavItem {
 // the URL — the URL is just /dashboard, /appointments, etc.
 export const roleNavConfig: Record<UserRole, NavItem[]> = {
   admin: [
-    { label: "Dashboard",  href: "/dashboard",  icon: "LayoutDashboard" },
+    { label: "Dashboard",  href: "/admin-dashboard",  icon: "LayoutDashboard" },
     {
       label: "Doctors", href: "/doctors", icon: "Stethoscope",
       children: [
@@ -47,13 +47,14 @@ export const roleNavConfig: Record<UserRole, NavItem[]> = {
   patient: [
     { label: "Dashboard",       href: "/dashboard",    icon: "LayoutDashboard" },
     { label: "Find Doctors",    href: "/find-doctors", icon: "Search" },
+    { label: "Appointments",    href: "/my-appointments", icon: "Calendar" },
     { label: "Medical Records", href: "/records",      icon: "FileText" },
     { label: "Prescriptions",   href: "/prescriptions",icon: "Pill" },
   ],
 
   // Receptionist maps to the Front Desk portal routes.
   receptionist: [
-    { label: "Dashboard",    href: "/dashboard",        icon: "LayoutDashboard" },
+    { label: "Dashboard",    href: "/front-desk-dashboard",        icon: "LayoutDashboard" },
     {
       label: "Appointments", href: "/appointments", icon: "Calendar",
       children: [

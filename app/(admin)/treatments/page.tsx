@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useClinicalStore } from "@/lib/stores/clinicalStore";
 import { useRole, useCurrentUser } from "@/lib/stores/authStore";
-import { treatmentCatalogue } from "@/lib/constants";;
+import { treatmentCatalogue } from "@/lib/constants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/catms/StatusPill";
@@ -22,7 +22,7 @@ const CATEGORY_CONFIG: Record<
 > = {
   Laboratory: { label: "Laboratory",  color: "text-blue-700",   bg: "bg-blue-50 border-blue-200",   Icon: FlaskConical  },
   Radiology:  { label: "Radiology",   color: "text-purple-700", bg: "bg-purple-50 border-purple-200", Icon: Radiation    },
-  Procedure:  { label: "Procedure",   color: "text-amber-700",  bg: "bg-amber-50 border-amber-200",  Icon: Stethoscope  },
+  Procedure:  { label: "Procedure",  color: "text-amber-700",  bg: "bg-amber-50 border-amber-200",  Icon: Stethoscope  },
   Therapy:    { label: "Therapy",     color: "text-green-700",  bg: "bg-green-50 border-green-200",  Icon: Dumbbell     },
 };
 
@@ -34,7 +34,7 @@ function AdminCatalogueView() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
-  const filtered = treatmentCatalogue.filter((item) => {
+  const filtered = treatmentCatalogue.filter((item: any) => {
     const q = search.toLowerCase();
     const matchesSearch =
       !q ||
@@ -48,12 +48,12 @@ function AdminCatalogueView() {
   // Stats per category
   const stats = CATEGORIES.filter((c) => c !== "All").map((cat) => ({
     cat,
-    count: treatmentCatalogue.filter((i) => i.category === cat).length,
+    count: treatmentCatalogue.filter((i: any) => i.category === cat).length,
     avgPrice:
       treatmentCatalogue
-        .filter((i) => i.category === cat)
-        .reduce((sum, i) => sum + i.unitPrice, 0) /
-        (treatmentCatalogue.filter((i) => i.category === cat).length || 1),
+        .filter((i: any) => i.category === cat)
+        .reduce((sum: number, i: any) => sum + i.unitPrice, 0) /
+        (treatmentCatalogue.filter((i: any) => i.category === cat).length || 1),
     ...CATEGORY_CONFIG[cat],
   }));
 
@@ -178,7 +178,7 @@ function AdminCatalogueView() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {filtered.map((item) => {
+              {filtered.map((item: any) => {
                 const catCfg = CATEGORY_CONFIG[item.category];
                 const Icon = catCfg?.Icon ?? Activity;
                 return (
@@ -219,7 +219,7 @@ function AdminCatalogueView() {
                           catCfg?.color ?? "text-slate-600"
                         )}
                       >
-                        <Icon className="w-3 h-3" />
+                        <Icon className="w-3.5 h-3.5" />
                         {item.category}
                       </span>
                     </td>
