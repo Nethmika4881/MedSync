@@ -120,7 +120,7 @@ export default function BranchesPage() {
                       className={cn("w-9 h-9 flex items-center justify-center text-sm font-bold shrink-0", theme.shape)}
                       style={{ clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)" }}
                     >
-                      {branch.managerName.split(' ').map(n => n[0]).join('')}
+                      {branch.managerName.split(' ').map((n: string) => n[0]).join('')}
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-slate-900">{branch.managerName}</p>
