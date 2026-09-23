@@ -97,7 +97,7 @@ export default function InsurancePackagesPage() {
                 <div className="pt-4 border-t border-slate-100">
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Coverage Includes</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {pkg.coverage.map(cov => (
+                    {pkg.coverage.map((cov: string) => (
                       <span key={cov} className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
                         <CheckCircle2 className="w-3 h-3" /> {cov}
                       </span>
