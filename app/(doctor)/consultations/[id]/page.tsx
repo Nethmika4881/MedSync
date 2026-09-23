@@ -94,6 +94,7 @@ export default function ConsultationWorkspacePage() {
     if (!item) return;
     addTreatment({
       treatmentId: `TRT-${Date.now()}`,
+      appointmentId: appointmentId,
       consultationId,
       patientId,
       patientName,
@@ -208,6 +209,7 @@ export default function ConsultationWorkspacePage() {
       appointmentId,
       consultationId,
       branchId: appt?.branchId ?? "BR-001",
+      issuedAt: new Date().toISOString(),
       issueDate: new Date().toISOString().slice(0, 10),
       dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
       totalAmount,

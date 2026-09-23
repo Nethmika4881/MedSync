@@ -227,21 +227,21 @@ function ReceiptModal({
             <span className="text-sm font-bold text-slate-800" style={{ fontFamily: "monospace" }}>{appointment.appointmentId}</span>
           </div>
           <div className="space-y-3">
-            <ReceiptRow icon={<Stethoscope className="w-4 h-4" />} label="Doctor" value={appointment.doctorName} />
-            <ReceiptRow icon={<User className="w-4 h-4" />} label="Patient" value={appointment.patientName} />
+            <ReceiptRow icon={<Stethoscope className="w-4 h-4" />} label="Doctor" value={appointment.doctorName || "Unknown Doctor"} />
+            <ReceiptRow icon={<User className="w-4 h-4" />} label="Patient" value={appointment.patientName || "Unknown Patient"} />
             <ReceiptRow
               icon={<Calendar className="w-4 h-4" />}
               label="Date"
-              value={apptDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+              value={!isNaN(apptDate.getTime()) ? apptDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) : "Invalid Date"}
             />
             <ReceiptRow
               icon={<Clock className="w-4 h-4" />}
               label="Session"
-              value={`${SESSION_META[appointment.session].emoji} ${appointment.session} · ${SESSION_META[appointment.session].timeRange} (Ticket #${appointment.ticketNumber})`}
+              value={appointment.session && SESSION_META[appointment.session] ? `${SESSION_META[appointment.session].emoji} ${appointment.session} · ${SESSION_META[appointment.session].timeRange} (Ticket #${appointment.ticketNumber ?? "N/A"})` : "Unassigned"}
             />
-            <ReceiptRow icon={<MapPin className="w-4 h-4" />} label="Branch" value={appointment.branchName} />
+            <ReceiptRow icon={<MapPin className="w-4 h-4" />} label="Branch" value={appointment.branchName || "Main Branch"} />
             <ReceiptRow icon={<FileText className="w-4 h-4" />} label="Visit Type" value={appointment.visitType} />
-            <ReceiptRow icon={<CreditCard className="w-4 h-4" />} label="Specialization" value={appointment.doctorSpecialization} />
+            <ReceiptRow icon={<CreditCard className="w-4 h-4" />} label="Specialization" value={appointment.doctorSpecialization || "General"} />
           </div>
           <div className="flex items-center justify-between rounded-2xl px-4 py-3" style={{ background: "#E9F9EF" }}>
             <span className="text-sm font-semibold text-green-700">Status</span>
@@ -374,6 +374,7 @@ function NewAppointmentModal({
       paymentStatus: "Unpaid",
       source: "Booked",
       notes: notes || undefined,
+      fee: doctor.consultationFee,
     };
 
     addAppointment(appt);
@@ -721,7 +722,7 @@ export default function AppointmentsPage() {
                     <td className="px-6 py-4">
                       <div className="font-semibold text-slate-900">{new Date(appt.dateTime).toLocaleDateString()}</div>
                       <div className="mt-1">
-                        <SessionBadge session={appt.session} ticketNumber={appt.ticketNumber} variant="compact" />
+                        {appt.session && <SessionBadge session={appt.session} ticketNumber={appt.ticketNumber} variant="compact" />}
                       </div>
                     </td>
                     {role !== "patient" && (
@@ -801,7 +802,7 @@ export default function AppointmentsPage() {
                       <td className="px-6 py-4">
                         <div className="font-semibold text-slate-700">{new Date(appt.dateTime).toLocaleDateString()}</div>
                         <div className="mt-1">
-                          <SessionBadge session={appt.session} ticketNumber={appt.ticketNumber} variant="compact" />
+                          {appt.session && <SessionBadge session={appt.session} ticketNumber={appt.ticketNumber} variant="compact" />}
                         </div>
                       </td>
                       {role !== "patient" && (

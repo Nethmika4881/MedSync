@@ -158,9 +158,10 @@ export function BookingModal({
       session: selectedSession,
       ticketNumber: nextTicket,
       visitType,
-      status: "Pending",
+      status: "Confirmed",
       paymentStatus: "Unpaid",
       source: "Booked",
+      fee: doctor.consultationFee,
       notes: notes || undefined,
     };
 
