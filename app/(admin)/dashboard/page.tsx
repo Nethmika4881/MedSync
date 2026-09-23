@@ -177,7 +177,7 @@ export default function DashboardPage() {
                           {role === "patient" ? appt.doctorName : appt.patientName}
                         </p>
                         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                          <SessionBadge session={appt.session} ticketNumber={appt.ticketNumber} variant="compact" />
+                          {appt.session && <SessionBadge session={appt.session} ticketNumber={appt.ticketNumber} variant="compact" />}
                           <span className="text-xs text-slate-400">{appt.visitType}</span>
                         </div>
                       </div>

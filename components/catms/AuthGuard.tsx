@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 
 // AuthGuard — wraps any portal layout to redirect unauthenticated users to the
 // landing page. Uses the mock Zustand authStore until NextAuth.js middleware is

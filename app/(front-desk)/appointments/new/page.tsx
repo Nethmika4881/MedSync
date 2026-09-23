@@ -369,7 +369,8 @@ export default function NewAppointmentPage() {
       status: "Confirmed",
       paymentStatus: form.paymentStatus,
       source: "Booked",
-      notes: form.notes,
+      notes: form.notes || undefined,
+      fee: selectedDoctor!.consultationFee,
     };
 
     addAppointment(newAppt);
