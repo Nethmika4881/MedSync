@@ -44,6 +44,7 @@ export default function NewDoctorPage() {
     const branchName = branches.find(b => b.branchId === form.branchId)?.name || "Main Clinic";
     
     addDoctor({
+      doctorId: `DOC-${Date.now()}`,
       name: fullName,
       specialization: form.specialization,
       branchId: form.branchId,
