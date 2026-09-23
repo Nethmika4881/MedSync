@@ -44,6 +44,7 @@ export default function NewPatientPage() {
       firstName: form.firstName,
       lastName: form.lastName,
       dob: form.dob,
+      dateOfBirth: form.dob,
       age,
       gender: form.gender,
       bloodGroup: form.bloodGroup,
@@ -57,6 +58,7 @@ export default function NewPatientPage() {
       avatar: `${form.firstName[0]}${form.lastName[0]}`,
       registeredAt: new Date().toISOString().split("T")[0],
       branchId: form.branchId,
+      isActive: true,
     };
     setNewPatient(patient);
     setSubmitted(true);

@@ -154,7 +154,7 @@ export default function PatientProfilePage() {
               <div className="space-y-2.5">
                 <div className="flex items-start gap-2.5 text-sm">
                   <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0 text-slate-500 font-bold text-xs">
-                    {patient.emergencyContactName.charAt(0)}
+                    {patient.emergencyContactName?.charAt(0)}
                   </div>
                   <div>
                     <p className="font-semibold text-slate-800">{patient.emergencyContactName}</p>

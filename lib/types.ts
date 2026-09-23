@@ -178,6 +178,7 @@ export type TreatmentStatus = "Ordered" | "In-Progress" | "Completed" | "Cancell
 export interface Treatment {
   treatmentId: string;
   appointmentId: string;
+  consultationId?: string;
   patientId: string;
   patientName: string;
   doctorId: string;
@@ -235,19 +236,32 @@ export interface Medication {
 
 // ─── Billing ──────────────────────────────────────────────────────────────────
 
+export interface InvoiceLineItem {
+  itemId: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
+
+
 export type InvoiceStatus = "Draft" | "Unpaid" | "Partial" | "Paid" | "Overdue" | "Cancelled";
 export type ClaimStatus = "Submitted" | "UnderReview" | "Approved" | "Rejected" | "Settled";
 
 export interface Invoice {
   invoiceId: string;
   appointmentId: string;
+  consultationId?: string;
   patientId: string;
   patientName: string;
   branchId: string;
   totalAmount: number;
+  discountAmount?: number;
+  insuranceCoveredAmount?: number;
   paidAmount: number;
   balanceDue: number;
   status: InvoiceStatus | "Due";
+  lineItems?: InvoiceLineItem[];
   issuedAt: string;
   issueDate?: string;
   dueDate: string;

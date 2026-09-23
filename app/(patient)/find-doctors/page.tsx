@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { VisitType } from "@/lib/types";
-import { Appointment,   } from "@/lib/constants";;
 import { BookingModal, getAvatarGradient } from "@/components/catms/BookingModal";
 
 // ─── Info Pill ────────────────────────────────────────────────────────────────

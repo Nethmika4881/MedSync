@@ -59,7 +59,7 @@ export default function MySchedulePage() {
                 <div key={appt.appointmentId} className="p-4 hover:bg-slate-50 transition-colors">
                   <div className="flex justify-between items-start mb-2">
                     <p className="font-bold text-slate-900">{appt.patientName}</p>
-                    <SessionBadge session={appt.session} ticketNumber={appt.ticketNumber} variant="compact" />
+                    {appt.session && <SessionBadge session={appt.session} ticketNumber={appt.ticketNumber} variant="compact" />}
                   </div>
                   <div className="flex items-center gap-2">
                     <StatusPill status={appt.status} />
@@ -111,7 +111,7 @@ export default function MySchedulePage() {
                             <StatusPill status={slotAppt.status} />
                           </div>
                           <div className="flex items-center gap-2 mb-3 flex-wrap">
-                            <SessionBadge session={slotAppt.session} ticketNumber={slotAppt.ticketNumber} variant="full" />
+                            {slotAppt.session && <SessionBadge session={slotAppt.session} ticketNumber={slotAppt.ticketNumber} variant="full" />}
                             <span className="text-xs text-slate-500">{slotAppt.visitType}</span>
                           </div>
                           <div className="flex gap-2">
