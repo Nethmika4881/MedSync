@@ -32,13 +32,7 @@ export function Sidebar() {
         </Link>
       </div>
 
-      {/* Role Badge */}
-      <div className="px-6 py-4 shrink-0">
-        <div className={cn("px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-2", rConfig.color)}>
-          <span className="w-1.5 h-1.5 rounded-full bg-current" />
-          {rConfig.label} Portal
-        </div>
-      </div>
+
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-4 py-2 space-y-1 custom-scrollbar">
