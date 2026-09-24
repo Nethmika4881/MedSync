@@ -4,15 +4,26 @@ import React from "react";
 import { usePathname } from "next/navigation";
 import { Search, Bell, Menu } from "lucide-react";
 import { AvatarWithName } from "@/components/catms/AvatarWithName";
-import { useCurrentUser } from "@/lib/stores/authStore";
+import { useCurrentUser, useRole } from "@/lib/stores/authStore";
+import { roleConfig } from "@/lib/mockData/users";
+import type { UserRole } from "@/lib/types";
 
 export function Header() {
   const pathname = usePathname();
   const user = useCurrentUser();
+  const role = useRole() as UserRole | null;
 
   const getPageTitle = () => {
     const segments = pathname.split("/").filter(Boolean);
-    if (segments.length <= 1) return "Dashboard";
+
+    // If we are on the dashboard or root
+    if (segments.length <= 1 || (segments.length === 1 && segments[0] === "dashboard")) {
+      if (role && roleConfig[role]) {
+        return `${roleConfig[role].label} Portal`;
+      }
+      return "Dashboard";
+    }
+
     const last = segments[segments.length - 1];
     if (last === "new") return "Register New";
     return last.charAt(0).toUpperCase() + last.slice(1);
@@ -38,13 +49,8 @@ export function Header() {
           />
         </div>
 
-        {/* Notifications */}
-        <button className="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
-        </button>
 
-        <div className="h-6 w-px bg-slate-200" />
+
 
         {/* User Profile */}
         {user && (
