@@ -171,13 +171,13 @@
 | 5.14 | **Reports — Outstanding patient balance debtor list** | ❌ | Not built. Required via SQL Function. |
 | 5.15 | **Reports — Treatment category volume & insurance ratios** | ❌ | Not built. |
 | 5.16 | Settings page — profile, notifications, security, appearance | `(admin)/settings/page.tsx` | 🟡 | UI fully built with 4 tabs. Save shows toast but is a no-op. Not DB-connected. |
-| 5.17 | **Employee provisioning** — add/edit/deactivate staff with role assignment | ❌ | Staff page is read-only. No create/edit form exists. |
-| 5.18 | Doctor fee configuration panel — set `consultation_fee` per doctor | ❌ | Not built as a standalone feature. |
+| 5.17 | **Employee provisioning** — add/edit/deactivate staff with role assignment | `(admin)/staff/new/page.tsx` | 🟡 | UI fully built. Not DB-connected. |
+| 5.18 | Doctor fee configuration panel — set `consultation_fee` per doctor | `(admin)/doctors/fees/page.tsx` | 🟡 | UI fully built. Not DB-connected. |
 
 **Concrete next steps for Person 5:**
 1. ✅ Verify and complete stub pages: `doctors/new`, `doctors/[id]`, `insurance/packages` (UI fully built)
-2. Build employee provisioning (add/edit/deactivate) form
-3. Build Doctor fee configuration panel UI
+2. ✅ Build employee provisioning (add/edit/deactivate) form (UI fully built)
+3. ✅ Build Doctor fee configuration panel UI (UI fully built)
 4. Wire admin dashboard charts to real DB aggregation queries
 5. Build the 3 missing report queries as Server Actions (stored procedure + SQL function)
 
@@ -221,9 +221,7 @@
 11. ❌ Emergency walk-in appointment generator
 12. ❌ Branch-scoped data filtering for receptionist
 13. ❌ Three report SQL queries (stored procedures + functions)
-14. ❌ Employee provisioning (create/edit/deactivate staff)
-15. ❌ Doctor fee configuration panel
-16. ❌ Any Server Action connected to a real database
+14. ❌ Any Server Action connected to a real database
 
 ---
 
@@ -234,10 +232,10 @@
 - Patient records, prescriptions, medical history viewer
 - Doctor schedule agenda view
 - Admin dashboard charts (hardcoded data)
-- Staff / employee table
+- Staff / employee table and Employee Provisioning form
 - Branch directory
 - Insurance tables and packages
-- Add new doctor form and doctor profile view
+- Add new doctor form, doctor profile view, and fee configuration panel
 - Treatment catalogue
 - Billing invoices / payments / claims tables
 - Settings profile save (button is a no-op)
