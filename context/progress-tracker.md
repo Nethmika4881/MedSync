@@ -158,14 +158,14 @@
 | 5.1 | Admin layout — sidebar + header | `(admin)/layout.tsx` | ✅ | Complete. |
 | 5.2 | Admin dashboard — KPI cards, revenue chart, upcoming appointments | `(admin)/dashboard/page.tsx` | 🟡 | UI fully built with Recharts. Reads from mock data. Not DB-connected. |
 | 5.3 | Doctor directory — searchable list, specialization filter, availability toggle | `(admin)/doctors/page.tsx` | 🟡 | UI complete. Reads from `lib/mockData/doctors.ts`. No DB. |
-| 5.4 | Add doctor form | `(admin)/doctors/new/page.tsx` | 🔧 | Page file exists. Likely stub — needs verification. |
-| 5.5 | Doctor detail / edit view | `(admin)/doctors/[id]/page.tsx` | 🔧 | Dynamic route file exists. Likely stub. |
+| 5.4 | Add doctor form | `(admin)/doctors/new/page.tsx` | 🟡 | UI complete. Reads from mock data. Not DB-connected. |
+| 5.5 | Doctor detail / edit view | `(admin)/doctors/[id]/page.tsx` | 🟡 | UI complete. Reads from mock data. Not DB-connected. |
 | 5.6 | Doctor schedules management | `(admin)/doctors/schedules/page.tsx` | 🟡 | UI built. Reads from mock data. Not DB-connected. |
 | 5.7 | Staff management — employee table, department/branch filters | `(admin)/staff/page.tsx` | 🟡 | UI complete. Reads from `employees.ts` mock. Not DB-connected. |
 | 5.8 | Branch management — branch directory, rooms, contacts | `(admin)/branches/page.tsx` | 🟡 | UI complete. Reads from `lib/mockData/branches.ts`. Not DB-connected. |
 | 5.9 | Treatment catalogue management — CRUD for treatments and prices | `(admin)/treatments/page.tsx` | 🟡 | UI complete. Mutations are Zustand-only. |
 | 5.10 | Insurance providers list | `(admin)/insurance/page.tsx` | 🟡 | UI complete. Reads from `lib/mockData/insurance.ts`. Not DB-connected. |
-| 5.11 | Insurance packages management | `(admin)/insurance/packages/page.tsx` | 🔧 | Page exists. Needs verification. |
+| 5.11 | Insurance packages management | `(admin)/insurance/packages/page.tsx` | 🟡 | UI complete. Reads from mock data. Not DB-connected. |
 | 5.12 | Reports — Branch-wise appointment summary (charts) | `(admin)/reports/page.tsx` | 🟡 | Charts exist (Recharts). Uses hardcoded mock chart data. No SQL. |
 | 5.13 | **Reports — Doctor-wise billed vs. collected revenue** | ❌ | Not built. Required via SQL Stored Procedure. |
 | 5.14 | **Reports — Outstanding patient balance debtor list** | ❌ | Not built. Required via SQL Function. |
@@ -175,10 +175,11 @@
 | 5.18 | Doctor fee configuration panel — set `consultation_fee` per doctor | ❌ | Not built as a standalone feature. |
 
 **Concrete next steps for Person 5:**
-1. Verify and complete stub pages: `doctors/new`, `doctors/[id]`, `insurance/packages`
-2. Wire admin dashboard charts to real DB aggregation queries
-3. Build the 3 missing report queries as Server Actions (stored procedure + SQL function)
-4. Build employee provisioning (add/edit/deactivate) form
+1. ✅ Verify and complete stub pages: `doctors/new`, `doctors/[id]`, `insurance/packages` (UI fully built)
+2. Build employee provisioning (add/edit/deactivate) form
+3. Build Doctor fee configuration panel UI
+4. Wire admin dashboard charts to real DB aggregation queries
+5. Build the 3 missing report queries as Server Actions (stored procedure + SQL function)
 
 ---
 
@@ -235,7 +236,8 @@
 - Admin dashboard charts (hardcoded data)
 - Staff / employee table
 - Branch directory
-- Insurance tables
+- Insurance tables and packages
+- Add new doctor form and doctor profile view
 - Treatment catalogue
 - Billing invoices / payments / claims tables
 - Settings profile save (button is a no-op)
