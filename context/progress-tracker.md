@@ -44,16 +44,17 @@
 | # | Feature | Status | Notes |
 |---|---------|--------|-------|
 | 1.1 | Project initialization — Next.js 15, Tailwind v3, shadcn/ui | ✅ | Complete. App directory restructured into role-based route groups. |
-| 1.2 | **Neon PostgreSQL Database Schema** — all tables, constraints, triggers, stored procedures | ❌ | **Not started.** This is the single most critical blocker. No table, no migration, no SQL file exists. Blocks everyone else. |
-| 1.3 | **NextAuth.js / JWT Authentication** — login form, session management, middleware role routing | ❌ | Not started. `app/login/page.tsx` is a stub. `AuthGuard` uses a fake Zustand store only. |
+| 1.2 | **PostgreSQL Database Schema** — all tables, constraints, triggers, stored procedures | ✅ | **Complete.** Flyway migrations (V1-V7) configured and running locally via Docker Compose. |
+| 1.3 | **Custom Authentication** — login form, session management, middleware role routing | ❌ | Not started. Building from scratch without libraries (database-backed sessions). |
 | 1.4 | **Middleware role-routing** — protect `/dashboard`, `/appointments`, etc. by role | ❌ | Not started. All route groups are currently unprotected — anyone can visit any URL if they know it. |
-| 1.5 | Environment setup — `.env.local` with `DATABASE_URL`, `NEXTAUTH_SECRET` | ❌ | Not configured. No `.env` file exists in the project. |
+| 1.5 | Environment setup — `.env.local` with `DATABASE_URL` | ✅ | Complete. Local Docker setup configured and running. |
 | 1.6 | Shared UI component library registry (`ui-registry.md`, `ui-tokens.md`) | 🔧 | Tailwind tokens exist in `globals.css`. `ui-registry.md` not written yet. |
 
 **Concrete next steps for Person 1:**
-1. Write raw SQL schema file (`db/schema.sql`) with all tables
-2. Create `.env.local` with Neon connection string
-3. Implement NextAuth credentials provider with `pg` raw SQL lookup
+1. ✅ Set up Flyway migrations and Docker environment
+2. ✅ Create `.env.local` with connection strings
+3. Create `users` and `sessions` tables for custom authentication
+4. Implement custom registration, login, and database-backed sessions from scratch
 4. Write `middleware.ts` that reads the JWT role and redirects if unauthorized
 
 ---
@@ -187,8 +188,8 @@
 
 | Blocker | Impact |
 |---------|--------|
-| ❌ No `DATABASE_URL` / `.env.local` configured | App cannot connect to Neon at all |
-| ❌ No SQL schema / migration file | No tables exist; no data can be persisted |
+| ✅ `DATABASE_URL` / `.env.local` configured | App can now connect to local PostgreSQL |
+| ✅ SQL schema / migration file | Flyway migrations (V1-V7) run via Docker |
 | ❌ No NextAuth.js session | All auth is fake Zustand state; cleared on page refresh |
 | ❌ No middleware role guard | Any URL is accessible without logging in |
 | ❌ No Server Actions written | Every form, button, and mutation only touches in-memory state |
@@ -206,8 +207,8 @@
 
 ## What is 100% NOT built yet (summary)
 
-1. ❌ PostgreSQL database schema (the biggest blocker)
-2. ❌ NextAuth login + JWT middleware
+1. ✅ PostgreSQL database schema (Flyway + Docker setup complete)
+2. ❌ Custom Auth login + Database session middleware
 3. ❌ Patient dashboard page
 4. ❌ Patient appointment history page
 5. ❌ Patient billing page
