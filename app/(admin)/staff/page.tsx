@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Search, UserPlus, Building2, Phone, Mail, Briefcase } from "lucide-react";
 import { getInitials, getAvatarColor, cn } from "@/lib/utils";
+import Link from "next/link";
 
 const DEPT_SHAPES: Record<string, string> = {
   "Front Desk":    "clip-path: polygon(0 15%, 15% 0, 85% 0, 100% 15%, 100% 85%, 85% 100%, 15% 100%, 0 85%);",
@@ -45,9 +46,11 @@ export default function StaffPage() {
           <p className="text-slate-500">View, filter, and manage all clinic staff members.</p>
         </div>
         {role === "admin" && (
-          <Button className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-xl h-10 px-5">
-            <UserPlus className="w-4 h-4 mr-2" /> Add Staff Member
-          </Button>
+          <Link href="/staff/new">
+            <Button className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-xl h-10 px-5">
+              <UserPlus className="w-4 h-4 mr-2" /> Add Staff Member
+            </Button>
+          </Link>
         )}
       </div>
 
