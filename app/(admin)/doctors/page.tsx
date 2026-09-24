@@ -8,7 +8,7 @@ import type { Doctor } from "@/lib/types";
 import {   } from "@/lib/constants";;
 import { branches } from "@/lib/constants";;
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, MapPin, Calendar, Clock, Star, Plus, Trash2 } from "lucide-react";
+import { Search, MapPin, Calendar, Clock, Star, Plus, Trash2, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BookingModal } from "@/components/catms/BookingModal";
 import { getAvatarGradient } from "@/components/catms/BookingModal";
@@ -41,10 +41,16 @@ export default function DoctorsPage() {
           <p className="text-slate-500">Find and schedule appointments with our specialists.</p>
         </div>
         {isAdmin && (
-          <Button onClick={() => router.push("/doctors/new")} className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-10 px-4 flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            New Doctor
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button onClick={() => router.push("/doctors/fees")} variant="outline" className="rounded-xl h-10 px-4 flex items-center gap-2 text-slate-600">
+              <DollarSign className="w-4 h-4" />
+              Manage Fees
+            </Button>
+            <Button onClick={() => router.push("/doctors/new")} className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-10 px-4 flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              New Doctor
+            </Button>
+          </div>
         )}
       </div>
 
