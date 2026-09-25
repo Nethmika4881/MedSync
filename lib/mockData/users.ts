@@ -1,6 +1,6 @@
 // lib/mockData/users.ts
 // Only role UI config and the UserRole type remain here.
-// Actual user data is in the database (Neon PostgreSQL).
+// Actual user data is in the database (local PostgreSQL via pg pool).
 // Import UserRole from here or from @/lib/types — both are the same.
 
 export type UserRole = "admin" | "doctor" | "patient" | "receptionist";
