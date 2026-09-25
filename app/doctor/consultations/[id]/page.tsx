@@ -62,7 +62,7 @@ export default function ConsultationWorkspacePage() {
   if (!patientId || !patientName) {
     return (
       <div className="space-y-6 animate-fade-in">
-        <Link href="/consultations" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900">
+        <Link href="/doctor/consultations" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900">
           <ArrowLeft className="w-4 h-4" /> Back to Queue
         </Link>
         <Card className="border-slate-200 shadow-sm">
@@ -228,7 +228,7 @@ export default function ConsultationWorkspacePage() {
 
   return (
     <div className="space-y-6 animate-fade-in max-w-4xl">
-      <Link href="/consultations" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900">
+      <Link href="/doctor/consultations" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900">
         <ArrowLeft className="w-4 h-4" /> Back to Queue
       </Link>
 

@@ -70,7 +70,7 @@ export default function ConsultationsPage() {
                         <StatusPill status={appt.status} />
                       </p>
                     </div>
-                    <Link href={`/consultations/${appt.appointmentId}`}>
+                    <Link href={`/doctor/consultations/${appt.appointmentId}`}>
                       <Button className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-xl px-6">
                         <ClipboardPlus className="w-4 h-4 mr-2" /> Start Consultation
                       </Button>
@@ -122,7 +122,7 @@ export default function ConsultationsPage() {
                       <td className="px-6 py-4">{record.diagnosis || "Pending Diagnosis"}</td>
                       <td className="px-6 py-4"><StatusPill status={record.followUpRequired ? "In-Progress" : "Completed"} /></td>
                       <td className="px-6 py-4 text-right">
-                        <Link href={`/consultations/${record.appointmentId}`}>
+                        <Link href={`/doctor/consultations/${record.appointmentId}`}>
                           <Button size="sm" variant="outline" className="rounded-lg h-8">
                             <Edit className="w-4 h-4 mr-2" /> View/Edit
                           </Button>
