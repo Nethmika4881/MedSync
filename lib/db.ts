@@ -1,12 +1,15 @@
 // lib/db.ts
-// Singleton Neon serverless SQL client.
-// Import `sql` wherever you need parameterized queries — in Server Actions only.
-// Never import this file from a "use client" component.
+// Singleton pg connection pool for local PostgreSQL (Docker).
+// Import `pool` in Server Actions only — never from a "use client" component.
 
-import { neon } from "@neondatabase/serverless";
+import { Pool } from "pg";
 
 if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL environment variable is not set");
+  throw new Error("[lib/db] DATABASE_URL environment variable is not set");
 }
 
-export const sql = neon(process.env.DATABASE_URL);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+export default pool;
