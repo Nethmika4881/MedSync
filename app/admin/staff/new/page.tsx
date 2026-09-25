@@ -61,7 +61,7 @@ export default function NewStaffPage() {
             setForm({ firstName: "", lastName: "", role: "Receptionist", department: "Front Desk", branchId: "BR-001", email: "", phone: "" }); 
           }}
             variant="outline" className="rounded-xl px-6 h-11">Add Another</Button>
-          <Link href="/staff">
+          <Link href="/admin/staff">
             <Button className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl px-6 h-11">View Directory</Button>
           </Link>
         </div>
@@ -72,7 +72,7 @@ export default function NewStaffPage() {
   return (
     <div className="max-w-3xl mx-auto animate-fade-in pb-10">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/staff">
+        <Link href="/admin/staff">
           <Button variant="ghost" size="icon" className="text-slate-500 hover:bg-slate-100 rounded-xl">
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -153,7 +153,7 @@ export default function NewStaffPage() {
           <Button type="submit" className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-11 px-8 font-semibold">
             <UserPlus className="w-4 h-4 mr-2" /> Provision Employee
           </Button>
-          <Link href="/staff">
+          <Link href="/admin/staff">
             <Button type="button" variant="outline" className="rounded-xl h-11 px-6 text-slate-600">Cancel</Button>
           </Link>
         </div>

@@ -83,7 +83,7 @@ export default function NewDoctorPage() {
             setForm({ firstName: "", lastName: "", specialization: "General Practice", branchId: "BR-001", email: "", phone: "", consultationFee: "100", experience: "5", education: "", bio: "" }); 
           }}
             variant="outline" className="rounded-xl px-6 h-11">Register Another</Button>
-          <Link href="/doctors">
+          <Link href="/admin/doctors">
             <Button className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl px-6 h-11">View Directory</Button>
           </Link>
         </div>
@@ -94,7 +94,7 @@ export default function NewDoctorPage() {
   return (
     <div className="max-w-3xl mx-auto animate-fade-in pb-10">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/doctors">
+        <Link href="/admin/doctors">
           <Button variant="ghost" size="icon" className="text-slate-500 hover:bg-slate-100 rounded-xl">
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -190,7 +190,7 @@ export default function NewDoctorPage() {
           <Button type="submit" className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-11 px-8 font-semibold">
             <UserPlus className="w-4 h-4 mr-2" /> Register Doctor
           </Button>
-          <Link href="/doctors">
+          <Link href="/admin/doctors">
             <Button type="button" variant="outline" className="rounded-xl h-11 px-6 text-slate-600">Cancel</Button>
           </Link>
         </div>
