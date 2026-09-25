@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { useCurrentUser, useRole } from "@/lib/stores/authStore";
 import { useAppointmentStore } from "@/lib/stores/appointmentStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusPill } from "@/components/catms/StatusPill";
 import { SessionBadge } from "@/components/catms/SessionBadge";
 import { SESSION_META } from "@/lib/constants";;
-import { Clock, Calendar as CalendarIcon, FileText, User } from "lucide-react";
+import { Clock, Calendar as CalendarIcon, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TIME_SLOTS = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"];
@@ -115,12 +116,12 @@ export default function MySchedulePage() {
                             <span className="text-xs text-slate-500">{slotAppt.visitType}</span>
                           </div>
                           <div className="flex gap-2">
-                            <button className="flex items-center gap-1.5 text-xs font-semibold text-[var(--brand-primary)] bg-white border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50">
-                              <User className="w-3.5 h-3.5" /> View Patient
-                            </button>
-                            <button className="flex items-center gap-1.5 text-xs font-semibold text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] px-3 py-1.5 rounded-lg">
+                            <Link
+                              href={`/consultations/${slotAppt.appointmentId}`}
+                              className="flex items-center gap-1.5 text-xs font-semibold text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] px-3 py-1.5 rounded-lg"
+                            >
                               <FileText className="w-3.5 h-3.5" /> Start Consult
-                            </button>
+                            </Link>
                           </div>
                         </div>
                       ) : (
