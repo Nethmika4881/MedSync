@@ -156,7 +156,7 @@ export default function DoctorFeesPage() {
   return (
     <div className="space-y-6 animate-fade-in max-w-6xl mx-auto pb-10">
       <div className="flex items-center gap-3 mb-2">
-        <Link href="/doctors">
+        <Link href="/admin/doctors">
           <Button variant="ghost" size="icon" className="text-slate-500 hover:bg-slate-100 rounded-xl">
             <ArrowLeft className="w-5 h-5" />
           </Button>
