@@ -3,15 +3,16 @@
 import React from "react";
 import { useCurrentUser, useRole } from "@/lib/stores/authStore";
 import { usePharmacyStore } from "@/lib/stores/pharmacyStore";
+import { useDoctorStore } from "@/lib/stores/doctorStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Pill, AlertCircle, CheckCircle2, RotateCcw } from "lucide-react";
-import { useDoctorStore } from "@/lib/stores/doctorStore";
+
 
 export default function MyPrescriptionsPage() {
   const user = useCurrentUser();
   const role = useRole();
   const { prescriptions } = usePharmacyStore();
-  const { doctors } = useDoctorStore();
+  const { doctors } = useDoctorStore(); // import doctors for lookup
   
   if (!user || role !== "patient") return null;
 
