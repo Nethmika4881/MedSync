@@ -3,7 +3,7 @@
 import db from "../db";
 import { generateSalt, hashPassword } from "../actions/passwordHasher";
 import { RegisterFormValues, registerSchema } from "../schemas";
-import { createUserSession } from "./sessions";
+import { createUserSession, removeUserFromSession } from "./sessions";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -143,6 +143,12 @@ export default async function registerFunction(unsafeData: RegisterFormValues) {
   } catch (error) {
     console.error(error);
   }
+
+  redirect("/");
+}
+
+export async function logOut() {
+  await removeUserFromSession(await cookies());
 
   redirect("/");
 }
