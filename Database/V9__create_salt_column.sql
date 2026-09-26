@@ -1,1 +1,0 @@
-alter table app_user add column salt varchar(20);
