@@ -104,7 +104,7 @@ export default function DoctorDashboardPage() {
               <CardTitle className="text-base font-semibold text-slate-900 flex items-center gap-2">
                 <Stethoscope className="w-4 h-4 text-slate-400" /> Today's Schedule Queue
               </CardTitle>
-              <Link href="/schedule">
+              <Link href="/doctor/schedule">
                 <Button variant="outline" size="sm" className="rounded-lg h-8">
                   View Full Schedule <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
                 </Button>
@@ -135,7 +135,7 @@ export default function DoctorDashboardPage() {
                       <div className="flex items-center gap-3">
                         <StatusPill status={appt.status} />
                         {(appt.status === "Checked-in" || appt.status === "Confirmed") && (
-                          <Link href={`/consultations/${appt.appointmentId}`}>
+                          <Link href={`/doctor/consultations/${appt.appointmentId}`}>
                             <Button size="sm" className="rounded-lg h-8 bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)]">
                               <ClipboardPlus className="w-4 h-4 mr-1.5" /> Start
                             </Button>

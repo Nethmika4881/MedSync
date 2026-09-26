@@ -176,7 +176,7 @@ export default function ConsultationWorkspacePage() {
 
   const handleSave = () => {
     persistConsultation();
-    router.push("/consultations");
+    router.push("/doctor/consultations");
   };
 
   const handleComplete = () => {
@@ -223,7 +223,7 @@ export default function ConsultationWorkspacePage() {
 
     updateAppointment(appointmentId, { status: "Completed", invoiceId, consultationId });
 
-    router.push("/consultations");
+    router.push("/doctor/consultations");
   };
 
   return (
@@ -564,13 +564,13 @@ export default function ConsultationWorkspacePage() {
 
       {isLocked ? (
         <div className="flex justify-end">
-          <Button variant="outline" className="rounded-xl" onClick={() => router.push("/consultations")}>
+          <Button variant="outline" className="rounded-xl" onClick={() => router.push("/doctor/consultations")}>
             <ArrowLeft className="w-4 h-4 mr-2" /> Back to Queue
           </Button>
         </div>
       ) : (
         <div className="flex justify-end gap-3">
-          <Button variant="outline" className="rounded-xl" onClick={() => router.push("/consultations")}>
+          <Button variant="outline" className="rounded-xl" onClick={() => router.push("/doctor/consultations")}>
             Cancel
           </Button>
           <Button
