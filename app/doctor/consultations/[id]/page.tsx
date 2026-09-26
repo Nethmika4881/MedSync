@@ -577,15 +577,21 @@ export default function ConsultationWorkspacePage() {
             variant="outline"
             className="rounded-xl"
             onClick={handleSave}
-            disabled={!symptoms && !diagnosis && !notes}
+            disabled={(!symptoms && !diagnosis && !notes) || (followUpRequired && !followUpDate)}
           >
             <Save className="w-4 h-4 mr-2" /> Save Draft
           </Button>
           <Button
             className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-6"
             onClick={handleComplete}
-            disabled={!diagnosis}
-            title={!diagnosis ? "A diagnosis is required to complete the consultation" : undefined}
+            disabled={!diagnosis || (followUpRequired && !followUpDate)}
+            title={
+              !diagnosis
+                ? "A diagnosis is required to complete the consultation"
+                : followUpRequired && !followUpDate
+                ? "Pick a follow-up date or untick follow-up"
+                : undefined
+            }
           >
             <CheckCircle2 className="w-4 h-4 mr-2" /> Complete Consultation
           </Button>
