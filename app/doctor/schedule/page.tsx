@@ -117,7 +117,7 @@ export default function MySchedulePage() {
                           </div>
                           <div className="flex gap-2">
                             <Link
-                              href={`/consultations/${slotAppt.appointmentId}`}
+                              href={`/doctor/consultations/${slotAppt.appointmentId}`}
                               className="flex items-center gap-1.5 text-xs font-semibold text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] px-3 py-1.5 rounded-lg"
                             >
                               <FileText className="w-3.5 h-3.5" /> Start Consult
