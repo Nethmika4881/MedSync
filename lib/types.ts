@@ -96,6 +96,7 @@ export interface PatientCondition {
   conditionName: string;
   diagnosedDate: string;
   isActive: boolean;
+  isChronic?: boolean; 
   notes?: string;
   // UI legacy fields
   pcId?: string;
