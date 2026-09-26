@@ -66,12 +66,11 @@ export default function DoctorWorkingHoursPage() {
     const overlap = mySlots.some(
       (s) =>
         s.dayOfWeek === dayOfWeek &&
-        s.branchId === branchId &&
         startTime < s.endTime &&
         endTime > s.startTime
     );
     if (overlap) {
-      alert("This overlaps with an existing working-hours slot for that day and branch.");
+      alert("This overlaps with an existing slot on that day (any branch).");
       return;
     }
 
