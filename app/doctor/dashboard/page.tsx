@@ -22,7 +22,7 @@ import {
 
 export default function DoctorDashboardPage() {
   const user = useCurrentUser();
-  const { appointments } = useAppointmentStore();
+  const { appointments, updateAppointment } = useAppointmentStore();
   const { consultations } = useClinicalStore();
 
   if (!user) return null;
@@ -134,10 +134,17 @@ export default function DoctorDashboardPage() {
                       />
                       <div className="flex items-center gap-3">
                         <StatusPill status={appt.status} />
-                        {(appt.status === "Checked-in" || appt.status === "Confirmed") && (
-                          <Link href={`/doctor/consultations/${appt.appointmentId}`}>
+                        {(appt.status === "Checked-in" || appt.status === "Confirmed" || appt.status === "In-Progress") && (
+                          <Link
+                            href={`/doctor/consultations/${appt.appointmentId}`}
+                            onClick={() => {
+                              if (appt.status !== "In-Progress")
+                                updateAppointment(appt.appointmentId, { status: "In-Progress" });
+                            }}
+                          >
                             <Button size="sm" className="rounded-lg h-8 bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)]">
-                              <ClipboardPlus className="w-4 h-4 mr-1.5" /> Start
+                              <ClipboardPlus className="w-4 h-4 mr-1.5" />
+                              {appt.status === "In-Progress" ? "Resume" : "Start"}
                             </Button>
                           </Link>
                         )}
