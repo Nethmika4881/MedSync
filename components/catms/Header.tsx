@@ -3,27 +3,15 @@
 import React from "react";
 import { usePathname } from "next/navigation";
 import { Search, Bell, Menu } from "lucide-react";
-import { AvatarWithName } from "@/components/catms/AvatarWithName";
-import { useCurrentUser, useRole } from "@/lib/stores/authStore";
-import { roleConfig } from "@/lib/mockData/users";
-import type { UserRole } from "@/lib/types";
 
 export function Header() {
   const pathname = usePathname();
-  const user = useCurrentUser();
-  const role = useRole() as UserRole | null;
 
   const getPageTitle = () => {
     const segments = pathname.split("/").filter(Boolean);
-
-    // If we are on the dashboard or root
     if (segments.length <= 1 || (segments.length === 1 && segments[0] === "dashboard")) {
-      if (role && roleConfig[role]) {
-        return `${roleConfig[role].label} Portal`;
-      }
       return "Dashboard";
     }
-
     const last = segments[segments.length - 1];
     if (last === "new") return "Register New";
     return last.charAt(0).toUpperCase() + last.slice(1);
@@ -48,20 +36,7 @@ export function Header() {
             className="w-64 h-9 pl-9 pr-4 rounded-full bg-slate-100 border-transparent text-sm focus:bg-white focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/20 transition-all outline-none"
           />
         </div>
-
-
-
-
-        {/* User Profile */}
-        {user && (
-          <div className="flex items-center gap-3">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-semibold text-slate-900">{user.name}</p>
-              <p className="text-xs text-slate-500 capitalize">{user.role}</p>
-            </div>
-            <AvatarWithName name={user.name} avatarSrc={user.avatar} size="md" />
-          </div>
-        )}
+        <Bell className="w-5 h-5 text-slate-400 cursor-pointer hover:text-slate-700 transition-colors" />
       </div>
     </header>
   );

@@ -19,6 +19,7 @@ const sectionLabel = (text: string) => (
 
 export default function RegisterPage() {
   const [branches, setBranches] = useState<{ branch_id: string; branch_name: string }[]>([]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     async function fetchBranches() {
@@ -38,6 +39,7 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
     defaultValues: { 
       role: "Employee",
+      employeeRole: "Doctor",
       fullName: "Dr. Sample Name",
       nic: "198012345678",
       email: "sample@example.com",
@@ -72,7 +74,9 @@ export default function RegisterPage() {
   const role = watch("role");
 
   async function onSubmit(data: RegisterFormValues) {
-    await registerFunction(data);
+    setError("");
+    const result = await registerFunction(data);
+    if (result) setError(result);
   }
 
   return (
@@ -82,6 +86,9 @@ export default function RegisterPage() {
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold text-foreground">MedSync</h1>
           <p className="text-sm text-muted-foreground mt-1">Create your account</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            Patients and doctors can register here. Admin and front desk accounts are created by an administrator.
+          </p>
         </div>
 
         <div className="bg-card border border-border rounded-xl shadow-sm p-8">
@@ -91,7 +98,10 @@ export default function RegisterPage() {
             <button
               type="button"
               id="role-patient"
-              onClick={() => setValue("role", "Patient")}
+              onClick={() => {
+                setValue("role", "Patient");
+                setValue("employeeRole", undefined);
+              }}
               className={`flex-1 py-2 text-sm font-medium transition-colors ${
                 role === "Patient"
                   ? "bg-primary text-primary-foreground"
@@ -102,8 +112,11 @@ export default function RegisterPage() {
             </button>
             <button
               type="button"
-              id="role-doctor"
-              onClick={() => setValue("role", "Employee")}
+              id="role-employee"
+              onClick={() => {
+                setValue("role", "Employee");
+                setValue("employeeRole", "Doctor");
+              }}
               className={`flex-1 py-2 text-sm font-medium transition-colors border-l border-border ${
                 role === "Employee"
                   ? "bg-primary text-primary-foreground"
@@ -282,6 +295,21 @@ export default function RegisterPage() {
               </>
             )}
 
+            {role === "Employee" && (
+              <>
+                {sectionLabel("Employment Details")}
+                <div className="flex flex-col gap-1.5 flex-1">
+                  <label htmlFor="joined-date" className="text-sm font-medium text-foreground">Joined date</label>
+                  <input id="joined-date" type="date"
+                    {...register("joinedDate")} className={inputClass}
+                    aria-invalid={errors.joinedDate ? "true" : undefined} />
+                  {errors.joinedDate && (
+                    <p className="text-xs text-destructive">{errors.joinedDate.message}</p>
+                  )}
+                </div>
+              </>
+            )}
+
             {/* ── DOCTOR FIELDS ── */}
             {role === "Employee" && (
               <>
@@ -349,15 +377,7 @@ export default function RegisterPage() {
                       <p className="text-xs text-destructive">{errors.roomNo.message}</p>
                     )}
                   </div>
-                  <div className="flex flex-col gap-1.5 flex-1">
-                    <label htmlFor="joined-date" className="text-sm font-medium text-foreground">Joined date</label>
-                    <input id="joined-date" type="date"
-                      {...register("joinedDate")} className={inputClass}
-                      aria-invalid={errors.joinedDate ? "true" : undefined} />
-                    {errors.joinedDate && (
-                      <p className="text-xs text-destructive">{errors.joinedDate.message}</p>
-                    )}
-                  </div>
+
                 </div>
 
               </>
@@ -378,6 +398,11 @@ export default function RegisterPage() {
                 <p className="text-xs text-destructive">{errors.branchId.message}</p>
               )}
             </div>
+
+            {errors.employeeRole && (
+              <p role="alert" className="text-sm text-destructive">{errors.employeeRole.message}</p>
+            )}
+            {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
 
             {/* ── SECURITY ── */}
             {sectionLabel("Security")}

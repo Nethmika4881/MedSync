@@ -34,22 +34,32 @@ export async function createUserSession(user: userSession, cookie: Cookies) {
   const redis = await getRedis();
   await redis.set(
     `session_id:${sessionID}`,
-    JSON.stringify(sessionSchema.safeParse(user)),
+    JSON.stringify(sessionSchema.parse(user)),
     {
       EX: SESSION_EXPIRATION_SECONDS,
     },
   );
 
-  setCookie(sessionID, cookie);
+  setCookie(sessionID, user.role, cookie);
 }
 
 export async function setCookie(
   session_id: string,
+  role: string,
   cookie: Pick<Cookies, "set">,
 ) {
+  //this is http only secured
   cookie.set(COOKIE_SESSION_KEY, session_id, {
     secure: true,
     httpOnly: true,
+    sameSite: "strict",
+    expires: Date.now() + SESSION_EXPIRATION_SECONDS * 1000,
+  });
+
+  //role cookie - read by proxy
+  cookie.set("session_role", role, {
+    secure: true,
+    httpOnly: false, //proxy needs to read this
     sameSite: "strict",
     expires: Date.now() + SESSION_EXPIRATION_SECONDS * 1000,
   });
@@ -67,7 +77,9 @@ export async function getuserfromSessionID(sessionID: string) {
 
   const user = await redis.get(`session_id:${sessionID}`);
 
-  const { success, data } = sessionSchema.safeParse(user);
+  if (user == null) return;
+  const userObj = JSON.parse(user);
+  const { success, data } = sessionSchema.safeParse(userObj);
 
   if (!success) return;
 
@@ -82,6 +94,7 @@ export async function removeUserFromSession(
   if (sessionID == null) return null;
 
   const redis = await getRedis();
-  await redis.del(`session : ${sessionID}`);
+  await redis.del(`session_id:${sessionID}`);
   cookies.delete(COOKIE_SESSION_KEY);
+  cookies.delete("session_role");
 }
