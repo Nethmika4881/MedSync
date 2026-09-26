@@ -112,6 +112,7 @@ export type AppointmentStatus =
   | "Checked-out"
   | "Completed"
   | "Cancelled"
+  | "No-Show"
   | "Rescheduled";
 
 export type VisitType =
