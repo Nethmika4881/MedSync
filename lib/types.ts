@@ -172,8 +172,16 @@ export interface ConsultationRecord {
 }
 
 // ─── Treatments ───────────────────────────────────────────────────────────────
+export type TreatmentCategory =
+  | "Laboratory" 
+  | "Radiology" 
+  | "Procedure" 
+  | "Therapy"
+  | "Consultation" 
+  | "Injection" 
+  | "Surgery" 
+  | "Other";
 
-export type TreatmentCategory = "Laboratory" | "Radiology" | "Procedure" | "Therapy";
 export type TreatmentStatus = "Ordered" | "In-Progress" | "Completed" | "Cancelled";
 
 export interface Treatment {
