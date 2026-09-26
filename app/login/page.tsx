@@ -4,26 +4,26 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { signIn } from "@/lib/actions/auth";
+import { signInSchema } from "@/lib/schemas";
+import { useState } from "react";
+ 
 
-const loginSchema = z.object({
-  email: z.string().email("Enter a valid email address"),
-  password: z.string().min(1, "Password is required"),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
+type LoginFormValues = z.infer<typeof signInSchema>;
 
 export default function LoginPage() {
+  const [error,setError] = useState<string|null>(null);
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(signInSchema),
   });
 
   async function onSubmit(data: LoginFormValues) {
-    // TODO: wire up sign-in action
-    console.log(data);
+    const result = await signIn(data);
+   if(result)  setError(result);
   }
 
   return (
@@ -88,7 +88,8 @@ export default function LoginPage() {
             >
               {isSubmitting ? "Signing in…" : "Sign in"}
             </button>
-
+{error && <p className="text-xs text-destructive text-center">{error}</p>}
+     
           </form>
 
           <div className="flex items-center gap-3 my-6">

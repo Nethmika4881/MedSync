@@ -4,35 +4,42 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { HeartPulse, LogOut, ChevronDown } from "lucide-react";
-import { useAuthStore, useRole, useCurrentUser } from "@/lib/stores/authStore";
 import { roleNavConfig } from "@/lib/roleNavConfig";
-import { roleConfig } from "@/lib/mockData/users";
-import type { UserRole } from "@/lib/types";;
+import type { UserRole } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import * as Icons from "lucide-react";
+import { logOut } from "@/lib/actions/auth";
+
+/** Derive role from the URL prefix so we don't need a client auth store. */
+function getRoleFromPath(pathname: string): UserRole | null {
+  if (pathname.startsWith("/admin")) return "admin";
+  if (pathname.startsWith("/doctor")) return "doctor";
+  if (pathname.startsWith("/patient")) return "patient";
+  if (pathname.startsWith("/front-desk")) return "receptionist";
+  return null;
+}
 
 export function Sidebar() {
   const pathname = usePathname();
-  const role = useRole() as UserRole | null;
-  const user = useCurrentUser();
-  const logout = useAuthStore((s) => s.logout);
+  const role = getRoleFromPath(pathname);
 
-  if (!role || !user) return null;
+  // Patients use a top-nav layout — no sidebar.
+  if (!role || role === "patient") return null;
 
   const navItems = roleNavConfig[role] || [];
-  const rConfig = roleConfig[role];
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-slate-200 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-40 transition-transform">
       {/* Brand */}
       <div className="h-16 flex items-center px-6 border-b border-slate-100 shrink-0">
-        <Link href={role === 'receptionist' ? '/front-desk/dashboard' : `/${role}/dashboard`} className="flex items-center gap-2 text-xl font-bold font-outfit text-slate-900 tracking-tight">
+        <Link
+          href={role === "receptionist" ? "/front-desk/dashboard" : `/${role}/dashboard`}
+          className="flex items-center gap-2 text-xl font-bold font-outfit text-slate-900 tracking-tight"
+        >
           <HeartPulse className="w-7 h-7 text-[var(--brand-primary)]" />
           Med<span className="text-[var(--brand-primary)]">Sync</span>
         </Link>
       </div>
-
-
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-4 py-2 space-y-1 custom-scrollbar">
@@ -52,11 +59,19 @@ export function Sidebar() {
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 )}
               >
-
-                {Icon && <Icon className={cn("w-5 h-5", isActive ? "text-white" : "text-slate-400 group-hover:text-[var(--brand-primary)]")} />}
+                {Icon && (
+                  <Icon
+                    className={cn(
+                      "w-5 h-5",
+                      isActive ? "text-white" : "text-slate-400 group-hover:text-[var(--brand-primary)]"
+                    )}
+                  />
+                )}
                 {item.label}
                 {hasChildren && (
-                  <ChevronDown className={cn("w-4 h-4 ml-auto", isActive ? "text-white/70" : "text-slate-400")} />
+                  <ChevronDown
+                    className={cn("w-4 h-4 ml-auto", isActive ? "text-white/70" : "text-slate-400")}
+                  />
                 )}
               </Link>
 
@@ -89,20 +104,19 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* User Footer */}
+      {/* Sign Out */}
       <div className="p-4 border-t border-slate-100 shrink-0">
-        <button
-          onClick={() => {
-            logout();
-            window.location.href = "/";
-          }}
-          className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors group"
-        >
-          <div className="flex items-center gap-3">
-            <LogOut className="w-5 h-5 text-slate-400 group-hover:text-red-500" />
-            Sign Out
-          </div>
-        </button>
+        <form action={logOut}>
+          <button
+            type="submit"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              <LogOut className="w-5 h-5 text-slate-400 group-hover:text-red-500" />
+              Sign Out
+            </div>
+          </button>
+        </form>
       </div>
     </aside>
   );
