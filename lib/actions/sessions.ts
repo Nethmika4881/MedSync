@@ -54,3 +54,34 @@ export async function setCookie(
     expires: Date.now() + SESSION_EXPIRATION_SECONDS * 1000,
   });
 }
+
+export async function getUserfromSession(cookie: Pick<Cookies, "get">) {
+  const sessionID = cookie.get(COOKIE_SESSION_KEY)?.value;
+
+  if (!sessionID) return;
+  return getuserfromSessionID(sessionID);
+}
+
+export async function getuserfromSessionID(sessionID: string) {
+  const redis = await getRedis();
+
+  const user = await redis.get(`session_id:${sessionID}`);
+
+  const { success, data } = sessionSchema.safeParse(user);
+
+  if (!success) return;
+
+  return data;
+}
+
+export async function removeUserFromSession(
+  cookies: Pick<Cookies, "get" | "delete">,
+) {
+  const sessionID = cookies.get(COOKIE_SESSION_KEY)?.value;
+
+  if (sessionID == null) return null;
+
+  const redis = await getRedis();
+  await redis.del(`session : ${sessionID}`);
+  cookies.delete(COOKIE_SESSION_KEY);
+}
