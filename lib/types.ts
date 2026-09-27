@@ -241,6 +241,9 @@ export interface Medication {
   medicationId: string;
   genericName: string;
   brandName?: string;
+  strength?: string;
+  form?: string;
+  category?: string;
   contraindications?: string;
 }
 
