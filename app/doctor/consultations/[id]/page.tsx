@@ -83,6 +83,9 @@ export default function ConsultationWorkspacePage() {
   );
 
   const attachedPrescriptions = prescriptions.filter((p) => p.consultationId === consultationId);
+  const hasInvalidPrescription = attachedPrescriptions.some(
+    (p) => !p.dosage.trim() || !Number.isInteger(p.durationDays) || p.durationDays < 1
+  );
 
   const filteredMedications = medications.filter((m) =>
     m.genericName.toLowerCase().includes(medicationSearch.toLowerCase()) ||
@@ -133,8 +136,9 @@ export default function ConsultationWorkspacePage() {
       medicationName: [med.genericName, med.strength].filter(Boolean).join(" "),
       dosage: med.strength ?? "",
       frequency: "Once daily",
-      duration: "7 days",
+      durationDays: 7,
       instructions: "",
+      allergyChecked: true, // checkContraindication passed above
       dispensed: false,
       pickedUp: false,
       issuedDate: new Date().toISOString().slice(0, 10),
@@ -538,11 +542,13 @@ export default function ConsultationWorkspacePage() {
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-slate-500">Duration</Label>
+                        <Label className="text-xs text-slate-500">Duration (days)</Label>
                         <Input
                           className="h-8 text-sm"
-                          value={p.duration}
-                          onChange={(e) => updatePrescription(p.prescriptionId, { duration: e.target.value })}
+                          type="number"
+                          min={1}
+                          value={p.durationDays || ""}
+                          onChange={(e) => updatePrescription(p.prescriptionId, { durationDays: Number(e.target.value) })}
                           disabled={isLocked}
                         />
                       </div>
@@ -587,12 +593,14 @@ export default function ConsultationWorkspacePage() {
           <Button
             className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-6"
             onClick={handleComplete}
-            disabled={!diagnosis || (followUpRequired && !followUpDate)}
+            disabled={!diagnosis || (followUpRequired && !followUpDate) || hasInvalidPrescription}
             title={
               !diagnosis
                 ? "A diagnosis is required to complete the consultation"
                 : followUpRequired && !followUpDate
                 ? "Pick a follow-up date or untick follow-up"
+                : hasInvalidPrescription
+                ? "Every prescription needs a dosage and a duration of at least 1 day"
                 : undefined
             }
           >
