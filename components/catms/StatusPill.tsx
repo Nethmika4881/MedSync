@@ -39,6 +39,7 @@ function getStatusClass(status: StatusType): string {
     case "Low Stock":
     case "Rescheduled":
     case "Ordered":
+    case "Draft":
     case "Partial":
     case "PartiallyApproved":
       return "pill-warning";
