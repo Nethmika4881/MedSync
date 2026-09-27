@@ -86,7 +86,7 @@ export default function ConsultationWorkspacePage() {
 
   const filteredMedications = medications.filter((m) =>
     m.genericName.toLowerCase().includes(medicationSearch.toLowerCase()) ||
-    m.brandName.toLowerCase().includes(medicationSearch.toLowerCase())
+    (m.brandName ?? "").toLowerCase().includes(medicationSearch.toLowerCase())
   );
 
   const handleAddTreatment = (catalogueId: string) => {
@@ -130,8 +130,8 @@ export default function ConsultationWorkspacePage() {
       patientName,
       doctorId,
       medicationId: med.medicationId,
-      medicationName: `${med.genericName} ${med.strength}`,
-      dosage: med.strength,
+      medicationName: [med.genericName, med.strength].filter(Boolean).join(" "),
+      dosage: med.strength ?? "",
       frequency: "Once daily",
       duration: "7 days",
       instructions: "",
@@ -465,11 +465,14 @@ export default function ConsultationWorkspacePage() {
                   >
                     <div>
                       <p className="text-sm font-semibold text-slate-900">
-                        {med.genericName} <span className="text-slate-400 font-normal">({med.brandName})</span>
+                        {med.genericName}
+                        {med.brandName && <span className="text-slate-400 font-normal"> ({med.brandName})</span>}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline">{med.strength} • {med.form}</Badge>
-                        <span className="text-xs text-slate-500">{med.category}</span>
+                        {(med.strength || med.form) && (
+                          <Badge variant="outline">{[med.strength, med.form].filter(Boolean).join(" • ")}</Badge>
+                        )}
+                        {med.category && <span className="text-xs text-slate-500">{med.category}</span>}
                       </div>
                     </div>
                     {conflict.conflict ? (
