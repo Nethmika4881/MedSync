@@ -21,10 +21,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/catms/EmptyState";
-import { Clock, Plus, Trash2, MapPin, CalendarClock } from "lucide-react";
+import { Clock, Plus, Trash2, MapPin, CalendarClock, Pencil, AlertCircle } from "lucide-react";
+import type { DoctorScheduleSlot } from "@/lib/types";
 
 const BRANCH_OPTIONS = [
   { branchId: "BR-001", branchName: "Colombo" },
@@ -42,41 +42,58 @@ export default function DoctorWorkingHoursPage() {
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("17:00");
   const [slotDuration, setSlotDuration] = useState(15);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   if (!user) return null;
 
   const mySlots = schedules.filter((s) => s.doctorId === user.userId);
 
-  function resetForm() {
+  function openAddDialog() {
+    setEditingId(null);
     setDayOfWeek("Monday");
     setBranchId(BRANCH_OPTIONS[0].branchId);
     setStartTime("09:00");
     setEndTime("17:00");
     setSlotDuration(15);
+    setFormError(null);
+    setDialogOpen(true);
   }
 
-  function handleAddSlot() {
+  function openEditDialog(slot: DoctorScheduleSlot) {
+    setEditingId(slot.scheduleId);
+    setDayOfWeek(slot.dayOfWeek);
+    setBranchId(slot.branchId);
+    setStartTime(slot.startTime);
+    setEndTime(slot.endTime);
+    setSlotDuration(slot.slotDurationMinutes);
+    setFormError(null);
+    setDialogOpen(true);
+  }
+
+  function handleSaveSlot() {
     if (!user) return;
 
     if (startTime >= endTime) {
-      alert("End time must be after start time.");
+      setFormError("End time must be after start time.");
       return;
     }
 
+    // A doctor can't be in two places at once, so check every branch.
     const overlap = mySlots.some(
       (s) =>
+        s.scheduleId !== editingId &&
         s.dayOfWeek === dayOfWeek &&
         startTime < s.endTime &&
         endTime > s.startTime
     );
     if (overlap) {
-      alert("This overlaps with an existing slot on that day (any branch).");
+      setFormError("This overlaps with an existing slot on that day (any branch).");
       return;
     }
 
     const branch = BRANCH_OPTIONS.find((b) => b.branchId === branchId)!;
-
-    addSlot({
+    const slot = {
       doctorId: user.userId,
       branchId: branch.branchId,
       branchName: branch.branchName,
@@ -84,15 +101,24 @@ export default function DoctorWorkingHoursPage() {
       startTime,
       endTime,
       slotDurationMinutes: slotDuration,
-    });
+    };
 
-    resetForm();
+    if (editingId) {
+      updateSlot(editingId, slot);
+    } else {
+      addSlot(slot);
+    }
     setDialogOpen(false);
   }
 
-  // group slots by day for display
+  // group slots by day for display, earliest first
   const slotsByDay: Record<DayOfWeek, typeof mySlots> = DAYS_OF_WEEK.reduce(
-    (acc, day) => ({ ...acc, [day]: mySlots.filter((s) => s.dayOfWeek === day) }),
+    (acc, day) => ({
+      ...acc,
+      [day]: mySlots
+        .filter((s) => s.dayOfWeek === day)
+        .sort((a, b) => a.startTime.localeCompare(b.startTime)),
+    }),
     {} as Record<DayOfWeek, typeof mySlots>
   );
 
@@ -109,15 +135,17 @@ export default function DoctorWorkingHoursPage() {
           </p>
         </div>
 
+        <Button
+          onClick={openAddDialog}
+          className="rounded-xl bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)]"
+        >
+          <Plus className="w-4 h-4 mr-2" /> Add Working Hours
+        </Button>
+
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="rounded-xl bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)]">
-              <Plus className="w-4 h-4 mr-2" /> Add Working Hours
-            </Button>
-          </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Add Working Hours Slot</DialogTitle>
+              <DialogTitle>{editingId ? "Edit Working Hours Slot" : "Add Working Hours Slot"}</DialogTitle>
             </DialogHeader>
 
             <div className="space-y-4 py-2">
@@ -194,13 +222,19 @@ export default function DoctorWorkingHoursPage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {formError && (
+                <p className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" /> {formError}
+                </p>
+              )}
             </div>
 
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)} className="rounded-lg">
                 Cancel
               </Button>
-              <Button onClick={handleAddSlot} className="rounded-lg bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)]">
+              <Button onClick={handleSaveSlot} className="rounded-lg bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)]">
                 Save Slot
               </Button>
             </DialogFooter>
@@ -244,14 +278,30 @@ export default function DoctorWorkingHoursPage() {
                           {slot.slotDurationMinutes}-min slots
                         </span>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                        onClick={() => removeSlot(slot.scheduleId)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-slate-400 hover:text-[var(--brand-primary)] hover:bg-blue-50 rounded-lg"
+                          onClick={() => openEditDialog(slot)}
+                          title="Edit slot"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                          onClick={() => {
+                            if (confirm(`Remove ${slot.dayOfWeek} ${slot.startTime}–${slot.endTime} at ${slot.branchName}?`)) {
+                              removeSlot(slot.scheduleId);
+                            }
+                          }}
+                          title="Remove slot"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
