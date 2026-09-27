@@ -374,8 +374,9 @@ export interface PrescriptionItem {
   medicationName: string;
   dosage: string;
   frequency: string;
-  duration: string;
-  instructions: string;
+  durationDays: number;
+  instructions: string;   // stored as prescription.notes
+  allergyChecked: boolean;
   dispensed: boolean;
   dispensedAt?: string;
   dispensedBy?: string;
