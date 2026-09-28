@@ -60,7 +60,7 @@ export default function MyPrescriptionsPage() {
                       </div>
                       
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-500">Duration: <strong className="text-slate-900">{presc.duration}</strong></span>
+                        <span className="text-slate-500">Duration: <strong className="text-slate-900">{presc.durationDays} {presc.durationDays === 1 ? "day" : "days"}</strong></span>
                         <button className="flex items-center gap-1 font-semibold text-[var(--brand-primary)] hover:underline">
                           <RotateCcw className="w-3.5 h-3.5" /> Request Refill
                         </button>
