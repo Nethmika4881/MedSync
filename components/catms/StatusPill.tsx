@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 type StatusType =
   | "Confirmed" | "Paid" | "Completed" | "Approved" | "Settled" | "Dispensed" | "Performed"
-  | "Cancelled" | "Rejected" | "Failed" | "Overdue"
+  | "Cancelled" | "Rejected" | "Failed" | "Overdue" | "No-Show"
   | "Pending" | "Due" | "Unpaid" | "Submitted" | "UnderReview" | "Low Stock" | "Rescheduled"
   | "Checked-in" | "Checked-out" | "In-Progress" | "Active" | "Managed" | "Resolved"
   | "Partial" | "PartiallyApproved" | "Ordered" | "Insurance" | "Expired" | "Suspended"
@@ -24,6 +24,7 @@ function getStatusClass(status: StatusType): string {
     case "Managed":
       return "pill-success";
     case "Cancelled":
+    case "No-Show":
     case "Rejected":
     case "Failed":
     case "Overdue":
@@ -38,6 +39,7 @@ function getStatusClass(status: StatusType): string {
     case "Low Stock":
     case "Rescheduled":
     case "Ordered":
+    case "Draft":
     case "Partial":
     case "PartiallyApproved":
       return "pill-warning";
