@@ -8,7 +8,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
         const result = await db.query(`
             UPDATE treatment_catalogue
-            SET category = $1, treatment_name = $2, base_price = $3, duration = $4, description = $5, is_usable = $6, is_active = $7, updated_at = NOW()
+            SET category = $1, treatment_name = $2, base_price = $3, duration = $4, description = $5, is_usable = $6, is_active = $7,
             WHERE treatment_service_code = $8
             RETURNING *`,
             [category, treatment_name, base_price, duration, description, is_usable, is_active, params.id]
