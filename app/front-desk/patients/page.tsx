@@ -15,8 +15,8 @@ export default function PatientsPage() {
   const { patients, allergies, conditions } = usePatientStore();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredPatients = patients.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  const filteredPatients = patients.filter(p =>
+    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.patientId.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.phone.includes(searchTerm)
   );
@@ -40,7 +40,7 @@ export default function PatientsPage() {
             />
           </div>
           <Button
-            onClick={() => router.push("/patients/new")}
+            onClick={() => router.push("/front-desk/patients/new")}
             className="w-full sm:w-auto bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-10 px-4 shrink-0"
           >
             <UserPlus className="w-4 h-4 mr-2" />
@@ -56,7 +56,7 @@ export default function PatientsPage() {
           const activeConditions = conditions.filter(c => c.patientId === patient.patientId && c.status === "Active");
 
           return (
-            <Card key={patient.patientId} className="border-slate-200 shadow-sm hover:shadow-md transition-shadow group cursor-pointer" onClick={() => router.push(`/app/patients/${patient.patientId}`)}>
+            <Card key={patient.patientId} className="border-slate-200 shadow-sm hover:shadow-md transition-shadow group cursor-pointer" onClick={() => router.push(`/front-desk/patients/${patient.patientId}`)}>
               <CardContent className="p-6">
                 <div className="flex justify-between items-start mb-4">
                   <AvatarWithName name={patient.name} subtitle={patient.patientId} avatarSrc={patient.avatar} size="lg" />
@@ -64,12 +64,12 @@ export default function PatientsPage() {
                     variant="ghost"
                     size="icon"
                     className="text-slate-400 group-hover:text-[var(--brand-primary)] hover:bg-teal-50 transition-colors"
-                    onClick={(e) => { e.stopPropagation(); router.push(`/app/patients/${patient.patientId}`); }}
+                    onClick={(e) => { e.stopPropagation(); router.push(`/front-desk/patients/${patient.patientId}`); }}
                   >
                     <ArrowRight className="w-5 h-5" />
                   </Button>
                 </div>
-                
+
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center text-sm text-slate-600">
                     <Phone className="w-4 h-4 mr-2 text-slate-400" />
@@ -103,7 +103,7 @@ export default function PatientsPage() {
           );
         })}
       </div>
-      
+
       {filteredPatients.length === 0 && (
         <Card className="border-slate-200 shadow-sm">
           <EmptyState icon={Users} title="No patients found" description="Try adjusting your search criteria." />

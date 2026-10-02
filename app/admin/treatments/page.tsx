@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/catms/StatusPill";
 import {
   Activity, ClipboardCheck, Clock, Plus, Search,
-  FlaskConical, Radiation, Stethoscope, Dumbbell,
+  FlaskConical, Radiation, Stethoscope, Dumbbell, Syringe, Scissors, MessageSquare,
   Pencil, Trash2, DollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,13 +20,17 @@ const CATEGORY_CONFIG: Record<
   string,
   { label: string; color: string; bg: string; Icon: React.ElementType }
 > = {
-  Laboratory: { label: "Laboratory",  color: "text-blue-700",   bg: "bg-blue-50 border-blue-200",   Icon: FlaskConical  },
-  Radiology:  { label: "Radiology",   color: "text-purple-700", bg: "bg-purple-50 border-purple-200", Icon: Radiation    },
-  Procedure:  { label: "Procedure",   color: "text-amber-700",  bg: "bg-amber-50 border-amber-200",  Icon: Stethoscope  },
-  Therapy:    { label: "Therapy",     color: "text-green-700",  bg: "bg-green-50 border-green-200",  Icon: Dumbbell     },
+  Laboratory:   { label: "Laboratory",   color: "text-blue-700",   bg: "bg-blue-50 border-blue-200",     Icon: FlaskConical  },
+  Radiology:    { label: "Radiology",    color: "text-purple-700", bg: "bg-purple-50 border-purple-200", Icon: Radiation     },
+  Procedure:    { label: "Procedure",    color: "text-amber-700",  bg: "bg-amber-50 border-amber-200",   Icon: Stethoscope   },
+  Therapy:      { label: "Therapy",      color: "text-green-700",  bg: "bg-green-50 border-green-200",   Icon: Dumbbell      },
+  Consultation: { label: "Consultation", color: "text-sky-700",    bg: "bg-sky-50 border-sky-200",       Icon: MessageSquare },
+  Injection:    { label: "Injection",    color: "text-rose-700",   bg: "bg-rose-50 border-rose-200",     Icon: Syringe       },
+  Surgery:      { label: "Surgery",      color: "text-red-700",    bg: "bg-red-50 border-red-200",       Icon: Scissors      },
+  Other:        { label: "Other",        color: "text-slate-700",  bg: "bg-slate-50 border-slate-200",   Icon: Activity      },
 };
 
-const CATEGORIES = ["All", "Laboratory", "Radiology", "Procedure", "Therapy"];
+const CATEGORIES = ["All", "Laboratory", "Radiology", "Procedure", "Therapy", "Consultation", "Injection", "Surgery", "Other"];
 
 // ─── Admin View — Treatment Catalogue ─────────────────────────────────────────
 

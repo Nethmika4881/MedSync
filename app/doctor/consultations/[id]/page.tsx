@@ -83,10 +83,13 @@ export default function ConsultationWorkspacePage() {
   );
 
   const attachedPrescriptions = prescriptions.filter((p) => p.consultationId === consultationId);
+  const hasInvalidPrescription = attachedPrescriptions.some(
+    (p) => !p.dosage.trim() || !Number.isInteger(p.durationDays) || p.durationDays < 1
+  );
 
   const filteredMedications = medications.filter((m) =>
     m.genericName.toLowerCase().includes(medicationSearch.toLowerCase()) ||
-    m.brandName.toLowerCase().includes(medicationSearch.toLowerCase())
+    (m.brandName ?? "").toLowerCase().includes(medicationSearch.toLowerCase())
   );
 
   const handleAddTreatment = (catalogueId: string) => {
@@ -130,11 +133,12 @@ export default function ConsultationWorkspacePage() {
       patientName,
       doctorId,
       medicationId: med.medicationId,
-      medicationName: `${med.genericName} ${med.strength}`,
-      dosage: med.strength,
+      medicationName: [med.genericName, med.strength].filter(Boolean).join(" "),
+      dosage: med.strength ?? "",
       frequency: "Once daily",
-      duration: "7 days",
+      durationDays: 7,
       instructions: "",
+      allergyChecked: true, // checkContraindication passed above
       dispensed: false,
       pickedUp: false,
       issuedDate: new Date().toISOString().slice(0, 10),
@@ -176,7 +180,7 @@ export default function ConsultationWorkspacePage() {
 
   const handleSave = () => {
     persistConsultation();
-    router.push("/consultations");
+    router.push("/doctor/consultations");
   };
 
   const handleComplete = () => {
@@ -223,7 +227,7 @@ export default function ConsultationWorkspacePage() {
 
     updateAppointment(appointmentId, { status: "Completed", invoiceId, consultationId });
 
-    router.push("/consultations");
+    router.push("/doctor/consultations");
   };
 
   return (
@@ -465,11 +469,14 @@ export default function ConsultationWorkspacePage() {
                   >
                     <div>
                       <p className="text-sm font-semibold text-slate-900">
-                        {med.genericName} <span className="text-slate-400 font-normal">({med.brandName})</span>
+                        {med.genericName}
+                        {med.brandName && <span className="text-slate-400 font-normal"> ({med.brandName})</span>}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline">{med.strength} • {med.form}</Badge>
-                        <span className="text-xs text-slate-500">{med.category}</span>
+                        {(med.strength || med.form) && (
+                          <Badge variant="outline">{[med.strength, med.form].filter(Boolean).join(" • ")}</Badge>
+                        )}
+                        {med.category && <span className="text-xs text-slate-500">{med.category}</span>}
                       </div>
                     </div>
                     {conflict.conflict ? (
@@ -535,11 +542,13 @@ export default function ConsultationWorkspacePage() {
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-slate-500">Duration</Label>
+                        <Label className="text-xs text-slate-500">Duration (days)</Label>
                         <Input
                           className="h-8 text-sm"
-                          value={p.duration}
-                          onChange={(e) => updatePrescription(p.prescriptionId, { duration: e.target.value })}
+                          type="number"
+                          min={1}
+                          value={p.durationDays || ""}
+                          onChange={(e) => updatePrescription(p.prescriptionId, { durationDays: Number(e.target.value) })}
                           disabled={isLocked}
                         />
                       </div>
@@ -564,28 +573,36 @@ export default function ConsultationWorkspacePage() {
 
       {isLocked ? (
         <div className="flex justify-end">
-          <Button variant="outline" className="rounded-xl" onClick={() => router.push("/consultations")}>
+          <Button variant="outline" className="rounded-xl" onClick={() => router.push("/doctor/consultations")}>
             <ArrowLeft className="w-4 h-4 mr-2" /> Back to Queue
           </Button>
         </div>
       ) : (
         <div className="flex justify-end gap-3">
-          <Button variant="outline" className="rounded-xl" onClick={() => router.push("/consultations")}>
+          <Button variant="outline" className="rounded-xl" onClick={() => router.push("/doctor/consultations")}>
             Cancel
           </Button>
           <Button
             variant="outline"
             className="rounded-xl"
             onClick={handleSave}
-            disabled={!symptoms && !diagnosis && !notes}
+            disabled={(!symptoms && !diagnosis && !notes) || (followUpRequired && !followUpDate)}
           >
             <Save className="w-4 h-4 mr-2" /> Save Draft
           </Button>
           <Button
             className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-6"
             onClick={handleComplete}
-            disabled={!diagnosis}
-            title={!diagnosis ? "A diagnosis is required to complete the consultation" : undefined}
+            disabled={!diagnosis || (followUpRequired && !followUpDate) || hasInvalidPrescription}
+            title={
+              !diagnosis
+                ? "A diagnosis is required to complete the consultation"
+                : followUpRequired && !followUpDate
+                ? "Pick a follow-up date or untick follow-up"
+                : hasInvalidPrescription
+                ? "Every prescription needs a dosage and a duration of at least 1 day"
+                : undefined
+            }
           >
             <CheckCircle2 className="w-4 h-4 mr-2" /> Complete Consultation
           </Button>
