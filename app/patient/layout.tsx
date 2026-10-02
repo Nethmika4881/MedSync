@@ -1,5 +1,5 @@
 import React from "react";
-import { Header } from "@/components/catms/Header";
+import { PatientNav } from "@/components/catms/PatientNav";
 
 export default function PatientLayout({
   children,
@@ -8,7 +8,7 @@ export default function PatientLayout({
 }) {
   return (
     <div className="min-h-screen bg-[var(--bg-app)] flex flex-col">
-      <Header />
+      <PatientNav />
       <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-8">
         {children}
       </main>
