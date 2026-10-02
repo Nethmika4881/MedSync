@@ -8,8 +8,8 @@ if (!process.env.DATABASE_URL) {
   throw new Error("[lib/db] DATABASE_URL environment variable is not set");
 }
 
-const pool = new Pool({
+const db = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-export default pool;
+export default db;

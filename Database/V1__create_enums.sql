@@ -11,11 +11,11 @@ CREATE TYPE gender_enum AS ENUM (
     'Other'
 );
 
-CREATE TYPE contact_number_type_enum AS ENUM (
-    'Mobile',
-    'Home',
-    'Work'
-);
+ 
+
+-- ------------------------------------------------------------
+-- Employee Role
+-- ------------------------------------------------------------
 
 CREATE TYPE employee_role_enum AS ENUM (
     'Doctor',
