@@ -1,0 +1,11 @@
+# Mark lockfiles as auto-generated so they don't bloat GitHub statistics or Pull Request diffs
+package-lock.json linguist-generated=true
+bun.lock linguist-generated=true
+bun.lockb linguist-generated=true
+
+# Mark images as binary to prevent text diffs
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.svg binary
