@@ -85,7 +85,7 @@ export default function ConsultationWorkspacePage({ user }: { user: any }) {
 
   const filteredMedications = medications.filter((m) =>
     m.genericName.toLowerCase().includes(medicationSearch.toLowerCase()) ||
-    m.brandName.toLowerCase().includes(medicationSearch.toLowerCase())
+    (m.brandName && m.brandName.toLowerCase().includes(medicationSearch.toLowerCase()))
   );
 
   const handleAddTreatment = (catalogueId: string) => {
@@ -129,11 +129,12 @@ export default function ConsultationWorkspacePage({ user }: { user: any }) {
       patientName,
       doctorId,
       medicationId: med.medicationId,
-      medicationName: `${med.genericName} ${med.strength}`,
-      dosage: med.strength,
+      medicationName: `${med.genericName} ${med.strength || ""}`.trim(),
+      dosage: med.strength || "",
       frequency: "Once daily",
-      duration: "7 days",
+      durationDays: 7,
       instructions: "",
+      allergyChecked: true,
       dispensed: false,
       pickedUp: false,
       issuedDate: new Date().toISOString().slice(0, 10),
@@ -534,11 +535,12 @@ export default function ConsultationWorkspacePage({ user }: { user: any }) {
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-slate-500">Duration</Label>
+                        <Label className="text-xs text-slate-500">Duration (Days)</Label>
                         <Input
                           className="h-8 text-sm"
-                          value={p.duration}
-                          onChange={(e) => updatePrescription(p.prescriptionId, { duration: e.target.value })}
+                          type="number"
+                          value={p.durationDays}
+                          onChange={(e) => updatePrescription(p.prescriptionId, { durationDays: parseInt(e.target.value) || 0 })}
                           disabled={isLocked}
                         />
                       </div>
