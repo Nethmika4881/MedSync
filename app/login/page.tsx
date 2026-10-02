@@ -1,19 +1,22 @@
-// Unified login page for all CATMS roles (Admin, Doctor, Front Desk, Patient).
-// Authentication is handled via NextAuth.js / JWT — see lib/auth.ts.
-// This is a stub to be implemented in Phase 1, Task 03:
-// "NextAuth.js / JWT Authentication Setup & Middleware Role Routing"
+import { getCurrentUser } from "@/lib/actions/getcurrentuser";
+import { redirect } from "next/navigation";
+import LoginPageClient from "./_client";
 
-export default function LoginPage() {
-  return (
-    <main className="min-h-screen flex items-center justify-center bg-[var(--bg-app)]">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-[var(--text-primary)]">
-          MedSync Login
-        </h1>
-        <p className="text-sm text-[var(--text-secondary)] mt-2">
-          Authentication UI to be implemented in Phase 1 — Task 03.
-        </p>
-      </div>
-    </main>
-  );
+export default async function LoginPage() {
+  const user = await getCurrentUser();
+  
+  if (user) {
+    const roleRoutes: Record<string, string> = {
+      admin: "/admin",
+      doctor: "/doctor",
+      receptionist: "/front-desk",
+      patient: "/patient",
+    };
+    const route = roleRoutes[user.role] || "/login";
+    if (route !== "/login") {
+      redirect(`${route}/dashboard`);
+    }
+  }
+
+  return <LoginPageClient />;
 }

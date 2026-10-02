@@ -25,7 +25,7 @@ export async function getAppointments(branchId?: string): Promise<Appointment[]>
             a.visit_type            AS "visitType",
             a.status                AS "status",
             a.notes                 AS "notes",
-            a.cancelled_reason         AS "cancelReason",
+            a.cancel_reason         AS "cancelReason",
             a.payment_status        AS "paymentStatus",
             a.fee                   AS "fee"
           FROM appointment a
@@ -161,7 +161,7 @@ export async function updateAppointmentStatus(
   await pool.query(
     `UPDATE appointment
      SET status        = $1,
-         cancelled_reason = $2,
+         cancel_reason = $2,
          updated_at    = NOW()
      WHERE appointment_id = $3`,
     [status, cancelReason ?? null, appointmentId]
