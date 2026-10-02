@@ -17,7 +17,7 @@ import Link from "next/link";
 
 export default function ConsultationsPage() {
   const { consultations } = useClinicalStore();
-  const { appointments } = useAppointmentStore();
+  const { appointments, updateAppointment } = useAppointmentStore();
   const { patients, allergies, conditions } = usePatientStore();
   const role = useRole();
   const user = useCurrentUser();
@@ -26,11 +26,23 @@ export default function ConsultationsPage() {
   if (!role || !user) return null;
 
   // For doctors, show their scheduled appointments today
+  const todayStr = new Date().toDateString();
   const todaysQueue = appointments.filter(
-    a => a.doctorId === user.userId && (a.status === "Checked-in" || a.status === "Confirmed")
+    a => a.doctorId === user.userId &&
+      new Date(a.dateTime).toDateString() === todayStr &&
+      (a.status === "Checked-in" || a.status === "Confirmed" || a.status === "In-Progress")
   );
 
-  const myConsultations = consultations.filter(c => c.doctorId === user.userId);
+  const myConsultations = consultations
+    .filter(c => c.doctorId === user.userId)
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  // A saved record isn't final until its appointment is completed (locked).
+  const recordStatus = (appointmentId: string, followUpRequired: boolean) => {
+    const appt = appointments.find(a => a.appointmentId === appointmentId);
+    if (appt?.status !== "Completed") return "Draft";
+    return followUpRequired ? "Follow-up" : "Completed";
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -70,9 +82,16 @@ export default function ConsultationsPage() {
                         <StatusPill status={appt.status} />
                       </p>
                     </div>
-                    <Link href={`/doctor/consultations/${appt.appointmentId}`}>
+                    <Link
+                      href={`/doctor/consultations/${appt.appointmentId}`}
+                      onClick={() => {
+                        if (appt.status !== "In-Progress")
+                          updateAppointment(appt.appointmentId, { status: "In-Progress" });
+                      }}
+                    >
                       <Button className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-xl px-6">
-                        <ClipboardPlus className="w-4 h-4 mr-2" /> Start Consultation
+                        <ClipboardPlus className="w-4 h-4 mr-2" />
+                        {appt.status === "In-Progress" ? "Resume Consultation" : "Start Consultation"}
                       </Button>
                     </Link>
                   </div>
@@ -120,7 +139,7 @@ export default function ConsultationsPage() {
                       <td className="px-6 py-4 font-semibold text-slate-900">{record.date}</td>
                       <td className="px-6 py-4 font-medium text-[var(--brand-primary)]">{record.patientName}</td>
                       <td className="px-6 py-4">{record.diagnosis || "Pending Diagnosis"}</td>
-                      <td className="px-6 py-4"><StatusPill status={record.followUpRequired ? "In-Progress" : "Completed"} /></td>
+                      <td className="px-6 py-4"><StatusPill status={recordStatus(record.appointmentId, record.followUpRequired)} /></td>
                       <td className="px-6 py-4 text-right">
                         <Link href={`/doctor/consultations/${record.appointmentId}`}>
                           <Button size="sm" variant="outline" className="rounded-lg h-8">
