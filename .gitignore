@@ -50,3 +50,7 @@ node_modules/
 /skills-lock.json
 
 flyway.conf
+docker-compose.yml
+.env
+.env.local
+.env*.local
