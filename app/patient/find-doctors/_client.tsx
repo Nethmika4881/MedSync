@@ -2,9 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import type { Doctor } from "@/lib/types";
-import { doctors,   } from "@/lib/constants";;
-import { branches } from "@/lib/constants";;
-import { useAppointmentStore } from "@/lib/stores/appointmentStore";
+import type { DoctorDirectoryItem, BranchOption, SpecializationOption } from "@/lib/actions/doctors";
 import { Button } from "@/components/ui/button";
 import {
   Search,
@@ -14,15 +12,11 @@ import {
   Stethoscope,
   Calendar,
   X,
-  ChevronLeft,
-  ChevronRight,
-  Check,
   GraduationCap,
   DollarSign,
   Filter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { VisitType } from "@/lib/types";
 import { BookingModal, getAvatarGradient } from "@/components/catms/BookingModal";
 
 // ─── Info Pill ────────────────────────────────────────────────────────────────
@@ -46,7 +40,13 @@ function InfoPill({
 
 // ─── Doctor Card ──────────────────────────────────────────────────────────────
 
-function DoctorCard({ doctor, onBook }: { doctor: Doctor; onBook: (d: Doctor) => void }) {
+function DoctorCard({
+  doctor,
+  onBook,
+}: {
+  doctor: DoctorDirectoryItem;
+  onBook: (d: DoctorDirectoryItem) => void;
+}) {
   const gradient = getAvatarGradient(doctor.avatar);
 
   return (
@@ -62,32 +62,41 @@ function DoctorCard({ doctor, onBook }: { doctor: Doctor; onBook: (d: Doctor) =>
           <div className="min-w-0 flex-1">
             <h3 className="font-bold text-slate-900 text-base leading-tight truncate">{doctor.name}</h3>
             <p className="text-sm text-[var(--brand-primary)] font-semibold mt-0.5">{doctor.specialization}</p>
-            <div className="flex items-center gap-1 mt-1">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={cn(
-                    "w-3.5 h-3.5",
-                    i < Math.floor(doctor.rating)
-                      ? "fill-amber-400 text-amber-400"
-                      : "fill-slate-200 text-slate-200"
-                  )}
-                />
-              ))}
-              <span className="text-xs font-semibold text-slate-700 ml-1">{doctor.rating}</span>
-              <span className="text-xs text-slate-400">({doctor.reviewCount})</span>
-            </div>
+            {/* Rating: not in current DB schema — only shown when non-zero */}
+            {doctor.rating > 0 && (
+              <div className="flex items-center gap-1 mt-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={cn(
+                      "w-3.5 h-3.5",
+                      i < Math.floor(doctor.rating)
+                        ? "fill-amber-400 text-amber-400"
+                        : "fill-slate-200 text-slate-200"
+                    )}
+                  />
+                ))}
+                <span className="text-xs font-semibold text-slate-700 ml-1">{doctor.rating}</span>
+                <span className="text-xs text-slate-400">({doctor.reviewCount})</span>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <InfoPill icon={Clock} label={`${doctor.experience} yrs exp`} />
-          <InfoPill icon={DollarSign} label={`$${doctor.consultationFee}`} />
+          {doctor.experience > 0 && (
+            <InfoPill icon={Clock} label={`${doctor.experience} yrs exp`} />
+          )}
+          <InfoPill icon={DollarSign} label={`Rs. ${doctor.consultationFee}`} />
           <InfoPill icon={MapPin} label={doctor.branchName} className="col-span-2" />
-          <InfoPill icon={GraduationCap} label={doctor.education} className="col-span-2" />
+          {doctor.education && (
+            <InfoPill icon={GraduationCap} label={doctor.education} className="col-span-2" />
+          )}
         </div>
 
-        <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{doctor.bio}</p>
+        {doctor.bio && (
+          <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{doctor.bio}</p>
+        )}
       </div>
 
       <div className="px-6 pb-5 flex items-center justify-between gap-3">
@@ -114,32 +123,26 @@ function DoctorCard({ doctor, onBook }: { doctor: Doctor; onBook: (d: Doctor) =>
   );
 }
 
-
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-const SPECIALIZATIONS = [
-  "All",
-  "Cardiology",
-  "Dermatology",
-  "General Practice",
-  "Gynecology",
-  "Neurology",
-  "Orthopedics",
-  "Pediatrics",
-  "Psychology",
-];
+interface Props {
+  user: any;
+  doctors: DoctorDirectoryItem[];
+  branches: BranchOption[];
+  specializations: SpecializationOption[];
+}
 
-export default function FindDoctorsPage({ user }: { user: any }) {
-  
+export default function FindDoctorsPage({ user, doctors, branches, specializations }: Props) {
   const [search, setSearch] = useState("");
   const [selectedSpec, setSelectedSpec] = useState("All");
   const [selectedBranch, setSelectedBranch] = useState("All");
   const [availableOnly, setAvailableOnly] = useState(false);
-  const [bookingDoctor, setBookingDoctor] = useState<Doctor | null>(null);
+  const [bookingDoctor, setBookingDoctor] = useState<DoctorDirectoryItem | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
+  // Derived from real DB data passed as props
   const branchOptions = ["All", ...branches.map((b) => b.name)];
+  const specOptions = ["All", ...specializations.map((s) => s.title)];
 
   const filtered = useMemo(() => {
     return doctors.filter((d) => {
@@ -151,12 +154,12 @@ export default function FindDoctorsPage({ user }: { user: any }) {
         d.branchName.toLowerCase().includes(q);
       const matchesSpec = selectedSpec === "All" || d.specialization === selectedSpec;
       const matchesBranch = selectedBranch === "All" || d.branchName === selectedBranch;
+      // Availability maps to doctor.is_available — the doctor's general flag.
+      // Slot-level capacity availability requires time_slot checks (out of scope here).
       const matchesAvail = !availableOnly || d.isAvailable;
       return matchesSearch && matchesSpec && matchesBranch && matchesAvail;
     });
-  }, [search, selectedSpec, selectedBranch, availableOnly]);
-
-
+  }, [search, selectedSpec, selectedBranch, availableOnly, doctors]);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -192,7 +195,7 @@ export default function FindDoctorsPage({ user }: { user: any }) {
               onChange={(e) => setSelectedSpec(e.target.value)}
               className="h-11 px-3 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:border-[var(--brand-primary)] transition-all cursor-pointer"
             >
-              {SPECIALIZATIONS.map((s) => <option key={s}>{s}</option>)}
+              {specOptions.map((s) => <option key={s}>{s}</option>)}
             </select>
             <select
               value={selectedBranch}
@@ -223,7 +226,7 @@ export default function FindDoctorsPage({ user }: { user: any }) {
               onChange={(e) => setSelectedSpec(e.target.value)}
               className="h-11 px-3 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none"
             >
-              {SPECIALIZATIONS.map((s) => <option key={s}>{s}</option>)}
+              {specOptions.map((s) => <option key={s}>{s}</option>)}
             </select>
             <select
               value={selectedBranch}
@@ -247,9 +250,9 @@ export default function FindDoctorsPage({ user }: { user: any }) {
         )}
       </div>
 
-      {/* Specialization chips */}
+      {/* Specialization chips — populated from DB */}
       <div className="flex gap-2 overflow-x-auto pb-1">
-        {SPECIALIZATIONS.map((spec) => (
+        {specOptions.map((spec) => (
           <button
             key={spec}
             onClick={() => setSelectedSpec(spec)}
@@ -293,13 +296,25 @@ export default function FindDoctorsPage({ user }: { user: any }) {
       </div>
 
       {/* Doctor Grid */}
-      {filtered.length > 0 ? (
+      {doctors.length === 0 ? (
+        /* No doctors in DB at all */
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center">
+            <Stethoscope className="w-8 h-8 text-slate-300" />
+          </div>
+          <div className="text-center">
+            <p className="font-semibold text-slate-700">No doctors available</p>
+            <p className="text-sm text-slate-400 mt-1">Please check back later or contact the clinic.</p>
+          </div>
+        </div>
+      ) : filtered.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((doctor) => (
             <DoctorCard key={doctor.doctorId} doctor={doctor} onBook={setBookingDoctor} />
           ))}
         </div>
       ) : (
+        /* Doctors exist but none match current filters */
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center">
             <Stethoscope className="w-8 h-8 text-slate-300" />
@@ -325,7 +340,7 @@ export default function FindDoctorsPage({ user }: { user: any }) {
       {/* Booking Modal */}
       {bookingDoctor && (
         <BookingModal
-          doctor={bookingDoctor}
+          doctor={bookingDoctor as unknown as Doctor}
           onClose={() => setBookingDoctor(null)}
           currentUserId={user?.userId}
           currentUserName={user?.name}
