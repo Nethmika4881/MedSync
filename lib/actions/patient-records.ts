@@ -88,7 +88,7 @@ export async function getPatientRecords(): Promise<ConsultationRecordItem[]> {
 
          ts.doctor_id                              AS "doctorId",
          u.full_name                               AS "doctorName",
-         d.specialization                          AS "specialization",
+         spec.title                                AS "specialization",
 
          b.branch_name                             AS "branchName"
        FROM consultation_record cr
@@ -98,6 +98,11 @@ export async function getPatientRecords(): Promise<ConsultationRecordItem[]> {
        JOIN employee e      ON e.employee_id    = d.doctor_id
        JOIN app_user u      ON u.user_id        = e.employee_id
        JOIN branch b        ON b.branch_id      = ts.branch_id
+       LEFT JOIN (
+         SELECT DISTINCT ON (doctor_id) doctor_id, specialization_id
+         FROM doctor_specialization
+       ) ds ON ds.doctor_id = d.doctor_id
+       LEFT JOIN specialization spec ON spec.specialization_id = ds.specialization_id
        WHERE a.patient_id = $1
        ORDER BY ts.available_date DESC, ts.start_time DESC`,
       [patientId]
