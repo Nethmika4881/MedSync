@@ -11,6 +11,7 @@ import {
   FileText,
   Pill,
   Receipt,
+  ShieldCheck,
   LogOut,
   Menu,
   X,
@@ -25,6 +26,7 @@ const navLinks = [
   { label: "Medical Records", href: "/patient/records",       icon: FileText },
   { label: "Prescriptions",   href: "/patient/prescriptions", icon: Pill },
   { label: "Billing",         href: "/patient/billing",       icon: Receipt },
+  { label: "Claims",          href: "/patient/claims",        icon: ShieldCheck },
 ];
 
 export function PatientNav() {
