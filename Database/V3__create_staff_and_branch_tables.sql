@@ -44,7 +44,7 @@ CREATE TABLE branch (
 CREATE TABLE employee (
     employee_id  UUID PRIMARY KEY,
 
-    branch_id    UUID NOT NULL,
+    branch_id    UUID,
 
     role         employee_role_enum NOT NULL,
 
