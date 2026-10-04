@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   HeartPulse,
   LayoutDashboard,
+  Calendar,
   Search,
   FileText,
   Pill,
@@ -18,6 +19,7 @@ import { logOut } from "@/lib/actions/auth";
 
 const navLinks = [
   { label: "Dashboard",       href: "/patient/dashboard",     icon: LayoutDashboard },
+  { label: "Appointments",    href: "/patient/appointments",  icon: Calendar },
   { label: "Find Doctors",    href: "/patient/find-doctors",  icon: Search },
   { label: "Medical Records", href: "/patient/records",       icon: FileText },
   { label: "Prescriptions",   href: "/patient/prescriptions", icon: Pill },

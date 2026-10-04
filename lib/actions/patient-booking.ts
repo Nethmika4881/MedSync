@@ -10,19 +10,7 @@ import { revalidatePath } from "next/cache";
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
-export const ALLOWED_VISIT_TYPES = [
-  "General Checkup",
-  "Follow-up",
-  "Consultation",
-  "New Patient",
-  "Routine Check",
-  "Emergency",
-  "Walk-in",
-  "Video Consultation",
-  "Pre-Visit",
-] as const;
-
-export type VisitType = (typeof ALLOWED_VISIT_TYPES)[number];
+import { ALLOWED_VISIT_TYPES, type VisitType } from "@/lib/types";
 
 export interface BookPatientAppointmentInput {
   doctorId: string;
@@ -99,39 +87,44 @@ export async function getDoctorBookableSlots(
   doctorId: string,
   date?: string
 ): Promise<BookableSlot[]> {
-  if (!UUID_REGEX.test(doctorId)) return [];
-  if (date && !DATE_REGEX.test(date)) return [];
+  try {
+    if (!UUID_REGEX.test(doctorId)) return [];
+    if (date && !DATE_REGEX.test(date)) return [];
 
-  const values: unknown[] = [doctorId];
-  let dateFilter = "AND s.available_date >= CURRENT_DATE";
-  if (date) {
-    values.push(date);
-    dateFilter += ` AND s.available_date = $${values.length}`;
+    const values: unknown[] = [doctorId];
+    let dateFilter = "AND s.available_date >= CURRENT_DATE";
+    if (date) {
+      values.push(date);
+      dateFilter += ` AND s.available_date = $${values.length}`;
+    }
+
+    const { rows } = await db.query(
+      `SELECT
+         s.time_slot_id                     AS "timeSlotId",
+         s.doctor_id                        AS "doctorId",
+         s.branch_id                        AS "branchId",
+         b.branch_name                      AS "branchName",
+         TO_CHAR(s.available_date, 'YYYY-MM-DD') AS "date",
+         s.start_time::text                 AS "startTime",
+         s.end_time::text                   AS "endTime",
+         s.max_tickets                      AS "maxTickets",
+         COUNT(a.appointment_id) FILTER (WHERE a.status NOT IN ('Cancelled'))::int AS "bookedCount",
+         GREATEST(0, s.max_tickets - COUNT(a.appointment_id) FILTER (WHERE a.status NOT IN ('Cancelled')))::int AS "remainingCapacity"
+       FROM time_slot s
+       JOIN branch b ON b.branch_id = s.branch_id
+       LEFT JOIN appointment a ON a.time_slot_id = s.time_slot_id
+       WHERE s.doctor_id = $1
+         ${dateFilter}
+       GROUP BY s.time_slot_id, b.branch_name
+       ORDER BY s.available_date ASC, s.start_time ASC`,
+      values
+    );
+
+    return rows as BookableSlot[];
+  } catch (err) {
+    console.error("[getDoctorBookableSlots] Failed to query slots:", err);
+    throw new Error("Failed to load doctor slots from database.");
   }
-
-  const { rows } = await db.query(
-    `SELECT
-       s.time_slot_id                     AS "timeSlotId",
-       s.doctor_id                        AS "doctorId",
-       s.branch_id                        AS "branchId",
-       b.branch_name                      AS "branchName",
-       TO_CHAR(s.available_date, 'YYYY-MM-DD') AS "date",
-       s.start_time::text                 AS "startTime",
-       s.end_time::text                   AS "endTime",
-       s.max_tickets                      AS "maxTickets",
-       COUNT(a.appointment_id) FILTER (WHERE a.status NOT IN ('Cancelled'))::int AS "bookedCount",
-       GREATEST(0, s.max_tickets - COUNT(a.appointment_id) FILTER (WHERE a.status NOT IN ('Cancelled')))::int AS "remainingCapacity"
-     FROM time_slot s
-     JOIN branch b ON b.branch_id = s.branch_id
-     LEFT JOIN appointment a ON a.time_slot_id = s.time_slot_id
-     WHERE s.doctor_id = $1
-       ${dateFilter}
-     GROUP BY s.time_slot_id, b.branch_name
-     ORDER BY s.available_date ASC, s.start_time ASC`,
-    values
-  );
-
-  return rows as BookableSlot[];
 }
 
 /**
