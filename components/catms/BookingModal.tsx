@@ -3,10 +3,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import type { Doctor } from "@/lib/types";
 import type { DoctorDirectoryItem } from "@/lib/actions/doctors";
+import { ALLOWED_VISIT_TYPES } from "@/lib/types";
 import {
   getDoctorBookableSlots,
   bookPatientAppointment,
-  ALLOWED_VISIT_TYPES,
   type BookableSlot,
   type BookAppointmentResult,
 } from "@/lib/actions/patient-booking";
@@ -132,12 +132,11 @@ export function BookingModal(props: BookingModalProps) {
       setSlots(data);
 
       // If user had a selected slot, re-verify it's still available in latest data
-      if (selectedSlot) {
-        const updated = data.find((s) => s.timeSlotId === selectedSlot.timeSlotId);
-        if (updated) {
-          setSelectedSlot(updated);
-        }
-      }
+      setSelectedSlot((curr) => {
+        if (!curr) return null;
+        const updated = data.find((s) => s.timeSlotId === curr.timeSlotId);
+        return updated ?? null;
+      });
 
       // Default select the first available date if none selected yet
       setSelectedDate((curr) => {
@@ -152,7 +151,7 @@ export function BookingModal(props: BookingModalProps) {
     } finally {
       setLoadingSlots(false);
     }
-  }, [doctor.doctorId, selectedSlot]);
+  }, [doctor.doctorId]);
 
   useEffect(() => {
     loadSlots();
