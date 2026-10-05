@@ -7,7 +7,7 @@ import { ArrowLeft, MapPin, Users, Stethoscope, Shield, UserPlus, Pencil, Loader
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-export default function BranchDetailPage({ params }: { params: { id: string } }) {
+export default function BranchDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const [branch, setBranch] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState(false);

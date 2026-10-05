@@ -1,15 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 @layer base {
   :root {
     /* === CATMS Brand Tokens === */
     --brand-primary: #16A085;
     --brand-primary-dark: #0F7A66;
-    --brand-secondary: #0B5345;  /* deep teal — used for active/hover accent states */
+    --brand-secondary: #0B5345;
     --brand-dark: #0B1220;
     --bg-app: #F7F8FA;
     --surface: #FFFFFF;
@@ -56,54 +53,106 @@
   }
 
   * {
-    @apply border-border;
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    border-color: hsl(var(--border));
   }
 
   body {
-    @apply bg-app text-[var(--text-primary)];
+    color: var(--text-primary);
+    background-color: var(--bg-app);
     font-family: 'Inter', 'Manrope', system-ui, sans-serif;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: 'Manrope', 'Inter', system-ui, sans-serif;
     font-weight: 700;
     color: var(--text-primary);
   }
 }
 
+@theme inline {
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+  --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+}
+
 @layer components {
   /* === App Shell === */
-  .app-bg { background-color: var(--bg-app); }
-  .surface { background-color: var(--surface); }
+  .app-bg {
+    background-color: var(--bg-app);
+  }
+
+  .surface {
+    background-color: var(--surface);
+  }
 
   /* === Cards === */
   .card-base {
-    @apply bg-white rounded-2xl shadow-card border border-[var(--border-subtle)] p-6;
+    background-color: #ffffff;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-subtle);
+    padding: 1.5rem;
+    border-radius: 1rem;
     transition: box-shadow 0.2s ease;
   }
+
   .card-hover:hover {
-    @apply shadow-card-hover;
+    box-shadow: var(--shadow-card-hover);
   }
 
   /* === Sidebar === */
   .sidebar-nav-item {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-           text-[var(--text-secondary)] cursor-pointer transition-all duration-150;
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium cursor-pointer transition-all duration-150;
+    color: var(--text-secondary);
   }
+
   .sidebar-nav-item:hover {
-    @apply bg-gray-50 text-[var(--text-primary)];
+    @apply bg-gray-50;
+    color: var(--text-primary);
   }
+
   .sidebar-nav-item.active {
     background-color: rgba(22, 160, 133, 0.10);
     color: var(--brand-primary);
     position: relative;
   }
+
   .sidebar-nav-item.active::before {
     content: '';
     position: absolute;
@@ -117,39 +166,67 @@
   }
 
   /* === Status Pills === */
-  .pill-success { @apply bg-[var(--success-bg)] text-[var(--success)] text-xs font-semibold px-2.5 py-0.5 rounded-full; }
-  .pill-danger  { @apply bg-[var(--danger-bg)] text-[var(--danger)] text-xs font-semibold px-2.5 py-0.5 rounded-full; }
-  .pill-warning { @apply bg-[var(--warning-bg)] text-[var(--warning)] text-xs font-semibold px-2.5 py-0.5 rounded-full; }
-  .pill-info    { @apply bg-[var(--info-bg)] text-[var(--info)] text-xs font-semibold px-2.5 py-0.5 rounded-full; }
-  .pill-purple  { @apply bg-[var(--purple-bg)] text-[var(--purple)] text-xs font-semibold px-2.5 py-0.5 rounded-full; }
+  .pill-success {
+    @apply text-xs font-semibold px-2.5 py-0.5 rounded-full;
+    background-color: var(--success-bg);
+    color: var(--success);
+  }
+
+  .pill-danger {
+    @apply text-xs font-semibold px-2.5 py-0.5 rounded-full;
+    background-color: var(--danger-bg);
+    color: var(--danger);
+  }
+
+  .pill-warning {
+    @apply text-xs font-semibold px-2.5 py-0.5 rounded-full;
+    background-color: var(--warning-bg);
+    color: var(--warning);
+  }
+
+  .pill-info {
+    @apply text-xs font-semibold px-2.5 py-0.5 rounded-full;
+    background-color: var(--info-bg);
+    color: var(--info);
+  }
+
+  .pill-purple {
+    @apply text-xs font-semibold px-2.5 py-0.5 rounded-full;
+    background-color: var(--purple-bg);
+    color: var(--purple);
+  }
 
   /* === Buttons === */
   .btn-primary {
-    @apply bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white
-           font-semibold text-sm px-5 py-2 rounded-full transition-all duration-150
-           shadow-sm hover:shadow-md active:scale-[0.98];
+    @apply text-white font-semibold text-sm px-5 py-2 rounded-full transition-all duration-150 shadow-sm hover:shadow-md active:scale-[0.98];
+    background-color: var(--brand-primary);
   }
+
+  .btn-primary:hover {
+    background-color: var(--brand-primary-dark);
+  }
+
   .btn-secondary {
-    @apply bg-white border border-[var(--border-subtle)] text-[var(--text-primary)]
-           font-semibold text-sm px-5 py-2 rounded-full transition-all duration-150
-           hover:bg-slate-800 hover:text-white hover:border-slate-800
-           hover:shadow-sm active:scale-[0.98];
+    @apply bg-white font-semibold text-sm px-5 py-2 rounded-full transition-all duration-150 hover:bg-slate-800 hover:text-white hover:border-slate-800 hover:shadow-sm active:scale-[0.98];
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
   }
+
   .btn-ghost {
-    @apply bg-transparent text-[var(--text-secondary)] font-medium text-sm
-           px-3 py-2 rounded-lg transition-colors
-           hover:bg-slate-800 hover:text-white;
+    @apply bg-transparent font-medium text-sm px-3 py-2 rounded-lg transition-colors hover:bg-slate-800 hover:text-white;
+    color: var(--text-secondary);
   }
 
   /* === Loading skeleton === */
   .skeleton {
     @apply bg-gray-100 rounded-lg overflow-hidden relative;
   }
+
   .skeleton::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
     animation: shimmer 1.5s infinite;
     transform: translateX(-100%);
   }
@@ -166,38 +243,73 @@
 
   /* === Chat === */
   .chat-bubble-in {
-    @apply bg-white border border-[var(--border-subtle)] text-[var(--text-primary)]
-           rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm max-w-[75%] shadow-sm;
+    @apply bg-white rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm max-w-[75%] shadow-sm;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
   }
+
   .chat-bubble-out {
-    @apply bg-[var(--brand-primary)] text-white
-           rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm max-w-[75%];
+    @apply text-white rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm max-w-[75%];
+    background-color: var(--brand-primary);
   }
 
   /* === Page title === */
-  .page-title { @apply text-2xl font-bold text-[var(--text-primary)]; }
-  .card-title  { @apply text-base font-semibold text-[var(--text-primary)]; }
-  .body-text   { @apply text-sm text-[var(--text-secondary)] leading-relaxed; }
-  .caption     { @apply text-xs text-[var(--text-muted)]; }
+  .page-title {
+    @apply text-2xl font-bold;
+    color: var(--text-primary);
+  }
+
+  .card-title {
+    @apply text-base font-semibold;
+    color: var(--text-primary);
+  }
+
+  .body-text {
+    @apply text-sm leading-relaxed;
+    color: var(--text-secondary);
+  }
+
+  .caption {
+    @apply text-xs;
+    color: var(--text-muted);
+  }
 
   /* === Scrollbar === */
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #D0D5DD; border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: #98A2B3; }
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #D0D5DD;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #98A2B3;
+  }
 }
 
-/* Landing page gradient */
+/* Shimmer animation keyframes for skeleton */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Gradients */
 .hero-gradient {
   background: linear-gradient(135deg, #e8f5f2 0%, #f0f4ff 50%, #faf0ff 100%);
 }
 
-/* Teal gradient for charts */
 .chart-gradient-teal {
-  background: linear-gradient(180deg, rgba(22,160,133,0.2) 0%, rgba(22,160,133,0) 100%);
+  background: linear-gradient(180deg, rgba(22, 160, 133, 0.2) 0%, rgba(22, 160, 133, 0) 100%);
 }
 
-/* Upgrade card gradient (sidebar bottom) */
 .upgrade-card-gradient {
   background: linear-gradient(135deg, #16A085 0%, #0F7A66 50%, #1a2e4a 100%);
 }

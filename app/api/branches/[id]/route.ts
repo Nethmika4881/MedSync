@@ -1,10 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export const GET: (request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response> = async (request, { params }) => {
   try {
     const {id: branchId } = await params;
 
@@ -71,7 +68,7 @@ export async function GET(
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export const DELETE: (request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response> = async (request, { params }) => {
   try {
     const { id: branchID } = await params;
 
@@ -84,7 +81,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
   }
 }
 
-export async function PATCH( request: Request, { params }: { params: {id: string } } ){
+export const PATCH: (request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response> = async (request, { params }) => {
   try {
     const { id: branchID } = await params;
     const body = await request.json();
