@@ -3,7 +3,7 @@
 import React from "react";
 import { useRole, useCurrentUser } from "@/lib/stores/authStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Calendar, Activity, CreditCard, Clock, CheckCircle2 } from "lucide-react";
+import { Users, Calendar, Activity, CreditCard, Clock, CheckCircle2, UserCheck } from "lucide-react";
 import { revenueByMonth, appointmentsByMonth } from "@/lib/constants";;
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { StatusPill } from "@/components/catms/StatusPill";
@@ -45,6 +45,15 @@ export default function DashboardPage() {
           { title: "Active Prescriptions", value: "1", icon: Activity, color: "text-purple-600", bg: "bg-purple-100" },
           { title: "Outstanding Bills", value: "$0", icon: CreditCard, color: "text-green-600", bg: "bg-green-100" },
         ];
+
+      case "receptionist":
+        return [
+          { title: "Today's Appointments", value: "24", icon: Calendar, color: "text-blue-600", bg: "bg-blue-100" },
+          { title: "Checked-In Patients", value: "9", icon: UserCheck, color: "text-green-600", bg: "bg-green-100" },
+          { title: "Pending Check-ins", value: "15", icon: Clock, color: "text-amber-600", bg: "bg-amber-100" },
+          { title: "Billing Due Today", value: "$3.2k", icon: CreditCard, color: "text-purple-600", bg: "bg-purple-100" },
+        ];
+
       default: // admin, manager, etc
         return [
           { title: "Total Patients", value: "2,845", icon: Users, color: "text-blue-600", bg: "bg-blue-100" },
