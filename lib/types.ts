@@ -96,6 +96,7 @@ export interface PatientCondition {
   conditionName: string;
   diagnosedDate: string;
   isActive: boolean;
+  isChronic?: boolean; 
   notes?: string;
   // UI legacy fields
   pcId?: string;
@@ -112,18 +113,22 @@ export type AppointmentStatus =
   | "Checked-out"
   | "Completed"
   | "Cancelled"
+  | "No-Show"
   | "Rescheduled";
 
-export type VisitType =
-  | "General Checkup"
-  | "Follow-up"
-  | "Consultation"
-  | "New Patient"
-  | "Routine Check"
-  | "Emergency"
-  | "Walk-in"
-  | "Video Consultation"
-  | "Pre-Visit";
+export const ALLOWED_VISIT_TYPES = [
+  "General Checkup",
+  "Follow-up",
+  "Consultation",
+  "New Patient",
+  "Routine Check",
+  "Emergency",
+  "Walk-in",
+  "Video Consultation",
+  "Pre-Visit",
+] as const;
+
+export type VisitType = (typeof ALLOWED_VISIT_TYPES)[number];
 
 export interface Appointment {
   appointmentId: string;
@@ -171,8 +176,16 @@ export interface ConsultationRecord {
 }
 
 // ─── Treatments ───────────────────────────────────────────────────────────────
+export type TreatmentCategory =
+  | "Laboratory" 
+  | "Radiology" 
+  | "Procedure" 
+  | "Therapy"
+  | "Consultation" 
+  | "Injection" 
+  | "Surgery" 
+  | "Other";
 
-export type TreatmentCategory = "Laboratory" | "Radiology" | "Procedure" | "Therapy";
 export type TreatmentStatus = "Ordered" | "In-Progress" | "Completed" | "Cancelled";
 
 export interface Treatment {
@@ -231,6 +244,9 @@ export interface Medication {
   medicationId: string;
   genericName: string;
   brandName?: string;
+  strength?: string;
+  form?: string;
+  category?: string;
   contraindications?: string;
 }
 
@@ -361,8 +377,9 @@ export interface PrescriptionItem {
   medicationName: string;
   dosage: string;
   frequency: string;
-  duration: string;
-  instructions: string;
+  durationDays: number;
+  instructions: string;   // stored as prescription.notes
+  allergyChecked: boolean;
   dispensed: boolean;
   dispensedAt?: string;
   dispensedBy?: string;

@@ -49,3 +49,8 @@ node_modules/
 .neon
 /skills-lock.json
 
+flyway.conf
+docker-compose.yml
+.env
+.env.local
+.env*.local

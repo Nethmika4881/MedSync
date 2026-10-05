@@ -4,12 +4,6 @@ import BranchesPage from "./_client";
 
 export default async function Page() {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
-  // const mockUser = {
-  //   id: "mock-123",
-  //   name: "Local Admin",
-  //   email: "admin@localhost",
-  //   role: "admin" 
-  //   };
+  if (!user) redirect("/login?clear=1");
   return <BranchesPage user={user} />;
 }

@@ -1,108 +1,230 @@
 "use client";
 
-import React from "react";
-import { usePharmacyStore } from "@/lib/stores/pharmacyStore";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pill, AlertCircle, CheckCircle2, RotateCcw } from "lucide-react";
-import { useDoctorStore } from "@/lib/stores/doctorStore";
+import { Pill, CheckCircle2, Clock, AlertTriangle, Loader2, Stethoscope, Calendar, Info } from "lucide-react";
+import {
+  getPatientPrescriptions,
+  type PatientPrescriptionItem,
+} from "@/lib/actions/patient-prescriptions";
+
+type Tab = "active" | "past" | "all";
 
 export default function MyPrescriptionsPage({ user }: { user: any }) {
-  const role = user?.role;
-  
-  
-  const { prescriptions } = usePharmacyStore();
-  const { doctors } = useDoctorStore();
-  
-  if (!user || role !== "patient") return null;
+  const [prescriptions, setPrescriptions] = useState<PatientPrescriptionItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>("active");
 
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getPatientPrescriptions();
+        if (!cancelled) setPrescriptions(data);
+      } catch {
+        if (!cancelled) setError("Failed to load prescriptions. Please try again.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
 
+  if (!user || user.role !== "patient") return null;
 
-  const myPrescriptions = prescriptions.filter(p => p.patientId === user?.userId).map(p => ({
-    ...p,
-    status: p.pickedUp ? "Completed" : p.dispensed ? "Dispensed" : "Pending",
-    doctorName: doctors.find((d: any) => d.doctorId === p.doctorId)?.name || "Unknown Doctor"
-  }));
-  const activePrescriptions = myPrescriptions.filter(p => p.status === "Dispensed" || p.status === "Pending");
-  const pastPrescriptions = myPrescriptions.filter(p => p.status === "Completed" || p.status === "Cancelled");
+  const active = prescriptions.filter((p) => p.isActive);
+  const past = prescriptions.filter((p) => !p.isActive);
+  const displayed = tab === "active" ? active : tab === "past" ? past : prescriptions;
+
+  const tabs: { key: Tab; label: string; count: number }[] = [
+    { key: "active", label: "Active", count: active.length },
+    { key: "past", label: "Past", count: past.length },
+    { key: "all", label: "All", count: prescriptions.length },
+  ];
+
+  // ── Loading state ──
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-3 animate-fade-in">
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--brand-primary)]" />
+        <p className="text-sm text-slate-500">Loading your prescriptions…</p>
+      </div>
+    );
+  }
+
+  // ── Error state ──
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-3 animate-fade-in">
+        <AlertTriangle className="w-8 h-8 text-amber-500" />
+        <p className="text-sm text-slate-600">{error}</p>
+        <button
+          className="text-sm font-semibold text-[var(--brand-primary)] hover:underline"
+          onClick={() => window.location.reload()}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in max-w-4xl">
+      {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-slate-900 tracking-tight">My Prescriptions</h2>
-        <p className="text-slate-500">View active medications and request refills.</p>
+        <p className="text-slate-500">View your active and past prescribed medications.</p>
       </div>
 
-      <div className="space-y-6">
-        <div>
-          <h3 className="text-lg font-bold text-slate-900 mb-4">Active Medications</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {activePrescriptions.map(presc => (
-              <Card key={presc.prescriptionId} className="border-[var(--brand-primary)] shadow-sm shadow-blue-500/10">
-                <CardContent className="p-5">
-                  <div className="flex items-start gap-4">
+      {/* Tabs */}
+      <div className="flex gap-2">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+              tab === t.key
+                ? "bg-[var(--brand-primary)] text-white shadow"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            {t.label}
+            <span
+              className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
+                tab === t.key
+                  ? "bg-white/20 text-white"
+                  : "bg-slate-200 text-slate-500"
+              }`}
+            >
+              {t.count}
+            </span>
+          </button>
+        ))}
+      </div>
 
-                    <div className="w-12 h-12 bg-blue-100 text-[var(--brand-primary)] flex flex-col items-center justify-center shrink-0"
-                      style={{ borderRadius: "24px", clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)" }}>
-                      <Pill className="w-6 h-6" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <h4 className="font-bold text-slate-900">{presc.medicationName}</h4>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
-                          {presc.status}
-                        </span>
-                      </div>
-                      <p className="text-sm text-slate-600 font-medium mb-2">{presc.dosage} — {presc.frequency}</p>
-                      
-                      <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs text-slate-600 mb-3">
-                        <span className="font-semibold text-slate-700">Instructions:</span> {presc.instructions}
-                      </div>
-                      
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-500">Duration: <strong className="text-slate-900">{presc.duration}</strong></span>
-                        <button className="flex items-center gap-1 font-semibold text-[var(--brand-primary)] hover:underline">
-                          <RotateCcw className="w-3.5 h-3.5" /> Request Refill
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            {activePrescriptions.length === 0 && (
-              <p className="text-sm text-slate-500 p-6 text-center border rounded-xl border-dashed col-span-full">You have no active prescriptions.</p>
+      {/* Empty state */}
+      {displayed.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-16 gap-3 border rounded-xl border-dashed border-slate-200">
+          <Pill className="w-8 h-8 text-slate-300" />
+          <p className="text-sm text-slate-500">
+            {tab === "active"
+              ? "You have no active prescriptions."
+              : tab === "past"
+              ? "No past prescriptions found."
+              : "No prescriptions on record."}
+          </p>
+        </div>
+      )}
+
+      {/* Prescription list */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {displayed.map((presc) => (
+          <PrescriptionCard key={presc.prescriptionId} presc={presc} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────── */
+/*  Individual prescription card                  */
+/* ────────────────────────────────────────────── */
+function PrescriptionCard({ presc }: { presc: PatientPrescriptionItem }) {
+  const isActive = presc.isActive;
+
+  return (
+    <Card
+      className={`shadow-sm transition-all hover:shadow-md ${
+        isActive ? "border-[var(--brand-primary)] shadow-blue-500/10" : "border-slate-200 opacity-85 hover:opacity-100"
+      }`}
+    >
+      <CardContent className="p-5">
+        <div className="flex items-start gap-4">
+          {/* Icon */}
+          <div
+            className={`w-12 h-12 flex items-center justify-center shrink-0 rounded-2xl ${
+              isActive ? "bg-blue-100 text-[var(--brand-primary)]" : "bg-slate-100 text-slate-400"
+            }`}
+          >
+            <Pill className="w-6 h-6" />
+          </div>
+
+          <div className="flex-1 min-w-0">
+            {/* Title + status badge */}
+            <div className="flex justify-between items-start gap-2">
+              <h4 className="font-bold text-slate-900 truncate">{presc.medicationName}</h4>
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${
+                  isActive
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-slate-100 text-slate-500"
+                }`}
+              >
+                {isActive ? (
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> Active
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-green-500" /> Completed
+                  </span>
+                )}
+              </span>
+            </div>
+
+            {/* Dosage / frequency */}
+            <p className="text-sm text-slate-600 font-medium mb-2">
+              {presc.dosage}
+              {presc.frequency ? ` — ${presc.frequency}` : ""}
+            </p>
+
+            {/* Strength + form */}
+            {(presc.strength || presc.form) && (
+              <p className="text-xs text-slate-500 mb-2">
+                {[presc.strength, presc.form].filter(Boolean).join(" • ")}
+                {presc.category ? ` • ${presc.category}` : ""}
+              </p>
+            )}
+
+            {/* Notes */}
+            {presc.notes && (
+              <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs text-slate-600 mb-3">
+                <span className="font-semibold text-slate-700 flex items-center gap-1 mb-0.5">
+                  <Info className="w-3 h-3" /> Notes
+                </span>
+                {presc.notes}
+              </div>
+            )}
+
+            {/* Metadata row */}
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+              {presc.durationDays != null && (
+                <span>
+                  Duration: <strong className="text-slate-900">{presc.durationDays} days</strong>
+                  {presc.endDate ? ` (ends ${presc.endDate})` : ""}
+                </span>
+              )}
+              <span className="flex items-center gap-1">
+                <Stethoscope className="w-3 h-3" /> {presc.doctorName}
+              </span>
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3 h-3" /> {presc.issuedDate}
+              </span>
+            </div>
+
+            {/* Allergy flag */}
+            {presc.allergyChecked && (
+              <p className="mt-2 text-[10px] text-green-600 font-medium flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" /> Allergy checked
+              </p>
             )}
           </div>
         </div>
-
-        <div>
-          <h3 className="text-lg font-bold text-slate-900 mb-4">Past Prescriptions</h3>
-          <div className="space-y-3">
-            {pastPrescriptions.map(presc => (
-              <Card key={presc.prescriptionId} className="border-slate-200 shadow-sm opacity-80 hover:opacity-100 transition-opacity">
-                <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-center justify-between">
-                  <div className="flex items-center gap-4 w-full sm:w-auto">
-                    <div className="w-10 h-10 bg-slate-100 text-slate-400 flex items-center justify-center shrink-0 rounded-full">
-                      <Pill className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-slate-700">{presc.medicationName}</h4>
-                      <p className="text-xs text-slate-500">{presc.dosage} • Prescribed by {presc.doctorName}</p>
-                    </div>
-                  </div>
-                  <div className="w-full sm:w-auto text-left sm:text-right">
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 mb-1">
-                      {presc.status === "Completed" ? <CheckCircle2 className="w-3 h-3 text-green-600" /> : <AlertCircle className="w-3 h-3" />}
-                      {presc.status}
-                    </span>
-                    <p className="text-xs text-slate-400">{presc.issuedDate}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

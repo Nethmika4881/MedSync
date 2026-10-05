@@ -12,26 +12,8 @@ export function Header() {
     if (segments.length <= 1 || (segments.length === 1 && segments[0] === "dashboard")) {
       return "Dashboard";
     }
-    
     const last = segments[segments.length - 1];
-    
-    // Check if the last segment is a database UUID
-    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(last);
-    
-    if (isUUID) {
-      // Look at the folder name before the ID to determine the title
-      const parent = segments[segments.length - 2];
-      if (parent === "branches") return "Branch Details";
-      if (parent === "treatments") return "Treatment Details";
-      if (parent === "staff") return "Staff Details";
-      if (parent === "doctors") return "Doctor Details";
-      if (parent === "patients") return "Patient Details";
-      return "Details";
-    }
-
     if (last === "new") return "Register New";
-    
-    // Default fallback: Capitalize the segment
     return last.charAt(0).toUpperCase() + last.slice(1);
   };
 

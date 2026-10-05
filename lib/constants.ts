@@ -4,13 +4,14 @@
 
 export { SESSION_META, DAYS_OF_WEEK } from "@/lib/types";
 export type { SessionType, DayOfWeek, DoctorScheduleSlot, SessionConfig } from "@/lib/types";
+import type { Medication } from "@/lib/types";
 
 // Empty arrays to prevent UI crashes while DB is disconnected
 export const branches: any[] = [];
 export const doctors: any[] = [];
 export const patients: any[] = [];
 export const employees: any[] = [];
-export const medications: any[] = [];
+export const medications: Medication[] = [];
 export const treatmentCatalogue: any[] = [];
 export const insuranceProviders: any[] = [];
 export const insurancePackages: any[] = [];

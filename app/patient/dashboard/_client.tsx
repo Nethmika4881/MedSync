@@ -1,198 +1,508 @@
 "use client";
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Calendar, Activity, CreditCard, Clock, CheckCircle2 } from "lucide-react";
-import { revenueByMonth, appointmentsByMonth } from "@/lib/constants";;
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { StatusPill } from "@/components/catms/StatusPill";
-import { SessionBadge, TicketBadge } from "@/components/catms/SessionBadge";
-import { useAppointmentStore } from "@/lib/stores/appointmentStore";
-import { AvatarWithName } from "@/components/catms/AvatarWithName";
-import { ClipboardPlus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Calendar,
+  Pill,
+  CreditCard,
+  CheckCircle2,
+  Clock,
+  MapPin,
+  Stethoscope,
+  ChevronRight,
+  Loader2,
+  AlertTriangle,
+  FileText,
+  ShieldCheck,
+  Search,
+  PlusCircle,
+  Ticket,
+} from "lucide-react";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+} from "recharts";
+import {
+  getPatientDashboardData,
+  type PatientDashboardMetrics,
+} from "@/lib/actions/patient-dashboard";
 
-export default function DashboardPage({ user }: { user: any }) {
-  const role = user?.role;
-  
-  
-  const { appointments } = useAppointmentStore();
+export default function PatientDashboardClient({ user }: { user: any }) {
+  const [data, setData] = useState<PatientDashboardMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-
-
-  // Doctor's queue follows the same status-based convention as /consultations and /schedule
-  // (Confirmed/Checked-in = still in today's queue, Completed = done) since mock appointment
-  // dates aren't pinned to "today".
-  const doctorQueue = appointments
-    .filter((a) => a.doctorId === user?.userId && (a.status === "Confirmed" || a.status === "Checked-in"))
-    .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
-  const doctorCheckedIn = appointments.filter((a) => a.doctorId === user?.userId && a.status === "Checked-in");
-  const doctorCompleted = appointments.filter((a) => a.doctorId === user?.userId && a.status === "Completed");
-
-  // Generic metrics based on role
-  const getMetrics = () => {
-    switch (role) {
-      case "doctor":
-        return [
-          { title: "Today's Patients", value: String(doctorQueue.length), icon: Users, color: "text-blue-600", bg: "bg-blue-100" },
-          { title: "Pending Consultations", value: String(doctorCheckedIn.length), icon: Clock, color: "text-amber-600", bg: "bg-amber-100" },
-          { title: "Completed Today", value: String(doctorCompleted.length), icon: CheckCircle2, color: "text-green-600", bg: "bg-green-100" },
-        ];
-      case "patient":
-        return [
-          { title: "Upcoming Appointments", value: "2", icon: Calendar, color: "text-blue-600", bg: "bg-blue-100" },
-          { title: "Active Prescriptions", value: "1", icon: Activity, color: "text-purple-600", bg: "bg-purple-100" },
-          { title: "Outstanding Bills", value: "$0", icon: CreditCard, color: "text-green-600", bg: "bg-green-100" },
-        ];
-      default: // admin, manager, etc
-        return [
-          { title: "Total Patients", value: "2,845", icon: Users, color: "text-blue-600", bg: "bg-blue-100" },
-          { title: "Today's Appointments", value: "48", icon: Calendar, color: "text-purple-600", bg: "bg-purple-100" },
-          { title: "Active Doctors", value: "18", icon: Activity, color: "text-amber-600", bg: "bg-amber-100" },
-          { title: "Monthly Revenue", value: "$75.8k", icon: CreditCard, color: "text-green-600", bg: "bg-green-100" },
-        ];
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const metrics = await getPatientDashboardData();
+        if (!cancelled) {
+          if (metrics) {
+            setData(metrics);
+          } else {
+            setError("Unable to load patient dashboard metrics.");
+          }
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError("Failed to load dashboard data. Please try again.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }
-  };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const metrics = getMetrics();
+  const firstName = user?.firstName || user?.name?.split(" ")[0] || "Patient";
 
-  // Upcoming appointments for the specific role
-  const upcomingAppts = appointments
-    .filter(a => a.status === "Confirmed" || a.status === "Rescheduled")
-    .filter(a => role === "doctor" ? a.doctorId === user?.userId : role === "patient" ? a.patientId === user?.userId : true)
-    .slice(0, 5);
+  // ── Loading state ──
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-3 animate-fade-in">
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--brand-primary)]" />
+        <p className="text-sm text-slate-500">Loading your personal health dashboard…</p>
+      </div>
+    );
+  }
+
+  // ── Error state ──
+  if (error || !data) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-3 animate-fade-in">
+        <AlertTriangle className="w-8 h-8 text-amber-500" />
+        <p className="text-sm text-slate-600">{error || "Something went wrong."}</p>
+        <button
+          className="text-sm font-semibold text-[var(--brand-primary)] hover:underline"
+          onClick={() => window.location.reload()}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  const hasOutstanding = data.totalDueRaw > 0;
+  const nextAppt = data.upcomingAppointments[0];
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back, {user?.name.split(' ')[0]}!</h2>
-          <p className="text-slate-500">Here's what's happening at your clinic today.</p>
+    <div className="space-y-8 animate-fade-in max-w-5xl mx-auto">
+      {/* ── Welcome Banner ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl p-6 sm:p-8 shadow-sm">
+        <div className="space-y-1">
+          <h2 className="text-2xl sm:text-3xl font-bold font-outfit tracking-tight">
+            Welcome back, {firstName}!
+          </h2>
+          <p className="text-slate-300 text-sm max-w-xl">
+            Here is your real-time health summary, upcoming consultations, and clinical records.
+          </p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <Link href="/patient/appointments">
+            <Button className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-xl shadow-md gap-2 font-medium">
+              <PlusCircle className="w-4 h-4" />
+              Book Appointment
+            </Button>
+          </Link>
+          <Link href="/patient/find-doctors">
+            <Button
+              variant="outline"
+              className="bg-white/10 hover:bg-white/20 border-white/20 text-white rounded-xl gap-2 font-medium"
+            >
+              <Search className="w-4 h-4" />
+              Find Doctors
+            </Button>
+          </Link>
         </div>
       </div>
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {metrics.map((m, i) => (
-          <Card key={i} className="border-none shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-xl ${m.bg} flex items-center justify-center shrink-0`}>
-                <m.icon className={`w-6 h-6 ${m.color}`} />
+      {/* ── Metrics Grid (Derived from real PostgreSQL data) ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Metric 1: Upcoming Appointments */}
+        <Link href="/patient/appointments" className="block group">
+          <Card className="border-slate-200 shadow-xs hover:border-[var(--brand-primary)] hover:shadow-md transition-all h-full">
+            <CardContent className="p-5 flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <Calendar className="w-6 h-6" />
               </div>
-              <div>
-                <p className="text-sm font-medium text-slate-500">{m.title}</p>
-                <h3 className="text-2xl font-bold text-slate-900">{m.value}</h3>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Upcoming Visits
+                </p>
+                <h3 className="text-2xl font-bold text-slate-900 mt-0.5">
+                  {data.upcomingAppointmentsCount}
+                </h3>
+                <p className="text-xs text-slate-500 mt-1 truncate">
+                  {data.upcomingAppointmentsCount > 0
+                    ? nextAppt
+                      ? `Next: ${nextAppt.appointmentDate}`
+                      : "Visits scheduled"
+                    : "No visits scheduled"}
+                </p>
               </div>
             </CardContent>
           </Card>
-        ))}
+        </Link>
+
+        {/* Metric 2: Active Prescriptions */}
+        <Link href="/patient/prescriptions" className="block group">
+          <Card className="border-slate-200 shadow-xs hover:border-[var(--brand-primary)] hover:shadow-md transition-all h-full">
+            <CardContent className="p-5 flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <Pill className="w-6 h-6" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Active Prescriptions
+                </p>
+                <h3 className="text-2xl font-bold text-slate-900 mt-0.5">
+                  {data.activePrescriptionsCount}
+                </h3>
+                <p className="text-xs text-slate-500 mt-1 truncate">
+                  {data.activePrescriptionsCount > 0
+                    ? `${data.activePrescriptionsCount} active course(s)`
+                    : "No active medications"}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        {/* Metric 3: Outstanding Balance */}
+        <Link href="/patient/billing" className="block group">
+          <Card className="border-slate-200 shadow-xs hover:border-[var(--brand-primary)] hover:shadow-md transition-all h-full">
+            <CardContent className="p-5 flex items-start gap-4">
+              <div
+                className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform ${
+                  hasOutstanding
+                    ? "bg-amber-50 text-amber-600"
+                    : "bg-emerald-50 text-emerald-600"
+                }`}
+              >
+                <CreditCard className="w-6 h-6" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Outstanding Bills
+                </p>
+                <h3
+                  className={`text-2xl font-bold mt-0.5 ${
+                    hasOutstanding ? "text-amber-600" : "text-slate-900"
+                  }`}
+                >
+                  {data.outstandingBalance}
+                </h3>
+                <p className="text-xs mt-1 truncate">
+                  {hasOutstanding ? (
+                    <span className="text-amber-600 font-medium">
+                      {data.unpaidInvoicesCount} invoice(s) pending
+                    </span>
+                  ) : (
+                    <span className="text-emerald-600 font-medium">All invoices settled</span>
+                  )}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        {/* Metric 4: Completed Consultations */}
+        <Link href="/patient/records" className="block group">
+          <Card className="border-slate-200 shadow-xs hover:border-[var(--brand-primary)] hover:shadow-md transition-all h-full">
+            <CardContent className="p-5 flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Consultation History
+                </p>
+                <h3 className="text-2xl font-bold text-slate-900 mt-0.5">
+                  {data.completedVisitsCount}
+                </h3>
+                <p className="text-xs text-slate-500 mt-1 truncate">
+                  {data.completedVisitsCount > 0
+                    ? `${data.completedVisitsCount} completed visit(s)`
+                    : "No completed visits yet"}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
-      {/* Charts & Lists */}
+      {/* ── Main Dashboard Content Grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Chart */}
-        <Card className="lg:col-span-2 border-slate-200 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-slate-900">
-              {role === "admin" ? "Revenue & Appointments Overview" : "Activity Overview"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              {role === "admin" ? (
-                <LineChart data={revenueByMonth} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748B' }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748B' }} tickFormatter={(val) => `$${val / 1000}k`} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
-                    formatter={(value: number) => [`$${value.toLocaleString()}`, 'Revenue']}
+        {/* Left Column: Monthly Activity Chart & Health Shortcuts (2 Cols) */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Monthly Activity Chart */}
+          <Card className="border-slate-200 shadow-xs">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg font-semibold text-slate-900">
+                    Visit Activity (Last 6 Months)
+                  </CardTitle>
+                  <p className="text-xs text-slate-500">
+                    Monthly appointment history recorded in your health profile.
+                  </p>
+                </div>
+                <div className="flex items-center gap-4 text-xs font-medium">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-xs bg-[var(--brand-primary)] inline-block" />
+                    <span className="text-slate-600">Completed</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-xs bg-slate-200 inline-block" />
+                    <span className="text-slate-600">Cancelled</span>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="h-[260px] pt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={data.monthlyActivity}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                  <XAxis
+                    dataKey="month"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: "#64748B" }}
                   />
-                  <Line type="monotone" dataKey="revenue" stroke="var(--brand-primary)" strokeWidth={3} dot={{ r: 4, fill: "var(--brand-primary)", strokeWidth: 2, stroke: "#fff" }} activeDot={{ r: 6 }} />
-                </LineChart>
-              ) : (
-                <BarChart data={appointmentsByMonth.slice(-6)} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748B' }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748B' }} />
-                  <Tooltip cursor={{ fill: '#F1F5F9' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
-                  <Bar dataKey="completed" fill="var(--brand-primary)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="cancelled" fill="#E2E8F0" radius={[4, 4, 0, 0]} />
+                  <YAxis
+                    allowDecimals={false}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: "#64748B" }}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "#F8FAFC" }}
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "1px solid #E2E8F0",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                    }}
+                  />
+                  <Bar
+                    dataKey="completed"
+                    name="Completed"
+                    fill="var(--brand-primary)"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="cancelled"
+                    name="Cancelled"
+                    fill="#E2E8F0"
+                    radius={[4, 4, 0, 0]}
+                  />
                 </BarChart>
-              )}
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
-        {/* Upcoming List / Doctor's Today's Queue */}
-        <Card className="border-slate-200 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-slate-900">
-              {role === "doctor" ? "Today's Schedule Queue" : "Upcoming Appointments"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-0">
-            {role === "doctor" ? (
-              doctorQueue.length > 0 ? (
+          {/* Quick Health Shortcuts */}
+          <div>
+            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider text-xs mb-3">
+              Patient Care Portals
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Link
+                href="/patient/appointments"
+                className="p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <Calendar className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-900 group-hover:text-[var(--brand-primary)] transition-colors">
+                      Book &amp; Reschedule
+                    </h4>
+                    <p className="text-xs text-slate-500">View schedule and manage bookings</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+
+              <Link
+                href="/patient/records"
+                className="p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-900 group-hover:text-[var(--brand-primary)] transition-colors">
+                      Medical Records
+                    </h4>
+                    <p className="text-xs text-slate-500">Diagnosis, notes, and treatments</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+
+              <Link
+                href="/patient/billing"
+                className="p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                    <CreditCard className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-900 group-hover:text-[var(--brand-primary)] transition-colors">
+                      Billing &amp; Invoices
+                    </h4>
+                    <p className="text-xs text-slate-500">Payments and invoice history</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+
+              <Link
+                href="/patient/claims"
+                className="p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-900 group-hover:text-[var(--brand-primary)] transition-colors">
+                      Insurance Claims
+                    </h4>
+                    <p className="text-xs text-slate-500">Coverage and claim tracking</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Upcoming Appointments with Zero-Data State */}
+        <div className="space-y-4">
+          <Card className="border-slate-200 shadow-xs flex flex-col h-full">
+            <CardHeader className="pb-3 border-b border-slate-100">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-semibold text-slate-900">
+                  Upcoming Consultations
+                </CardTitle>
+                <Link
+                  href="/patient/appointments"
+                  className="text-xs font-semibold text-[var(--brand-primary)] hover:underline"
+                >
+                  View all
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0 flex-1 flex flex-col">
+              {data.upcomingAppointments.length > 0 ? (
                 <div className="divide-y divide-slate-100">
-                  {doctorQueue.map((appt) => (
-                    <div key={appt.appointmentId} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-blue-50 flex flex-col items-center justify-center shrink-0">
-                          <span className="text-[10px] font-bold text-blue-600 uppercase leading-none">{new Date(appt.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-slate-900 truncate">{appt.patientName}</p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-xs text-slate-500">{appt.visitType}</span>
-                            <StatusPill status={appt.status} />
+                  {data.upcomingAppointments.map((appt) => (
+                    <div
+                      key={appt.appointmentId}
+                      className="p-4 hover:bg-slate-50/70 transition-colors space-y-2.5"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-700 flex flex-col items-center justify-center shrink-0 font-outfit">
+                            <span className="text-[10px] font-bold uppercase leading-none">
+                              {new Date(appt.appointmentDate).toLocaleString("en-US", {
+                                month: "short",
+                              })}
+                            </span>
+                            <span className="text-sm font-bold leading-none mt-1">
+                              {new Date(appt.appointmentDate).getDate()}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                              {appt.doctorName}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {appt.specialization || "General Practice"}
+                            </p>
                           </div>
                         </div>
+
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
+                          {appt.status}
+                        </span>
                       </div>
-                      <Link href={`/consultations/${appt.appointmentId}`} className="shrink-0">
-                        <Button size="sm" className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-lg h-8">
-                          <ClipboardPlus className="w-3.5 h-3.5 mr-1.5" /> Start
-                        </Button>
-                      </Link>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs text-slate-500 pt-1">
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          <span>
+                            {appt.startTime} - {appt.endTime}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                          <span className="truncate">{appt.branchName}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100 text-slate-500">
+                        <span className="flex items-center gap-1 font-medium text-slate-700">
+                          <Ticket className="w-3.5 h-3.5 text-[var(--brand-primary)]" />
+                          Queue Ticket #{appt.queueNumber}
+                        </span>
+                        {appt.reasonForVisit && (
+                          <span className="text-slate-400 truncate max-w-[140px]">
+                            {appt.reasonForVisit}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="p-8 text-center text-slate-500 text-sm">
-                  No patients queued for today.
-                </div>
-              )
-            ) : upcomingAppts.length > 0 ? (
-              <div className="divide-y divide-slate-100">
-                {upcomingAppts.map(appt => (
-                  <div key={appt.appointmentId} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blue-50 flex flex-col items-center justify-center shrink-0">
-                        <span className="text-[10px] font-bold text-blue-600 uppercase leading-none">{new Date(appt.dateTime).toLocaleString('en-US', { month: 'short' })}</span>
-                        <span className="text-sm font-bold text-blue-700 leading-none mt-0.5">{new Date(appt.dateTime).getDate()}</span>
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-slate-900 truncate">
-                          {role === "patient" ? appt.doctorName : appt.patientName}
-                        </p>
-                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                          {appt.session && <SessionBadge session={appt.session} ticketNumber={appt.ticketNumber} variant="compact" />}
-                          <span className="text-xs text-slate-400">{appt.visitType}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <StatusPill status={appt.status} className="hidden sm:inline-flex" />
+                /* ── Zero-Data State for Appointments ── */
+                <div className="p-8 text-center flex-1 flex flex-col items-center justify-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                    <Calendar className="w-6 h-6" />
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-8 text-center text-slate-500 text-sm">
-                No upcoming appointments.
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-900">
+                      No upcoming appointments
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-1 max-w-[240px]">
+                      You have no upcoming consultations scheduled. Book a session with our specialists anytime.
+                    </p>
+                  </div>
+                  <Link href="/patient/appointments" className="mt-2">
+                    <Button
+                      size="sm"
+                      className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-lg h-9 px-4 text-xs font-medium"
+                    >
+                      Book an Appointment
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
