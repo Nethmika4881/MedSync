@@ -116,16 +116,19 @@ export type AppointmentStatus =
   | "No-Show"
   | "Rescheduled";
 
-export type VisitType =
-  | "General Checkup"
-  | "Follow-up"
-  | "Consultation"
-  | "New Patient"
-  | "Routine Check"
-  | "Emergency"
-  | "Walk-in"
-  | "Video Consultation"
-  | "Pre-Visit";
+export const ALLOWED_VISIT_TYPES = [
+  "General Checkup",
+  "Follow-up",
+  "Consultation",
+  "New Patient",
+  "Routine Check",
+  "Emergency",
+  "Walk-in",
+  "Video Consultation",
+  "Pre-Visit",
+] as const;
+
+export type VisitType = (typeof ALLOWED_VISIT_TYPES)[number];
 
 export interface Appointment {
   appointmentId: string;
