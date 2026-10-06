@@ -5,7 +5,6 @@ import { clinicToday } from "@/lib/server/doctorAuth";
 import { dateSchema } from "@/lib/server/doctorSchemas";
 import { fetchDoctorAppointments } from "@/lib/server/sql/doctorAppointments";
 
-// GET /api/doctor/appointments?from=YYYY-MM-DD&to=YYYY-MM-DD  (default: today)
 export function GET(request: NextRequest) {
   return doctorRoute(async (doctor) => {
     const params = request.nextUrl.searchParams;
