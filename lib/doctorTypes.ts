@@ -35,6 +35,8 @@ export interface WorkspacePrescription {
   frequency: string;
   durationDays: number;
   notes: string;
+  allergyChecked: boolean;
+  contraindications: string; // medication.contraindications, "" when none are recorded
 }
 
 export interface ConsultationWorkspace {
@@ -60,6 +62,7 @@ export interface SaveConsultationInput {
     frequency: string;
     durationDays: number;
     notes: string;
+    allergyChecked: boolean; // the doctor confirmed the patient's allergies against this medication
   }[];
 }
 

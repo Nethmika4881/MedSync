@@ -36,6 +36,7 @@ export const saveConsultationSchema = z.object({
           .min(1, "Every prescription needs a duration of at least 1 day")
           .max(365, "Duration can't be more than 365 days"),
         notes: z.string().trim().max(255, "Prescription notes are too long"),
+        allergyChecked: z.boolean(),
       })
     )
     .max(50, "Too many prescriptions"),

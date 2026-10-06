@@ -185,6 +185,16 @@ BEGIN
         RAISE EXCEPTION 'A diagnosis is required to complete the consultation';
     END IF;
 
+    -- prescription.allergy_checked is the doctor's sign-off against the
+    -- patient's allergies and the medication's contraindications.
+    IF EXISTS (
+        SELECT 1
+        FROM jsonb_to_recordset(COALESCE(p_prescriptions, '[]'::jsonb)) AS p(allergy_checked BOOLEAN)
+        WHERE NOT COALESCE(p.allergy_checked, FALSE)
+    ) THEN
+        RAISE EXCEPTION 'Confirm the allergy check for every prescribed medication before completing';
+    END IF;
+
     CALL sp_save_consultation(
         p_appointment_id, p_doctor_id,
         p_symptoms, p_diagnosis, p_notes,

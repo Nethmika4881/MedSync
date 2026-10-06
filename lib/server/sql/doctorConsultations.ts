@@ -57,7 +57,9 @@ export async function fetchConsultationWorkspace(
               p.dosage                                  AS "dosage",
               COALESCE(p.frequency, '')                 AS "frequency",
               COALESCE(p.duration_days, 1)              AS "durationDays",
-              COALESCE(p.notes, '')                     AS "notes"
+              COALESCE(p.notes, '')                     AS "notes",
+              COALESCE(p.allergy_checked, FALSE)        AS "allergyChecked",
+              COALESCE(m.contraindications, '')         AS "contraindications"
        FROM prescription p
        JOIN medication m ON m.medication_id = p.medication_id
        WHERE p.appointment_id = $1
@@ -102,6 +104,8 @@ export async function fetchConsultationWorkspace(
         frequency: String(r.frequency),
         durationDays: Number(r.durationDays),
         notes: String(r.notes),
+        allergyChecked: Boolean(r.allergyChecked),
+        contraindications: String(r.contraindications),
       })
     ),
     invoiceId: invoice.rows[0] ? String(invoice.rows[0].invoiceId) : null,
@@ -131,7 +135,7 @@ function procedureArguments(doctorId: string, input: SaveConsultationInput) {
         frequency: p.frequency,
         duration_days: p.durationDays,
         notes: p.notes,
-        allergy_checked: false,
+        allergy_checked: p.allergyChecked,
       }))
     ),
   ];
