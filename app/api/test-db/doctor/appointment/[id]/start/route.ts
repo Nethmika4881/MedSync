@@ -3,7 +3,6 @@ import { doctorRoute } from "@/lib/server/apiHandler";
 import { appointmentIdSchema } from "@/lib/server/doctorSchemas";
 import { startConsultation } from "@/lib/server/sql/doctorAppointments";
 
-// POST /api/doctor/appointments/:id/start  -> Scheduled/CheckedIn becomes InProgress
 export function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   return doctorRoute(async (doctor) => {
     const { id } = await params;
