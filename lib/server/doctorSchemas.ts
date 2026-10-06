@@ -1,0 +1,82 @@
+import { z } from "zod";
+import { DAYS_OF_WEEK } from "@/lib/types";
+
+const uuid = z.string().uuid("Invalid id");
+const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Time must look like 09:30");
+
+export const appointmentIdSchema = uuid;
+
+export const saveConsultationSchema = z.object({
+  appointmentId: uuid,
+  symptoms: z.string().max(4000, "Symptoms are too long"),
+  diagnosis: z.string().max(2000, "Diagnosis is too long"),
+  notes: z.string().max(4000, "Notes are too long"),
+  followUpRequired: z.boolean(),
+  followUpDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Follow-up date is invalid")
+    .optional(),
+  treatments: z
+    .array(
+      z.object({
+        treatmentServiceCode: uuid,
+        quantity: z.number().int("Quantity must be a whole number").min(1, "Quantity must be at least 1").max(100),
+      })
+    )
+    .max(50, "Too many treatments"),
+  prescriptions: z
+    .array(
+      z.object({
+        medicationId: uuid,
+        dosage: z.string().trim().min(1, "Every prescription needs a dosage").max(50, "Dosage is too long"),
+        frequency: z.string().trim().max(50, "Frequency is too long"),
+        durationDays: z
+          .number()
+          .int("Duration must be a whole number of days")
+          .min(1, "Every prescription needs a duration of at least 1 day")
+          .max(365, "Duration can't be more than 365 days"),
+        notes: z.string().trim().max(255, "Prescription notes are too long"),
+      })
+    )
+    .max(50, "Too many prescriptions"),
+});
+
+export const scheduleSlotSchema = z
+  .object({
+    branchId: uuid,
+    dayOfWeek: z.enum(DAYS_OF_WEEK as [string, ...string[]]),
+    startTime: time,
+    endTime: time,
+    slotDurationMinutes: z.number().int().min(5, "Slots must be at least 5 minutes").max(120, "Slots can't be longer than 120 minutes"),
+  })
+  .refine((v) => v.startTime < v.endTime, {
+    message: "End time must be after start time.",
+    path: ["endTime"],
+  });
+
+export const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date");
+
+export const updateProfileSchema = z.object({
+  roomNo: z.string().trim().max(5, "Room number can be at most 5 characters"),
+  qualification: z.string().trim().max(150, "Qualification is too long"),
+  yearsExperience: z
+    .number()
+    .int("Experience must be a whole number of years")
+    .min(0, "Experience can't be negative")
+    .max(70, "Experience looks too high")
+    .nullable(),
+  isAvailable: z.boolean(),
+  phone: z
+    .string()
+    .trim()
+    .max(20, "Phone number is too long")
+    .regex(/^[0-9+\-\s()]*$/, "Phone number can only contain digits, spaces, + - ( )"),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Enter your current password").max(200),
+  newPassword: z
+    .string()
+    .min(8, "New password must be at least 8 characters")
+    .max(200, "New password is too long"),
+});
