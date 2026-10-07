@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
     try {
         const result = await db.query(`
@@ -8,6 +10,7 @@ export async function GET() {
         `);
         return NextResponse.json(result.rows);
     } catch (error) {
+        console.error("GET Error fetching treatments:", error);
         return NextResponse.json({ error: "Failed to fetch treatments" }, { status: 500 });
     }
 }
@@ -28,6 +31,7 @@ export async function POST(request: Request) {
         
         return NextResponse.json(result.rows[0]);
     } catch (error) {
+        console.error("POST Error creating treatment:", error);
         console.error("POST Error:", error);
         return NextResponse.json({ error: "Failed to create treatment" }, { status: 500 });
     }
