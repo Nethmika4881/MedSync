@@ -62,7 +62,7 @@ export default function PatientProfilePage() {
       {/* Header Actions */}
       <div className="flex items-center justify-between">
         <button
-          onClick={() => router.push("/patients")}
+          onClick={() => router.push("/front-desk/patients")}
           className="flex items-center text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-1.5" />
@@ -74,7 +74,7 @@ export default function PatientProfilePage() {
           </Button>
           <Button
             className="rounded-xl h-9 text-xs bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white"
-            onClick={() => router.push("/appointments")}
+            onClick={() => router.push("/front-desk/appointments")}
           >
             <Calendar className="w-3.5 h-3.5 mr-1.5" />
             Book Appointment
@@ -203,13 +203,12 @@ export default function PatientProfilePage() {
                     <li key={a.allergyId} className="px-5 py-3">
                       <div className="flex justify-between items-start">
                         <span className="font-medium text-slate-800 text-sm">{a.allergenName}</span>
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${
-                          a.severity === "Severe" || a.severity === "Life-threatening" 
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${a.severity === "Severe" || a.severity === "Life-threatening"
                             ? "bg-rose-100 text-rose-700"
-                            : a.severity === "Moderate" 
-                            ? "bg-amber-100 text-amber-700" 
-                            : "bg-blue-100 text-blue-700"
-                        }`}>
+                            : a.severity === "Moderate"
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-blue-100 text-blue-700"
+                          }`}>
                           {a.severity}
                         </span>
                       </div>
@@ -238,9 +237,8 @@ export default function PatientProfilePage() {
                 <ul className="divide-y divide-slate-100">
                   {patientConditions.map((c) => (
                     <li key={c.pcId} className="px-5 py-3 flex items-start gap-3">
-                      <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                        c.status === "Active" ? "bg-emerald-500" : "bg-slate-300"
-                      }`} />
+                      <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${c.status === "Active" ? "bg-emerald-500" : "bg-slate-300"
+                        }`} />
                       <div>
                         <p className="font-medium text-slate-800 text-sm">{c.conditionName}</p>
                         <p className="text-xs text-slate-500 mt-0.5">Diagnosed: {c.diagnosedDate}</p>
