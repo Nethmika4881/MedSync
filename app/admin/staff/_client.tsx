@@ -58,12 +58,15 @@ export default function StaffPage({
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBranch, setSelectedBranch] = useState("All");
-  const [selectedDept, setSelectedDept] = useState("All");
+  const [selectedRole, setSelectedRole] = useState("All");
   const filtered = staff;
   if (!role) return null;
 
   const roles = ["All", ...Array.from(new Set(staff.map((e) => e.role)))];
-  const branchOptions = ["All", ...Array.from(new Set(staff.map((b) => b.branchName)))];
+  const branchOptions = [
+    "All",
+    ...Array.from(new Set(staff.map((b) => b.branchName))),
+  ];
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -107,8 +110,8 @@ export default function StaffPage({
           ))}
         </select>
         <select
-          value={selectedDept}
-          onChange={(e) => setSelectedDept(e.target.value)}
+          value={selectedRole}
+          onChange={(e) => setSelectedRole(e.target.value)}
           className="h-10 px-3 rounded-xl border border-slate-200 text-sm text-slate-700 bg-white focus:border-[var(--brand-primary)] outline-none"
         >
           {roles.map((d) => (
@@ -131,11 +134,11 @@ export default function StaffPage({
               <button
                 key={dept}
                 onClick={() =>
-                  setSelectedDept(dept === selectedDept ? "All" : dept)
+                  setSelectedRole(dept === selectedRole ? "All" : dept)
                 }
                 className={cn(
                   "p-4 text-center transition-all group hover:-translate-y-1",
-                  selectedDept === dept
+                  selectedRole === dept
                     ? "bg-[var(--brand-primary)] text-white shadow-md shadow-brand-500/20 rounded-2xl"
                     : "bg-white border border-slate-200 text-slate-700 hover:shadow-sm rounded-2xl",
                 )}
@@ -145,7 +148,7 @@ export default function StaffPage({
                   <div
                     className={cn(
                       "w-10 h-10 flex items-center justify-center text-xs font-bold",
-                      selectedDept === dept
+                      selectedRole === dept
                         ? "bg-white/30 text-white"
                         : "bg-slate-100 text-slate-700",
                     )}
@@ -161,7 +164,7 @@ export default function StaffPage({
                 <p
                   className={cn(
                     "text-xs font-semibold leading-tight",
-                    selectedDept === dept ? "text-white" : "text-slate-600",
+                    selectedRole === dept ? "text-white" : "text-slate-600",
                   )}
                 >
                   {dept}
@@ -244,7 +247,11 @@ export default function StaffPage({
                         <Phone className="w-3.5 h-3.5" /> {emp.phone}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-slate-600">{emp.joinedDate ? new Date(emp.joinedDate).toLocaleDateString() : "N/A"}</td>
+                    <td className="px-6 py-4 text-slate-600">
+                      {emp.joinedDate
+                        ? new Date(emp.joinedDate).toLocaleDateString()
+                        : "N/A"}
+                    </td>
                     <td className="px-6 py-4">
                       <span
                         className={cn(
