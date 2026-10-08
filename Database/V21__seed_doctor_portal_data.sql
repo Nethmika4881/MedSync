@@ -1,6 +1,5 @@
--- Doctor Portal dev seed data. Run manually AFTER the Flyway migrations:
---   psql "$DATABASE_URL" -f Database/seed/doctor_portal_seed.sql
--- Safe to run more than once. Not a Flyway migration (no V/R prefix).
+-- V21: Doctor Portal dev seed data (runs as a normal Flyway migration).
+-- Creates a doctor, three patients, medications, treatments and sample appointments.
 --
 -- Login:  doctor@example.com / password123   (patients share the same password)
 
