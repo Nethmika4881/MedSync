@@ -61,18 +61,29 @@ export const registerSchema = baseSchema
     message: "Passwords do not match",
     path: ["confirmPassword"],
   })
-  .refine((data) => data.role !== "Employee" || data.employeeRole !== undefined, {
-    message: "Please select an employee role",
-    path: ["employeeRole"],
-  })
-  .refine((data) => data.employeeRole === undefined || data.employeeRole === "Doctor", {
-    message: "Admin and front desk accounts must be created by an administrator",
-    path: ["employeeRole"],
-  })
-  .refine((data) => data.role !== "Employee" || Boolean(data.medicalLicenceNo?.trim()), {
-    message: "Medical licence number is required for doctors",
-    path: ["medicalLicenceNo"],
-  });
+  .refine(
+    (data) => data.role !== "Employee" || data.employeeRole !== undefined,
+    {
+      message: "Please select an employee role",
+      path: ["employeeRole"],
+    },
+  )
+  .refine(
+    (data) => data.employeeRole === undefined || data.employeeRole === "Doctor",
+    {
+      message:
+        "Admin and front desk accounts must be created by an administrator",
+      path: ["employeeRole"],
+    },
+  )
+  .refine(
+    (data) =>
+      data.role !== "Employee" || Boolean(data.medicalLicenceNo?.trim()),
+    {
+      message: "Medical licence number is required for doctors",
+      path: ["medicalLicenceNo"],
+    },
+  );
 
 export type RegisterFormValues = z.infer<typeof registerSchema>;
 
@@ -80,3 +91,13 @@ export const signInSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 });
+export const staffDirectorySchema = z.object({
+  search: z.string().trim().max(100).default(""),
+  branchID: z.string().uuid().optional(),
+  role: z.enum(["Doctor", "FrontDesk", "Admin"]).optional(),
+  status: z.enum(["all", "active", "inactive"]).default("all"),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export type staffDirectoryType = z.infer<typeof staffDirectorySchema>;
