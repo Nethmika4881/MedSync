@@ -42,10 +42,6 @@ type staffMember = {
 export default function StaffPage({
   user,
   staff,
-  total,
-  page,
-  pageSize,
-  totalPages,
 }: {
   user: AuthUser;
   total: number;

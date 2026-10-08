@@ -2,27 +2,15 @@
 
 import React from "react";
 import Link from "next/link";
-import { Users, Clock, CheckCircle2, Stethoscope, CalendarDays, Eye } from "lucide-react";
+import { Users, Clock, CheckCircle2, Stethoscope, Eye } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Calendar, Activity, CreditCard, Clock, CheckCircle2 } from "lucide-react";
-import { revenueByMonth, appointmentsByMonth } from "@/lib/constants";;
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { StatusPill } from "@/components/catms/StatusPill";
-import { SessionBadge } from "@/components/catms/SessionBadge";
-import { useAppointmentStore } from "@/lib/stores/appointmentStore";
-import type { AuthUser } from "@/lib/types";
-import { ClipboardPlus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-
-export default function DashboardPage({ user }: { user: AuthUser }) {
-  const role = user?.role;
-  
-  
-  const { appointments } = useAppointmentStore();
-
-const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+import { EmptyState } from "@/components/catms/EmptyState";
+import { StartConsultationButton } from "@/components/doctor/StartConsultationButton";
+import { formatClockTime, formatDay, shiftDay } from "@/lib/doctorFormat";
+import type { AuthUser, Appointment } from "@/lib/types";
+import { Button } from "@/components/ui/button";const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function dayLabel(isoDate: string): string {
   return DAY_LABELS[new Date(`${isoDate}T00:00:00Z`).getUTCDay()];

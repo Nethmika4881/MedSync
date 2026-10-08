@@ -49,8 +49,6 @@ function ReadOnlyField({ label, value }: { label: string; value: string }) {
 
 export default function DoctorSettingsPage({ profile, schedule, branches }: SettingsProps) {
   const router = useRouter();
-import { Clock, Plus, Trash2, MapPin, CalendarClock, Pencil, AlertCircle } from "lucide-react";
-import type { AuthUser, DoctorScheduleSlot } from "@/lib/types";
 
   //  Profile
   const [roomNo, setRoomNo] = useState(profile.roomNo);
@@ -83,9 +81,6 @@ import type { AuthUser, DoctorScheduleSlot } from "@/lib/types";
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordNotice, setPasswordNotice] = useState<Notice>(null);
   const [passwordPending, startPassword] = useTransition();
-export default function DoctorWorkingHoursPage({ user }: { user: AuthUser }) {
-  const { schedules, addSlot, updateSlot, removeSlot } = useDoctorScheduleStore();
-
   function handleChangePassword() {
     setPasswordNotice(null);
     if (newPassword !== confirmPassword) {

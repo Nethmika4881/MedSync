@@ -12,25 +12,21 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { StatusPill } from "@/components/catms/StatusPill";
 import { AvatarWithName } from "@/components/catms/AvatarWithName";
-import { EmptyState } from "@/components/catms/EmptyState";
-import { ArrowLeft, Save, Calendar, Plus, X, Search, Minus, Pill, Lock, CheckCircle2, Receipt } from "lucide-react";
-import Link from "next/link";
-import { treatmentCatalogue } from "@/lib/constants";;
-import { medications } from "@/lib/constants";;
-import { doctors } from "@/lib/constants";;
-import { usePharmacyStore } from "@/lib/stores/pharmacyStore";
-import { useBillingStore } from "@/lib/stores/billingStore";
-import type { AuthUser, InvoiceLineItem } from "@/lib/types";;
-import { checkContraindication } from "@/lib/contraindication";
+import { StatusPill } from "@/components/catms/StatusPill";
+import { formatClockTime, formatDay, formatMoney } from "@/lib/doctorFormat";
+import { saveConsultationDraft, completeConsultation } from "@/lib/actions/doctor-consultations";
+import type { ConsultationWorkspace, WorkspaceTreatment } from "@/lib/doctorTypes";
+import type { TreatmentCatalogueItem, Medication, TreatmentCategory } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export default function ConsultationWorkspacePage({ user }: { user: AuthUser }) {
-  const params = useParams<{ id: string }>();
-  const appointmentId = params.id;
-  const router = useRouter();
-
+interface OrderedTreatment {
+  treatmentServiceCode: string;
+  name: string;
+  category: TreatmentCategory;
+  unitPrice: number;
+  quantity: number;
+}
 interface DraftPrescription {
   key: string;
   medicationId: string;
