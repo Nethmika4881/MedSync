@@ -1,27 +1,17 @@
 "use client";
 
 import React, { useState } from "react";
-import { useClinicalStore } from "@/lib/stores/clinicalStore";
-import { useAppointmentStore } from "@/lib/stores/appointmentStore";
-import { usePatientStore } from "@/lib/stores/patientStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/catms/StatusPill";
 import { EmptyState } from "@/components/catms/EmptyState";
-import { SafetyInfoBanner } from "@/components/catms/SafetyInfoBanner";
-import { FileText, Edit, ClipboardPlus, Calendar } from "lucide-react";
+import { FileText, Edit, Calendar, Eye } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import Link from "next/link";
-import type { AuthUser } from "@/lib/types";
-
-export default function ConsultationsPage({ user }: { user: AuthUser }) {
-  const { consultations } = useClinicalStore();
-  const { appointments } = useAppointmentStore();
-  const { allergies, conditions } = usePatientStore();
-  
-  
-  const [activeTab, setActiveTab] = useState("queue");
-
+import type { Appointment } from "@/lib/types";
+import type { ConsultationHistoryItem } from "@/lib/doctorTypes";
+import { formatClockTime, formatDay } from "@/lib/doctorFormat";
+import { StartConsultationButton } from "@/components/doctor/StartConsultationButton";
 
 interface ConsultationsProps {
   queue: Appointment[];            // today's appointments
