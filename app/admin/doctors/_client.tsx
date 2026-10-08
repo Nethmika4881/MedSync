@@ -3,16 +3,15 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDoctorStore } from "@/lib/stores/doctorStore";
-import type { Doctor } from "@/lib/types";
+import type { AuthUser, Doctor } from "@/lib/types";
 import {   } from "@/lib/constants";;
 import { branches } from "@/lib/constants";;
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, MapPin, Calendar, Clock, Star, Plus, Trash2, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BookingModal } from "@/components/catms/BookingModal";
 import { getAvatarGradient } from "@/components/catms/BookingModal";
 
-export default function DoctorsPage({ user }: { user: any }) {
+export default function DoctorsPage({ user }: { user: AuthUser }) {
   const role = user?.role;
   const router = useRouter();
   

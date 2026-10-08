@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import type { Doctor } from "@/lib/types";
+import type { AuthUser, Doctor } from "@/lib/types";
 import type { DoctorDirectoryItem, BranchOption, SpecializationOption } from "@/lib/actions/doctors";
 import { Button } from "@/components/ui/button";
 import {
@@ -126,7 +126,7 @@ function DoctorCard({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 interface Props {
-  user: any;
+  user: AuthUser;
   doctors: DoctorDirectoryItem[];
   branches: BranchOption[];
   specializations: SpecializationOption[];

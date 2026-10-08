@@ -178,7 +178,7 @@ export default function DoctorProfilePage() {
         <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
           <h3 className="font-semibold text-slate-800 flex items-center gap-2">
             <Calendar className="w-4 h-4 text-[var(--brand-primary)]" />
-            Doctor's Schedule & History
+            Doctor&apos;s Schedule &amp; History
           </h3>
         </div>
         <CardContent className="p-6 flex-1">

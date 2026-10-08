@@ -1,17 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useAppointmentStore } from "@/lib/stores/appointmentStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusPill } from "@/components/catms/StatusPill";
 import { SessionBadge } from "@/components/catms/SessionBadge";
-import { SESSION_META } from "@/lib/constants";;
-import { Clock, Calendar as CalendarIcon, FileText, User } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Clock, FileText, User } from "lucide-react";
+import type { AuthUser } from "@/lib/types";
 
 const TIME_SLOTS = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"];
 
-export default function MySchedulePage({ user }: { user: any }) {
+export default function MySchedulePage({ user }: { user: AuthUser }) {
   const role = user?.role;
   
   
@@ -43,7 +42,7 @@ export default function MySchedulePage({ user }: { user: any }) {
                   <span className="text-[10px] font-semibold uppercase">{new Date().toLocaleString('default', { month: 'short' })}</span>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">Today's Overview</h3>
+                  <h3 className="text-lg font-bold text-slate-900">Today&apos;s Overview</h3>
                   <p className="text-sm text-slate-600">{myAppointments.length} scheduled visits</p>
                 </div>
               </div>

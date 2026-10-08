@@ -12,7 +12,6 @@ interface SafetyInfoBannerProps {
 }
 
 export function SafetyInfoBanner({ patientName, allergies, conditions }: SafetyInfoBannerProps) {
-  const activeAllergies = allergies.filter((a) => a.severity === "Severe" || a.severity === "Life-threatening");
   const allAllergies = allergies;
   const activeConditions = conditions.filter((c) => c.status === "Active");
 

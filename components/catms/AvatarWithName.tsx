@@ -11,7 +11,7 @@ interface AvatarWithNameProps {
   className?: string;
 }
 
-export function AvatarWithName({ name, subtitle, avatarSrc, size = "md", className }: AvatarWithNameProps) {
+export function AvatarWithName({ name, subtitle, size = "md", className }: AvatarWithNameProps) {
   const sizeMap = {
     sm: { avatar: "w-8 h-8 text-xs", name: "text-sm", subtitle: "text-xs" },
     md: { avatar: "w-10 h-10 text-sm", name: "text-sm font-semibold", subtitle: "text-xs" },

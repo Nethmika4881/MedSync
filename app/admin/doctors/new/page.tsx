@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useDoctorStore } from "@/lib/stores/doctorStore";
 import { branches } from "@/lib/constants";;
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +15,6 @@ const SPECIALIZATIONS = [
 ];
 
 export default function NewDoctorPage() {
-  const router = useRouter();
   const { addDoctor } = useDoctorStore();
   
   const [submitted, setSubmitted] = useState(false);
@@ -119,7 +117,7 @@ export default function NewDoctorPage() {
               {[["First Name *", "firstName", "text", "e.g. Sarah"], ["Last Name *", "lastName", "text", "e.g. Jenkins"]].map(([label, field, type, ph]) => (
                 <div key={field}>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">{label}</label>
-                  <input type={type} value={(form as any)[field]} onChange={e => set(field, e.target.value)} placeholder={ph}
+                  <input type={type} value={form[field as keyof typeof form]} onChange={e => set(field, e.target.value)} placeholder={ph}
                     className="w-full h-11 px-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none" required />
                 </div>
               ))}
@@ -176,7 +174,7 @@ export default function NewDoctorPage() {
               {[["Phone *", "phone", "tel", "+1 (555) ..."], ["Email", "email", "email", "dr.name@clinic.com"]].map(([label, field, type, ph]) => (
                 <div key={field}>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">{label}</label>
-                  <input type={type} value={(form as any)[field]} onChange={e => set(field, e.target.value)} placeholder={ph}
+                  <input type={type} value={form[field as keyof typeof form]} onChange={e => set(field, e.target.value)} placeholder={ph}
                     className="w-full h-11 px-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none" />
                 </div>
               ))}

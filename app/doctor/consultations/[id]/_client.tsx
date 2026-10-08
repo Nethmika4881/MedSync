@@ -23,11 +23,11 @@ import { medications } from "@/lib/constants";;
 import { doctors } from "@/lib/constants";;
 import { usePharmacyStore } from "@/lib/stores/pharmacyStore";
 import { useBillingStore } from "@/lib/stores/billingStore";
-import type { InvoiceLineItem } from "@/lib/types";;
+import type { AuthUser, InvoiceLineItem } from "@/lib/types";;
 import { checkContraindication } from "@/lib/contraindication";
 import { cn } from "@/lib/utils";
 
-export default function ConsultationWorkspacePage({ user }: { user: any }) {
+export default function ConsultationWorkspacePage({ user }: { user: AuthUser }) {
   const params = useParams<{ id: string }>();
   const appointmentId = params.id;
   const router = useRouter();

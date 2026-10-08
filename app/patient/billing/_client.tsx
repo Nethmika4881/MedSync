@@ -14,7 +14,6 @@ import {
   ChevronUp,
   CreditCard,
   ShieldCheck,
-  DollarSign,
   CheckCircle2,
   CircleDashed,
   AlertCircle,
@@ -27,10 +26,11 @@ import {
   type PatientClaimSummary,
   type InvoiceTreatmentItem,
 } from "@/lib/actions/patient-billing";
+import type { AuthUser } from "@/lib/types";
 
 type Tab = "all" | "unpaid" | "paid";
 
-export default function BillingPage({ user }: { user: any }) {
+export default function BillingPage({ user }: { user: AuthUser }) {
   const [invoices, setInvoices] = useState<PatientInvoiceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

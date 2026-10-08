@@ -4,9 +4,9 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { User, Bell, Lock, Monitor, CheckCircle2, HeartPulse, Shield, Clock, Plus, Trash2 } from "lucide-react";
+import { User, Bell, Lock, Monitor, CheckCircle2, Shield, Clock, Plus, Trash2 } from "lucide-react";
 import { getInitials, getAvatarColor, cn } from "@/lib/utils";
-import type { UserRole } from "@/lib/types";;
+import type { AuthUser } from "@/lib/types";;
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { branches } from "@/lib/constants";;
@@ -22,7 +22,7 @@ const NOTIFICATION_SETTINGS = [
   { id: "prescriptions", label: "Prescription Ready", desc: "Alert when a dispensed prescription is ready for pickup.", defaultOn: false },
 ];
 
-export default function SettingsPage({ user }: { user: any }) {
+export default function SettingsPage({ user }: { user: AuthUser }) {
   const role = user?.role;
   
   
@@ -232,7 +232,7 @@ export default function SettingsPage({ user }: { user: any }) {
               <CardHeader className="border-b border-slate-100 pb-4 flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="text-base font-semibold text-slate-900">Weekly Working Hours</CardTitle>
-                  <p className="text-sm text-slate-500 mt-1">Recurring time slots you're available for consultations, per branch.</p>
+                  <p className="text-sm text-slate-500 mt-1">Recurring time slots you&apos;re available for consultations, per branch.</p>
                 </div>
                 <Button onClick={handleAddSlot} size="sm" className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-xl">
                   <Plus className="w-4 h-4 mr-1.5" /> Add Slot
@@ -241,7 +241,7 @@ export default function SettingsPage({ user }: { user: any }) {
               <CardContent className="p-0 divide-y divide-slate-100">
                 {mySchedule.length === 0 && (
                   <div className="p-8 text-center text-slate-500 text-sm">
-                    No working hours set yet. Click "Add Slot" to define your weekly availability.
+                    No working hours set yet. Click &quot;Add Slot&quot; to define your weekly availability.
                   </div>
                 )}
                 {mySchedule.map((slot) => (

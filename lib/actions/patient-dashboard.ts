@@ -48,7 +48,7 @@ export async function getPatientDashboardData(): Promise<PatientDashboardMetrics
 
   try {
     // 1. Upcoming Appointments (Scheduled or Rescheduled, sorted by date)
-    const { rows: upcomingRows } = await db.query(
+    const { rows: upcomingRows } = await db.query<PatientUpcomingAppointment>(
       `SELECT
          a.appointment_id                         AS "appointmentId",
          TO_CHAR(ts.available_date, 'YYYY-MM-DD') AS "appointmentDate",
@@ -123,7 +123,7 @@ export async function getPatientDashboardData(): Promise<PatientDashboardMetrics
     const completedVisitsCount = parseInt(visitCountRows[0]?.completedCount || "0", 10);
 
     // 5. Monthly Activity Breakdown (Last 6 months)
-    const { rows: activityRows } = await db.query(
+    const { rows: activityRows } = await db.query<PatientMonthlyActivity>(
       `WITH months AS (
          SELECT
            TO_CHAR(d, 'Mon') AS month,
@@ -152,13 +152,13 @@ export async function getPatientDashboardData(): Promise<PatientDashboardMetrics
       [patientId]
     );
 
-    const monthlyActivity: PatientMonthlyActivity[] = activityRows.map((r: any) => ({
+    const monthlyActivity: PatientMonthlyActivity[] = activityRows.map((r) => ({
       month: r.month,
       completed: r.completed || 0,
       cancelled: r.cancelled || 0,
     }));
 
-    const upcomingAppointments: PatientUpcomingAppointment[] = upcomingRows.map((r: any) => ({
+    const upcomingAppointments: PatientUpcomingAppointment[] = upcomingRows.map((r) => ({
       appointmentId: r.appointmentId,
       appointmentDate: r.appointmentDate,
       startTime: r.startTime,

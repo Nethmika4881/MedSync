@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useClinicalStore } from "@/lib/stores/clinicalStore";
 import { treatmentCatalogue } from "@/lib/constants";;
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/catms/StatusPill";
 import {
@@ -12,6 +12,7 @@ import {
   Pencil, Trash2, DollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { AuthUser } from "@/lib/types";
 
 // ─── Category config ──────────────────────────────────────────────────────────
 
@@ -279,7 +280,7 @@ function AdminCatalogueView() {
 
 // ─── Doctor View — Clinical Task Queue ────────────────────────────────────────
 
-function DoctorTaskView({ user }: { user: any }) {
+function DoctorTaskView({ user }: { user: AuthUser }) {
   const { treatments, markTreatmentPerformed } = useClinicalStore();
   
   const [activeTab, setActiveTab] = useState("pending");
@@ -451,7 +452,7 @@ function DoctorTaskView({ user }: { user: any }) {
 
 // ─── Root export — role router ─────────────────────────────────────────────────
 
-export default function TreatmentsPage({ user }: { user: any }) {
+export default function TreatmentsPage({ user }: { user: AuthUser }) {
   const role = user?.role;
   
 

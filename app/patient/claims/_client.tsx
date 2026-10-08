@@ -12,7 +12,6 @@ import {
   Stethoscope,
   ChevronDown,
   ChevronUp,
-  FileText,
   Building,
   CheckCircle2,
   Clock3,
@@ -25,9 +24,9 @@ import {
   getPatientClaims,
   type PatientClaimRecord,
   type PatientInsurancePolicy,
-  type PatientClaimItemLine,
   type ClaimStatus,
 } from "@/lib/actions/patient-claims";
+import type { AuthUser } from "@/lib/types";
 
 type Tab = "all" | "in-review" | "approved" | "rejected";
 
@@ -38,7 +37,7 @@ function fmt(val: string | number | null | undefined): string {
   return `Rs. ${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-export default function PatientClaimsClient({ user }: { user: any }) {
+export default function PatientClaimsClient({ user }: { user: AuthUser }) {
   const [claims, setClaims] = useState<PatientClaimRecord[]>([]);
   const [policies, setPolicies] = useState<PatientInsurancePolicy[]>([]);
   const [loading, setLoading] = useState(true);
@@ -289,7 +288,7 @@ function PolicyCard({ policy }: { policy: PatientInsurancePolicy }) {
 function StatusBadge({ status }: { status: ClaimStatus }) {
   const configs: Record<
     ClaimStatus,
-    { label: string; bg: string; text: string; border: string; icon: React.ComponentType<any> }
+    { label: string; bg: string; text: string; border: string; icon: React.ElementType }
   > = {
     Submitted: {
       label: "Submitted",
