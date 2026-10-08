@@ -1,8 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-
 import db from "@/lib/db";
+import { revalidatePath } from "next/cache";
 
 export interface TreatmentInput {
   category: string;
@@ -15,8 +14,7 @@ export interface TreatmentInput {
 
 export async function getTreatments() {
   try {
-    const result = await db.query(`SELECT * FROM treatment_catalogue WHERE is_active = true ORDER BY created_at DESC
-    `);
+    const result = await db.query(`SELECT * FROM treatment_catalogue ORDER BY created_at DESC`);
     return { success: true, data: result.rows };
   } catch (error: any) {
     console.error("getTreatments error:", error);
@@ -47,7 +45,7 @@ export async function createTreatment(formData: TreatmentInput) {
   }
 }
 
-export interface UpdateTreatment {
+export interface UpdateTreatmentInput {
   category: string;
   treatment_name: string;
   base_price: number | string;
@@ -57,7 +55,7 @@ export interface UpdateTreatment {
   is_active?: boolean;
 }
 
-export async function updateTreatment(id: string, data: UpdateTreatment) {
+export async function updateTreatment(id: string, data: UpdateTreatmentInput) {
   try {
     const {
       category,
@@ -71,7 +69,7 @@ export async function updateTreatment(id: string, data: UpdateTreatment) {
 
     const result = await db.query(`UPDATE treatment_catalogue SET category = $1, treatment_name = $2, base_price = $3, duration = $4, description = $5, is_insurable = $6, is_active = $7,updated_at = NOW()
       WHERE treatment_service_code = $8 RETURNING *;`,
-      [category, treatment_name, Number(base_price), duration, description, is_insurable, is_active, id]
+      [category, treatment_name, Number(base_price), duration, description, is_insurable, is_active, id,]
     );
 
     if (result.rowCount === 0) {
