@@ -180,3 +180,61 @@ export async function checkInAppointment(appointmentId: string): Promise<void> {
   );
   revalidatePath("/appointments");
 }
+
+export async function bookAppointment(data: {
+  time_slot_id: string;
+  patient_id: string;
+  created_by: string;
+  source?: string;
+  reason_for_visit?: string;
+}) {
+  try {
+    const {
+      time_slot_id,
+      patient_id,
+      created_by,
+      source = "Booked",
+      reason_for_visit = "",
+    } = data;
+
+    if (!time_slot_id || !patient_id || !created_by) {
+      return { success: false, error: "Missing required fields" };
+    }
+
+    const query = `
+      SELECT * FROM book_appointment(
+        $1::UUID, 
+        $2::UUID, 
+        $3::UUID, 
+        $4::appointment_source_enum, 
+        $5::VARCHAR
+      );
+    `;
+
+    const values = [time_slot_id, patient_id, created_by, source, reason_for_visit];
+    const { rows } = await pool.query(query, values);
+
+    revalidatePath("/appointments");
+    revalidatePath("/dashboard");
+
+    return {
+      success: true,
+      message: "Appointment successfully booked",
+      data: {
+        appointmentId: rows[0].new_appointment_id,
+        queueNumber: rows[0].assigned_queue_number,
+      },
+    };
+  } catch (error: any) {
+    console.error("Booking procedure error:", error);
+
+    if (error.message?.includes("Time Slot not found")) {
+      return { success: false, error: "Selected time slot does not exist." };
+    }
+    if (error.message?.includes("Time Slot is full")) {
+      return { success: false, error: "Sorry, this time slot is fully booked." };
+    }
+
+    return { success: false, error: error.message || "An unexpected booking error occurred." };
+  }
+}

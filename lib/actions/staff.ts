@@ -7,7 +7,7 @@ export async function getStaffDirectory(unsafeData: unknown = {}) {
   const user = await getCurrentUser();
   if (!user) redirect("/login?clear=1");
 
-  if (user?.role != "admin") throw new Error("Unauthorized");
+  if (user.role != "admin") throw new Error("Unauthorized");
   const parsedData = staffDirectorySchema.safeParse(unsafeData);
 
   if (!parsedData.success) {
@@ -18,7 +18,7 @@ export async function getStaffDirectory(unsafeData: unknown = {}) {
 
   // console.log(filters);
 
-  const active = filters.status == "all" ? null : filters.status === "active";
+  const active = filters.status === "all" ? null : filters.status === "active";
 
   const limit = filters.pageSize;
   const offset = (filters.page - 1) * filters.pageSize;

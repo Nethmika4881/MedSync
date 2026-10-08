@@ -9,24 +9,17 @@ import {
   Building2,
   Phone,
   Mail,
-  Briefcase,
 } from "lucide-react";
 import { getInitials, getAvatarColor, cn } from "@/lib/utils";
 import Link from "next/link";
 import type { AuthUser } from "@/lib/types";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
-const DEPT_SHAPES: Record<string, string> = {
-  "Front Desk":
+const ROLE_SHAPES: Record<string, string> = {
+  FrontDesk:
     "clip-path: polygon(0 15%, 15% 0, 85% 0, 100% 15%, 100% 85%, 85% 100%, 15% 100%, 0 85%);",
-  Clinical: "clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);",
-  Pharmacy:
-    "clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);",
-  Laboratory:
-    "clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);",
-  Management:
-    "clip-path: polygon(0 0, 85% 0, 100% 15%, 100% 100%, 15% 100%, 0 85%);",
-  Administration: "clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);",
+  Doctor: "clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);",
+  Admin: "clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);",
 };
 
 type staffMember = {
@@ -67,9 +60,9 @@ export default function StaffPage({
   const [searchTerm, setSearchTerm] = useState(
     searchParams.get("search") ?? "",
   );
-  const [selectedBranch, setSelectedBranch] = useState("");
   const selectedStatus = searchParams.get("status") ?? "all";
-  const [selectedRole, setSelectedRole] = useState("All");
+  const selectedRole = searchParams.get("role") ?? "All";
+  const selectedBranch = searchParams.get("branchID") ?? "";
   const filtered = staff;
   if (!role) return null;
 
@@ -92,7 +85,7 @@ export default function StaffPage({
     updateFilter("search", searchTerm.trim());
   }
   return (
-    <div className="w-full space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
@@ -113,20 +106,15 @@ export default function StaffPage({
 
         {/* Filters */}
         <div className="flex flex-col md:flex-row gap-3">
-          <form onSubmit={handleSearch} className="flex flex-1 md:max-w-md gap-2">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Search staff..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full h-10 pl-9 pr-4 rounded-xl border border-slate-200 text-sm focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none bg-white"
-              />
-            </div>
-            <Button type="submit" variant="outline">
-              Search
-            </Button>
+          <form onSubmit={handleSearch} className="relative flex-1 md:max-w-sm">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search staff..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full h-10 pl-9 pr-4 rounded-xl border border-slate-200 text-sm focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none bg-white"
+            />
           </form>
           <select
             value={selectedBranch}
@@ -163,13 +151,13 @@ export default function StaffPage({
         </div>
 
         {/* Staff Table */}
-        <Card className="w-full border-slate-200 shadow-sm overflow-hidden">
-          <div className="w-full overflow-x-auto">
-            <table className="w-full table-auto text-sm text-left text-slate-600">
+        <Card className="border-slate-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left text-slate-600">
               <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                 <tr>
                   <th className="px-6 py-4">Employee</th>
-                  <th className="px-6 py-4">Role / Department</th>
+                  <th className="px-6 py-4">Role</th>
                   <th className="px-6 py-4">Branch</th>
                   <th className="px-6 py-4">Contact</th>
                   <th className="px-6 py-4">Hire Date</th>
@@ -179,8 +167,7 @@ export default function StaffPage({
               <tbody className="divide-y divide-slate-100 bg-white">
                 {filtered.map((emp) => {
                   const colorClass = getAvatarColor(emp.fullName);
-                  const shapeStyle =
-                    DEPT_SHAPES[emp.role] || DEPT_SHAPES["Administration"];
+                  const shapeStyle = ROLE_SHAPES[emp.role] || ROLE_SHAPES.Admin;
                   return (
                     <tr
                       key={emp.employeeID}
@@ -214,9 +201,6 @@ export default function StaffPage({
                       </td>
                       <td className="px-6 py-4">
                         <p className="font-medium text-slate-900">{emp.role}</p>
-                        <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                          <Briefcase className="w-3 h-3" /> {emp.role}
-                        </p>
                       </td>
                       <td className="px-6 py-4">
                         <span className="flex items-center gap-1.5 text-slate-600">

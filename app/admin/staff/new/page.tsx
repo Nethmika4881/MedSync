@@ -1,31 +1,56 @@
 "use client";
 
-import React, { useState } from "react";
-import { branches } from "@/lib/constants";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserPlus, ArrowLeft, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
+import { getBranches } from "@/lib/actions/branches";
 
-const ROLES = ["Administrator", "Doctor", "Receptionist"];
-const DEPARTMENTS = ["Front Desk", "Clinical", "Pharmacy", "Laboratory", "Management", "Administration"];
+const ROLES = ["Admin", "Doctor", "FrontDesk"];
+
+type BranchOption = {
+  branch_id: string;
+  branch_name: string;
+};
 
 export default function NewStaffPage() {
   const [submitted, setSubmitted] = useState(false);
   const [newStaffName, setNewStaffName] = useState("");
   const [error, setError] = useState("");
+  const [branches, setBranches] = useState<BranchOption[]>([]);
+  const [branchesLoading, setBranchesLoading] = useState(true);
 
   const [form, setForm] = useState({
-    firstName: "", lastName: "", role: "Receptionist", department: "Front Desk",
-    branchId: "BR-001", email: "", phone: ""
+    firstName: "", lastName: "", role: "FrontDesk",
+    branchId: "", email: "", phone: ""
   });
+
+  useEffect(() => {
+    let active = true;
+
+    getBranches().then((rows) => {
+      if (!active) return;
+
+      setBranches(rows);
+      setForm((current) => ({
+        ...current,
+        branchId: current.branchId || rows[0]?.branch_id || "",
+      }));
+      setBranchesLoading(false);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const set = (field: string, value: string) => setForm(f => ({ ...f, [field]: value }));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.firstName || !form.lastName || !form.phone || !form.email) {
+    if (!form.firstName || !form.lastName || !form.phone || !form.email || !form.branchId) {
       setError("Please fill in all required fields."); 
       return;
     }
@@ -55,7 +80,7 @@ export default function NewStaffPage() {
         <div className="flex gap-3 justify-center">
           <Button onClick={() => { 
             setSubmitted(false); 
-            setForm({ firstName: "", lastName: "", role: "Receptionist", department: "Front Desk", branchId: "BR-001", email: "", phone: "" }); 
+            setForm({ firstName: "", lastName: "", role: "FrontDesk", branchId: branches[0]?.branch_id || "", email: "", phone: "" });
           }}
             variant="outline" className="rounded-xl px-6 h-11">Add Another</Button>
           <Link href="/admin/staff">
@@ -105,18 +130,13 @@ export default function NewStaffPage() {
                   {ROLES.map(s => <option key={s}>{s}</option>)}
                 </select>
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Department</label>
-                <select value={form.department} onChange={e => set("department", e.target.value)}
-                  className="w-full h-11 px-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[var(--brand-primary)] outline-none">
-                  {DEPARTMENTS.map(d => <option key={d}>{d}</option>)}
-                </select>
-              </div>
               <div className="md:col-span-2">
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Primary Branch Allocation</label>
                 <select value={form.branchId} onChange={e => set("branchId", e.target.value)}
+                  disabled={branchesLoading || branches.length === 0}
                   className="w-full h-11 px-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[var(--brand-primary)] outline-none">
-                  {branches.map(b => <option key={b.branchId} value={b.branchId}>{b.name}</option>)}
+                  <option value="">{branchesLoading ? "Loading branches..." : "Select a branch"}</option>
+                  {branches.map(b => <option key={b.branch_id} value={b.branch_id}>{b.branch_name}</option>)}
                 </select>
               </div>
             </div>
