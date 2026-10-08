@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
+import { useSidebarStore } from "@/lib/stores/sidebarStore";
 import { usePathname } from "next/navigation";
 import { HeartPulse, LogOut, ChevronDown } from "lucide-react";
 import { roleNavConfig } from "@/lib/roleNavConfig";
@@ -22,6 +23,12 @@ function getRoleFromPath(pathname: string): UserRole | null {
 export function Sidebar() {
   const pathname = usePathname();
   const role = getRoleFromPath(pathname);
+  const { open, close, collapsed } = useSidebarStore();
+
+  // Close the mobile drawer after navigating.
+  useEffect(() => {
+    close();
+  }, [pathname, close]);
 
   // Patients use a top-nav layout — no sidebar.
   if (!role || role === "patient") return null;
@@ -29,7 +36,17 @@ export function Sidebar() {
   const navItems = roleNavConfig[role] || [];
 
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-slate-200 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-40 transition-transform">
+    <>
+    {open && (
+      <div className="fixed inset-0 bg-slate-900/40 z-40 lg:hidden" onClick={close} aria-hidden="true" />
+    )}
+    <aside
+      className={cn(
+        "fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-slate-200 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-50 transition-transform duration-200",
+        open ? "translate-x-0" : "-translate-x-full",
+        collapsed ? "lg:-translate-x-full" : "lg:translate-x-0"
+      )}
+    >
       {/* Brand */}
       <div className="h-16 flex items-center px-6 border-b border-slate-100 shrink-0">
         <Link
@@ -119,5 +136,6 @@ export function Sidebar() {
         </form>
       </div>
     </aside>
+    </>
   );
 }
