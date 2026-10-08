@@ -47,11 +47,7 @@ type branchOption = {
 export default function StaffPage({
   user,
   staff,
-  total,
   branches,
-  page,
-  pageSize,
-  totalPages,
 }: {
   user: AuthUser;
   total: number;
