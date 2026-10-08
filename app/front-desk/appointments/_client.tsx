@@ -33,7 +33,7 @@ import {
 import { doctors } from "@/lib/constants";;
 import { patients } from "@/lib/constants";;
 import { branches } from "@/lib/constants";;
-import type { Appointment, SessionType, VisitType } from "@/lib/types";;
+import type { Appointment, AuthUser, SessionType, VisitType } from "@/lib/types";;
 import { SESSION_META } from "@/lib/constants";;
 import { SessionBadge } from "@/components/catms/SessionBadge";
 
@@ -599,7 +599,7 @@ function NewAppointmentModal({
 /* ──────────────────────────────────────────────────────────
    Main Page
 ────────────────────────────────────────────────────────── */
-export default function AppointmentsPage({ user }: { user: any }) {
+export default function AppointmentsPage({ user }: { user: AuthUser }) {
   const role = user?.role;
   const { appointments, checkInAppointment, cancelAppointment } = useAppointmentStore();
   

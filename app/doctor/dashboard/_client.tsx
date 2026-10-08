@@ -5,12 +5,22 @@ import Link from "next/link";
 import { Users, Clock, CheckCircle2, Stethoscope, CalendarDays, Eye } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Users, Calendar, Activity, CreditCard, Clock, CheckCircle2 } from "lucide-react";
+import { revenueByMonth, appointmentsByMonth } from "@/lib/constants";;
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { StatusPill } from "@/components/catms/StatusPill";
-import { EmptyState } from "@/components/catms/EmptyState";
-import { StartConsultationButton } from "@/components/doctor/StartConsultationButton";
-import { formatClockTime, formatDay, shiftDay } from "@/lib/doctorFormat";
-import type { Appointment, AuthUser } from "@/lib/types";
+import { SessionBadge } from "@/components/catms/SessionBadge";
+import { useAppointmentStore } from "@/lib/stores/appointmentStore";
+import type { AuthUser } from "@/lib/types";
+import { ClipboardPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+
+export default function DashboardPage({ user }: { user: AuthUser }) {
+  const role = user?.role;
+  
+  
+  const { appointments } = useAppointmentStore();
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -49,11 +59,11 @@ export default function DashboardPage({ user, today, appointments }: DashboardPr
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back, {user.firstName || user.name}!</h2>
-        <p className="text-slate-500 flex items-center gap-2">
-          <CalendarDays className="w-4 h-4" /> {formatDay(today)} — here&apos;s your clinic day.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back, {user?.name.split(' ')[0]}!</h2>
+          <p className="text-slate-500">Here&apos;s what&apos;s happening at your clinic today.</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

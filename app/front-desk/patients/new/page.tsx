@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { usePatientStore } from "@/lib/stores/patientStore";
 import { branches } from "@/lib/constants";;
 import { patients } from "@/lib/constants";;
 import type { Patient } from "@/lib/types";
@@ -16,7 +14,6 @@ import { cn, getInitials, getAvatarColor } from "@/lib/utils";
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 export default function NewPatientPage() {
-  const router = useRouter();
   const [submitted, setSubmitted] = useState(false);
   const [newPatient, setNewPatient] = useState<Patient | null>(null);
   const [error, setError] = useState("");
@@ -118,7 +115,7 @@ export default function NewPatientPage() {
               {[["First Name *", "firstName", "text", "e.g. Maria"], ["Last Name *", "lastName", "text", "e.g. Santos"]].map(([label, field, type, ph]) => (
                 <div key={field}>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">{label}</label>
-                  <input type={type} value={(form as any)[field]} onChange={e => set(field, e.target.value)} placeholder={ph}
+                  <input type={type} value={form[field as keyof typeof form]} onChange={e => set(field, e.target.value)} placeholder={ph}
                     className="w-full h-11 px-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none" required />
                 </div>
               ))}
@@ -159,7 +156,7 @@ export default function NewPatientPage() {
               {[["Phone *", "phone", "tel", "+1 (555) ..."], ["Email", "email", "email", "name@example.com"], ["Address", "address", "text", "Street address"], ["City", "city", "text", "City"]].map(([label, field, type, ph]) => (
                 <div key={field}>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">{label}</label>
-                  <input type={type} value={(form as any)[field]} onChange={e => set(field, e.target.value)} placeholder={ph}
+                  <input type={type} value={form[field as keyof typeof form]} onChange={e => set(field, e.target.value)} placeholder={ph}
                     className="w-full h-11 px-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none" />
                 </div>
               ))}
@@ -188,7 +185,7 @@ export default function NewPatientPage() {
               {[["Full Name", "emergencyContactName", "e.g. Jane Santos"], ["Relationship", "emergencyContactRelation", "e.g. Spouse"], ["Phone", "emergencyContactPhone", "+1 (555) ..."]].map(([label, field, ph]) => (
                 <div key={field}>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">{label}</label>
-                  <input type="text" value={(form as any)[field]} onChange={e => set(field, e.target.value)} placeholder={ph}
+                  <input type="text" value={form[field as keyof typeof form]} onChange={e => set(field, e.target.value)} placeholder={ph}
                     className="w-full h-11 px-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none" />
                 </div>
               ))}

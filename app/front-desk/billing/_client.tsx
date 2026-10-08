@@ -2,13 +2,14 @@
 
 import React, { useState } from "react";
 import { useBillingStore } from "@/lib/stores/billingStore";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/catms/StatusPill";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Receipt, CreditCard, FileCheck, Search, DollarSign } from "lucide-react";
+import type { AuthUser } from "@/lib/types";
 
-export default function BillingPage({ user }: { user: any }) {
+export default function BillingPage({ user }: { user: AuthUser }) {
   const role = user?.role;
   const { invoices, payments, claims, payInvoice, updateClaimStatus } = useBillingStore();
   

@@ -5,9 +5,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Download, FileSpreadsheet } from "lucide-react";
+import type { AuthUser } from "@/lib/types";
 
 // ─── Utility to download CSV ────────────────────────────────────────────────
-const downloadCSV = (data: any[], filename: string) => {
+const downloadCSV = (data: Record<string, unknown>[], filename: string) => {
   if (data.length === 0) return;
   const headers = Object.keys(data[0]).join(',');
   const rows = data.map(obj => 
@@ -63,7 +64,7 @@ const insuranceVsOutofPocketData = [
   { month: 'June 2026', totalRevenue: 110000, insuranceCovered: 71000, outOfPocket: 39000, insuranceRatio: '65%' },
 ];
 
-export default function ReportsPage({ user }: { user: any }) {
+export default function ReportsPage({ user }: { user: AuthUser }) {
   const role = user?.role;
   
 

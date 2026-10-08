@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { HeartPulse, Sparkles, Shield, Clock, Users } from "lucide-react";
+import { HeartPulse, Shield, Clock, Users } from "lucide-react";
 
 export default function LandingPage() {
   return (

@@ -72,6 +72,11 @@ export interface InvoiceTreatmentItem {
   status: string;
 }
 
+type InvoiceRow = Omit<PatientInvoiceItem, "treatments" | "payments" | "claim">;
+type TreatmentRow = InvoiceTreatmentItem & { appointmentId: string };
+type PaymentRow = PatientPaymentItem & { invoiceId: string };
+type ClaimRow = PatientClaimSummary & { invoiceId: string };
+
 /**
  * Loads all invoices belonging to the authenticated patient.
  * Read-only — no mutations exposed.
@@ -86,7 +91,7 @@ export async function getPatientBilling(): Promise<PatientInvoiceItem[]> {
 
   try {
     // 1. Invoices with appointment + doctor + branch context
-    const { rows: invoices } = await db.query(
+    const { rows: invoices } = await db.query<InvoiceRow>(
       `SELECT
          inv.invoice_id                             AS "invoiceId",
          inv.appointment_id                         AS "appointmentId",
@@ -128,11 +133,11 @@ export async function getPatientBilling(): Promise<PatientInvoiceItem[]> {
 
     if (invoices.length === 0) return [];
 
-    const invoiceIds = invoices.map((i: any) => i.invoiceId);
-    const appointmentIds = invoices.map((i: any) => i.appointmentId);
+    const invoiceIds = invoices.map((i) => i.invoiceId);
+    const appointmentIds = invoices.map((i) => i.appointmentId);
 
     // 2. Treatments (line items) for all matching appointments
-    const { rows: treatmentRows } = await db.query(
+    const { rows: treatmentRows } = await db.query<TreatmentRow>(
       `SELECT
          at.appointment_id                          AS "appointmentId",
          tc.treatment_name                          AS "treatmentName",
@@ -149,7 +154,7 @@ export async function getPatientBilling(): Promise<PatientInvoiceItem[]> {
     );
 
     // 3. Payments for all matching invoices
-    const { rows: paymentRows } = await db.query(
+    const { rows: paymentRows } = await db.query<PaymentRow>(
       `SELECT
          p.payment_id                               AS "paymentId",
          p.invoice_id                               AS "invoiceId",
@@ -164,7 +169,7 @@ export async function getPatientBilling(): Promise<PatientInvoiceItem[]> {
     );
 
     // 4. Insurance claims for all matching invoices
-    const { rows: claimRows } = await db.query(
+    const { rows: claimRows } = await db.query<ClaimRow>(
       `SELECT
          ic.claim_id                                AS "claimId",
          ic.invoice_id                              AS "invoiceId",
@@ -182,7 +187,7 @@ export async function getPatientBilling(): Promise<PatientInvoiceItem[]> {
     // 5. Group treatments by appointment_id
     const treatmentsByAppt: Record<string, InvoiceTreatmentItem[]> = {};
     for (const t of treatmentRows) {
-      const apptId = (t as any).appointmentId;
+      const apptId = t.appointmentId;
       if (!treatmentsByAppt[apptId]) treatmentsByAppt[apptId] = [];
       treatmentsByAppt[apptId].push({
         treatmentName: t.treatmentName,
@@ -197,7 +202,7 @@ export async function getPatientBilling(): Promise<PatientInvoiceItem[]> {
     // 6. Group payments by invoice_id
     const paymentsByInvoice: Record<string, PatientPaymentItem[]> = {};
     for (const p of paymentRows) {
-      const invId = (p as any).invoiceId;
+      const invId = p.invoiceId;
       if (!paymentsByInvoice[invId]) paymentsByInvoice[invId] = [];
       paymentsByInvoice[invId].push({
         paymentId: p.paymentId,
@@ -211,7 +216,7 @@ export async function getPatientBilling(): Promise<PatientInvoiceItem[]> {
     // 7. Index claims by invoice_id (1:1)
     const claimByInvoice: Record<string, PatientClaimSummary> = {};
     for (const c of claimRows) {
-      const invId = (c as any).invoiceId;
+      const invId = c.invoiceId;
       claimByInvoice[invId] = {
         claimId: c.claimId,
         claimedAmount: c.claimedAmount,
@@ -224,12 +229,12 @@ export async function getPatientBilling(): Promise<PatientInvoiceItem[]> {
     }
 
     // 8. Assemble final result
-    return invoices.map((inv: any) => ({
+    return invoices.map((inv) => ({
       ...inv,
       treatments: treatmentsByAppt[inv.appointmentId] || [],
       payments: paymentsByInvoice[inv.invoiceId] || [],
       claim: claimByInvoice[inv.invoiceId] || null,
-    })) as PatientInvoiceItem[];
+    }));
   } catch (err) {
     console.error("[getPatientBilling] Failed to fetch billing:", err);
     return [];

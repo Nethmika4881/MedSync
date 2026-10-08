@@ -4,23 +4,73 @@
 
 export { SESSION_META, DAYS_OF_WEEK } from "@/lib/types";
 export type { SessionType, DayOfWeek, DoctorScheduleSlot, SessionConfig } from "@/lib/types";
-import type { Medication } from "@/lib/types";
+import type {
+  Doctor,
+  DoctorScheduleSlot,
+  Employee,
+  InsuranceProvider,
+  Medication,
+  Patient,
+  SessionConfig,
+  TreatmentCatalogueItem,
+} from "@/lib/types";
+
+interface LegacyBranch {
+  branchId: string;
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  phone: string;
+  email: string;
+  managerName: string;
+  isActive: boolean;
+  doctorCount: number;
+  patientCount: number;
+  createdAt: string;
+}
+
+interface InsurancePackage {
+  packageId: string;
+  packageName: string;
+  providerId: string;
+  providerName: string;
+  annualLimit: number;
+  copayPercent: number;
+  coverage: string[];
+}
+
+interface RevenuePoint {
+  month: string;
+  revenue: number;
+}
+
+interface AppointmentPoint {
+  month: string;
+  completed: number;
+  cancelled: number;
+}
+
+interface PatientGrowthPoint {
+  month: string;
+  patients: number;
+}
 
 // Empty arrays to prevent UI crashes while DB is disconnected
-export const branches: any[] = [];
-export const doctors: any[] = [];
-export const patients: any[] = [];
-export const employees: any[] = [];
+export const branches: LegacyBranch[] = [];
+export const doctors: Doctor[] = [];
+export const patients: Patient[] = [];
+export const employees: Employee[] = [];
 export const medications: Medication[] = [];
-export const treatmentCatalogue: any[] = [];
-export const insuranceProviders: any[] = [];
-export const insurancePackages: any[] = [];
+export const treatmentCatalogue: TreatmentCatalogueItem[] = [];
+export const insuranceProviders: InsuranceProvider[] = [];
+export const insurancePackages: InsurancePackage[] = [];
 
 // For charts
-export const revenueByMonth: any[] = [];
-export const appointmentsByMonth: any[] = [];
-export const patientGrowthByMonth: any[] = [];
+export const revenueByMonth: RevenuePoint[] = [];
+export const appointmentsByMonth: AppointmentPoint[] = [];
+export const patientGrowthByMonth: PatientGrowthPoint[] = [];
 
 // Fallbacks for stores
-export const sessionConfigs: any[] = [];
-export const doctorSchedules: any[] = [];
+export const sessionConfigs: SessionConfig[] = [];
+export const doctorSchedules: DoctorScheduleSlot[] = [];

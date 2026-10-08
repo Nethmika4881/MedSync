@@ -23,8 +23,9 @@ import {
   type ConsultationRecordItem,
   type TreatmentItem,
 } from "@/lib/actions/patient-records";
+import type { AuthUser } from "@/lib/types";
 
-export default function MedicalRecordsPage({ user }: { user: any }) {
+export default function MedicalRecordsPage({ user }: { user: AuthUser }) {
   const [records, setRecords] = useState<ConsultationRecordItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

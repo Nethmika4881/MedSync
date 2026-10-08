@@ -5,8 +5,9 @@ import { branches } from "@/lib/constants";;
 import { employees } from "@/lib/constants";;
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, Phone, Mail, Users, Stethoscope, User, PlusCircle, CheckCircle2 } from "lucide-react";
+import { MapPin, Phone, Mail, Users, Stethoscope, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { AuthUser } from "@/lib/types";
 
 const BRANCH_GRADIENTS = [
   { bg: "from-cyan-500 to-teal-600", shape: "bg-cyan-100 text-cyan-700", light: "bg-cyan-50 border-cyan-200 text-cyan-700" },
@@ -14,7 +15,7 @@ const BRANCH_GRADIENTS = [
   { bg: "from-orange-400 to-rose-500", shape: "bg-orange-100 text-orange-700", light: "bg-orange-50 border-orange-200 text-orange-700" },
 ];
 
-export default function BranchesPage({ user }: { user: any }) {
+export default function BranchesPage({ user }: { user: AuthUser }) {
   const role = user?.role;
   
   if (!role) return null;

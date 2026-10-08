@@ -34,7 +34,6 @@ export default function InsurancePackagesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {insurancePackages.map((pkg) => {
-          const provider = insuranceProviders.find(p => p.providerId === pkg.providerId);
           const providerIndex = insuranceProviders.findIndex(p => p.providerId === pkg.providerId);
           const gradient = PROVIDER_COLORS[providerIndex % PROVIDER_COLORS.length];
           const coveragePct = pkg.copayPercent;

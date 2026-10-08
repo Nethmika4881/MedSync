@@ -3,11 +3,12 @@
 import React, { useState } from "react";
 import { employees } from "@/lib/constants";;
 import { branches } from "@/lib/constants";;
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Search, UserPlus, Building2, Phone, Mail, Briefcase } from "lucide-react";
 import { getInitials, getAvatarColor, cn } from "@/lib/utils";
 import Link from "next/link";
+import type { AuthUser } from "@/lib/types";
 
 const DEPT_SHAPES: Record<string, string> = {
   "Front Desk":    "clip-path: polygon(0 15%, 15% 0, 85% 0, 100% 15%, 100% 85%, 85% 100%, 15% 100%, 0 85%);",
@@ -18,7 +19,7 @@ const DEPT_SHAPES: Record<string, string> = {
   "Administration":"clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);",
 };
 
-export default function StaffPage({ user }: { user: any }) {
+export default function StaffPage({ user }: { user: AuthUser }) {
   const role = user?.role;
   
   const [searchTerm, setSearchTerm] = useState("");

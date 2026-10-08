@@ -146,7 +146,7 @@ export default function DoctorFeesPage() {
       sorting,
       globalFilter,
     },
-    globalFilterFn: (row: any, columnId: any, filterValue: any) => {
+    globalFilterFn: (row, columnId, filterValue) => {
       const value = row.getValue(columnId);
       if (value == null) return false;
       return String(value).toLowerCase().includes(String(filterValue).toLowerCase());

@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
-import { ChevronLeft, ChevronRight, Clock, MapPin, User, CalendarX } from "lucide-react";
+import { useAppointmentStore } from "@/lib/stores/appointmentStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/catms/StatusPill";
@@ -10,6 +9,9 @@ import { EmptyState } from "@/components/catms/EmptyState";
 import { StartConsultationButton } from "@/components/doctor/StartConsultationButton";
 import { formatClockTime, formatDay, shiftDay } from "@/lib/doctorFormat";
 import type { Appointment, DayOfWeek, DoctorScheduleSlot } from "@/lib/types";
+import { SessionBadge } from "@/components/catms/SessionBadge";
+import { Clock, FileText, User } from "lucide-react";
+import type { AuthUser } from "@/lib/types";
 
 const DAY_NAMES: DayOfWeek[] = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -19,6 +21,13 @@ interface ScheduleProps {
   appointments: Appointment[];
   weeklyHours: DoctorScheduleSlot[];
 }
+export default function MySchedulePage({ user }: { user: AuthUser }) {
+  const role = user?.role;
+  
+  
+  const { appointments } = useAppointmentStore();
+  
+  if (!user || role !== "doctor") return null;
 
 export default function MySchedulePage({ date, today, appointments, weeklyHours }: ScheduleProps) {
   const weekday = DAY_NAMES[new Date(`${date}T00:00:00Z`).getUTCDay()];
@@ -70,6 +79,8 @@ export default function MySchedulePage({ date, today, appointments, weeklyHours 
                   <p className="text-sm text-slate-600">
                     {appointments.length} scheduled visit{appointments.length === 1 ? "" : "s"}
                   </p>
+                  <h3 className="text-lg font-bold text-slate-900">Today&apos;s Overview</h3>
+                  <p className="text-sm text-slate-600">{myAppointments.length} scheduled visits</p>
                 </div>
               </div>
             </CardContent>

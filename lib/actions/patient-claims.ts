@@ -85,6 +85,13 @@ export interface PatientClaimsData {
   policies: PatientInsurancePolicy[];
 }
 
+type ClaimRow = Omit<PatientClaimRecord, "items" | "status" | "policyStatus"> & {
+  status: string;
+  policyStatus: string;
+};
+type PolicyRow = Omit<PatientInsurancePolicy, "status"> & { status: string };
+type ClaimItemRow = PatientClaimItemLine & { claimId: string };
+
 /**
  * Loads all insurance claims and active policies for the authenticated patient.
  * Read-only — enforces patient ID strictly from session.
@@ -99,7 +106,7 @@ export async function getPatientClaims(): Promise<PatientClaimsData> {
 
   try {
     // 1. Fetch claims filed against invoices owned by this patient
-    const { rows: claimRows } = await db.query(
+    const { rows: claimRows } = await db.query<ClaimRow>(
       `SELECT
          ic.claim_id                              AS "claimId",
          ic.invoice_id                            AS "invoiceId",
@@ -149,7 +156,7 @@ export async function getPatientClaims(): Promise<PatientClaimsData> {
     );
 
     // 2. Fetch policies owned by this patient
-    const { rows: policyRows } = await db.query(
+    const { rows: policyRows } = await db.query<PolicyRow>(
       `SELECT
          ins.insurance_id                         AS "insuranceId",
          ins.policy_number                        AS "policyNumber",
@@ -176,7 +183,7 @@ export async function getPatientClaims(): Promise<PatientClaimsData> {
       [patientId]
     );
 
-    const policies: PatientInsurancePolicy[] = policyRows.map((p: any) => ({
+    const policies: PatientInsurancePolicy[] = policyRows.map((p) => ({
       insuranceId: p.insuranceId,
       policyNumber: p.policyNumber,
       status: p.status as PolicyStatus,
@@ -195,8 +202,8 @@ export async function getPatientClaims(): Promise<PatientClaimsData> {
     }
 
     // 3. Itemized claim items for all matching claims
-    const claimIds = claimRows.map((c: any) => c.claimId);
-    const { rows: itemRows } = await db.query(
+    const claimIds = claimRows.map((c) => c.claimId);
+    const { rows: itemRows } = await db.query<ClaimItemRow>(
       `SELECT
          ici.claim_item_id                        AS "claimItemId",
          ici.claim_id                             AS "claimId",
@@ -217,7 +224,7 @@ export async function getPatientClaims(): Promise<PatientClaimsData> {
     // Group items by claim_id
     const itemsByClaim: Record<string, PatientClaimItemLine[]> = {};
     for (const item of itemRows) {
-      const cId = (item as any).claimId;
+      const cId = item.claimId;
       if (!itemsByClaim[cId]) itemsByClaim[cId] = [];
       itemsByClaim[cId].push({
         claimItemId: item.claimItemId,
@@ -231,7 +238,7 @@ export async function getPatientClaims(): Promise<PatientClaimsData> {
       });
     }
 
-    const claims: PatientClaimRecord[] = claimRows.map((c: any) => ({
+    const claims: PatientClaimRecord[] = claimRows.map((c) => ({
       claimId: c.claimId,
       invoiceId: c.invoiceId,
       insuranceId: c.insuranceId,

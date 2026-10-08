@@ -51,6 +51,9 @@ export interface TreatmentItem {
   performedBy: string | null;
 }
 
+type ConsultationRow = Omit<ConsultationRecordItem, "treatments">;
+type TreatmentRow = TreatmentItem & { appointmentId: string };
+
 /**
  * Loads all consultation records belonging to the authenticated patient.
  * Joins consultation_record → appointment → time_slot → doctor → app_user → branch.
@@ -66,7 +69,7 @@ export async function getPatientRecords(): Promise<ConsultationRecordItem[]> {
 
   try {
     // 1. Fetch consultation records with appointment + doctor + branch context
-    const { rows: consultations } = await db.query(
+    const { rows: consultations } = await db.query<ConsultationRow>(
       `SELECT
          cr.consultation_rec_id                    AS "consultationRecId",
          cr.appointment_id                         AS "appointmentId",
@@ -113,8 +116,8 @@ export async function getPatientRecords(): Promise<ConsultationRecordItem[]> {
     }
 
     // 2. Batch-load treatments for all matching appointments
-    const appointmentIds = consultations.map((c: any) => c.appointmentId);
-    const { rows: treatmentRows } = await db.query(
+    const appointmentIds = consultations.map((c) => c.appointmentId);
+    const { rows: treatmentRows } = await db.query<TreatmentRow>(
       `SELECT
          at.appointment_treatment_id               AS "appointmentTreatmentId",
          at.appointment_id                         AS "appointmentId",
@@ -138,7 +141,7 @@ export async function getPatientRecords(): Promise<ConsultationRecordItem[]> {
     // 3. Group treatments by appointment_id
     const treatmentsByAppt: Record<string, TreatmentItem[]> = {};
     for (const t of treatmentRows) {
-      const apptId = (t as any).appointmentId;
+      const apptId = t.appointmentId;
       if (!treatmentsByAppt[apptId]) treatmentsByAppt[apptId] = [];
       treatmentsByAppt[apptId].push({
         appointmentTreatmentId: t.appointmentTreatmentId,
@@ -154,10 +157,10 @@ export async function getPatientRecords(): Promise<ConsultationRecordItem[]> {
     }
 
     // 4. Attach treatments to their consultation record
-    return consultations.map((c: any) => ({
+    return consultations.map((c) => ({
       ...c,
       treatments: treatmentsByAppt[c.appointmentId] || [],
-    })) as ConsultationRecordItem[];
+    }));
   } catch (err) {
     console.error("[getPatientRecords] Failed to fetch records:", err);
     return [];

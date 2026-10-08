@@ -14,19 +14,22 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { StatusPill } from "@/components/catms/StatusPill";
 import { AvatarWithName } from "@/components/catms/AvatarWithName";
-import { completeConsultation, saveConsultationDraft } from "@/lib/actions/doctor-consultations";
-import { formatClockTime, formatDay, formatMoney } from "@/lib/doctorFormat";
-import type { ConsultationWorkspace, WorkspaceTreatment } from "@/lib/doctorTypes";
-import type { Medication, TreatmentCatalogueItem } from "@/lib/types";
+import { EmptyState } from "@/components/catms/EmptyState";
+import { ArrowLeft, Save, Calendar, Plus, X, Search, Minus, Pill, Lock, CheckCircle2, Receipt } from "lucide-react";
+import Link from "next/link";
+import { treatmentCatalogue } from "@/lib/constants";;
+import { medications } from "@/lib/constants";;
+import { doctors } from "@/lib/constants";;
+import { usePharmacyStore } from "@/lib/stores/pharmacyStore";
+import { useBillingStore } from "@/lib/stores/billingStore";
+import type { AuthUser, InvoiceLineItem } from "@/lib/types";;
+import { checkContraindication } from "@/lib/contraindication";
 import { cn } from "@/lib/utils";
 
-interface OrderedTreatment {
-  treatmentServiceCode: string;
-  name: string;
-  category: string;
-  unitPrice: number;
-  quantity: number;
-}
+export default function ConsultationWorkspacePage({ user }: { user: AuthUser }) {
+  const params = useParams<{ id: string }>();
+  const appointmentId = params.id;
+  const router = useRouter();
 
 interface DraftPrescription {
   key: string;
