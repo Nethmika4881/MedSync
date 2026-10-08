@@ -39,13 +39,24 @@ type staffMember = {
   branchName: string;
   phone: string | null;
 };
+
+type branchOption = {
+  branch_id: string;
+  branch_name: string;
+};
 export default function StaffPage({
   user,
   staff,
+  total,
+  branches,
+  page,
+  pageSize,
+  totalPages,
 }: {
   user: AuthUser;
   total: number;
   staff: staffMember[];
+  branches: branchOption[];
   page: number;
   pageSize: number;
   totalPages: number;
@@ -53,16 +64,12 @@ export default function StaffPage({
   const role = user?.role;
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedBranch, setSelectedBranch] = useState("All");
+  const [selectedBranch, setSelectedBranch] = useState("");
   const [selectedRole, setSelectedRole] = useState("All");
   const filtered = staff;
   if (!role) return null;
 
-  const roles = ["All", ...Array.from(new Set(staff.map((e) => e.role)))];
-  const branchOptions = [
-    "All",
-    ...Array.from(new Set(staff.map((b) => b.branchName))),
-  ];
+  const roles = ["All", "Doctor", "FrontDesk", "Admin"];
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -76,7 +83,7 @@ export default function StaffPage({
           </p>
         </div>
         {role === "admin" && (
-          <Link href="/staff/new">
+          <Link href="/admin/staff/new">
             <Button className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-xl h-10 px-5">
               <UserPlus className="w-4 h-4 mr-2" /> Add Staff Member
             </Button>
@@ -101,8 +108,12 @@ export default function StaffPage({
           onChange={(e) => setSelectedBranch(e.target.value)}
           className="h-10 px-3 rounded-xl border border-slate-200 text-sm text-slate-700 bg-white focus:border-[var(--brand-primary)] outline-none"
         >
-          {branchOptions.map((b) => (
-            <option key={b}>{b}</option>
+          <option value="">All branches</option>
+
+          {branches.map((branch) => (
+            <option key={branch.branch_id} value={branch.branch_id}>
+              {branch.branch_name}
+            </option>
           ))}
         </select>
         <select
