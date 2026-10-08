@@ -6,14 +6,14 @@ import { Users, Calendar, Activity, CreditCard, Clock, CheckCircle2 } from "luci
 import { revenueByMonth, appointmentsByMonth } from "@/lib/constants";;
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { StatusPill } from "@/components/catms/StatusPill";
-import { SessionBadge, TicketBadge } from "@/components/catms/SessionBadge";
+import { SessionBadge } from "@/components/catms/SessionBadge";
 import { useAppointmentStore } from "@/lib/stores/appointmentStore";
-import { AvatarWithName } from "@/components/catms/AvatarWithName";
+import type { AuthUser } from "@/lib/types";
 import { ClipboardPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-export default function DashboardPage({ user }: { user: any }) {
+export default function DashboardPage({ user }: { user: AuthUser }) {
   const role = user?.role;
   
   
@@ -68,7 +68,7 @@ export default function DashboardPage({ user }: { user: any }) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back, {user?.name.split(' ')[0]}!</h2>
-          <p className="text-slate-500">Here's what's happening at your clinic today.</p>
+          <p className="text-slate-500">Here&apos;s what&apos;s happening at your clinic today.</p>
         </div>
       </div>
 

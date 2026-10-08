@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   Clock,
   MapPin,
-  Stethoscope,
   ChevronRight,
   Loader2,
   AlertTriangle,
@@ -34,8 +33,9 @@ import {
   getPatientDashboardData,
   type PatientDashboardMetrics,
 } from "@/lib/actions/patient-dashboard";
+import type { AuthUser } from "@/lib/types";
 
-export default function PatientDashboardClient({ user }: { user: any }) {
+export default function PatientDashboardClient({ user }: { user: AuthUser }) {
   const [data, setData] = useState<PatientDashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +54,7 @@ export default function PatientDashboardClient({ user }: { user: any }) {
             setError("Unable to load patient dashboard metrics.");
           }
         }
-      } catch (err) {
+      } catch {
         if (!cancelled) {
           setError("Failed to load dashboard data. Please try again.");
         }

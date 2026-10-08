@@ -1,11 +1,9 @@
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useAppointmentStore } from "@/lib/stores/appointmentStore";
-import type { Doctor } from "@/lib/types";
+import type { AuthUser, Doctor } from "@/lib/types";
 import { doctors,   } from "@/lib/constants";;
-import type { Patient } from "@/lib/types";
 import { patients,   } from "@/lib/constants";;
 import { branches } from "@/lib/constants";;
 import type { VisitType } from "@/lib/types";
@@ -20,7 +18,6 @@ import {
   Search,
   ChevronDown,
   Check,
-  Star,
 } from "lucide-react";
 import Link from "next/link";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
@@ -300,8 +297,7 @@ function DoctorSelector({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-export default function NewAppointmentPage({ user }: { user: any }) {
-  const router = useRouter();
+export default function NewAppointmentPage({}: { user: AuthUser }) {
   const { addAppointment } = useAppointmentStore();
   
 

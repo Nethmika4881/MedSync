@@ -7,10 +7,11 @@ import {
   getPatientPrescriptions,
   type PatientPrescriptionItem,
 } from "@/lib/actions/patient-prescriptions";
+import type { AuthUser } from "@/lib/types";
 
 type Tab = "active" | "past" | "all";
 
-export default function MyPrescriptionsPage({ user }: { user: any }) {
+export default function MyPrescriptionsPage({ user }: { user: AuthUser }) {
   const [prescriptions, setPrescriptions] = useState<PatientPrescriptionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

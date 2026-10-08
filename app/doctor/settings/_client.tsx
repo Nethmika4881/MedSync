@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/catms/EmptyState";
 import { Clock, Plus, Trash2, MapPin, CalendarClock, Pencil, AlertCircle } from "lucide-react";
-import type { DoctorScheduleSlot } from "@/lib/types";
+import type { AuthUser, DoctorScheduleSlot } from "@/lib/types";
 
 const BRANCH_OPTIONS = [
   { branchId: "BR-001", branchName: "Colombo" },
@@ -31,7 +31,7 @@ const BRANCH_OPTIONS = [
   { branchId: "BR-003", branchName: "Galle" },
 ];
 
-export default function DoctorWorkingHoursPage({ user }: { user: any }) {
+export default function DoctorWorkingHoursPage({ user }: { user: AuthUser }) {
   const { schedules, addSlot, updateSlot, removeSlot } = useDoctorScheduleStore();
 
   const [dialogOpen, setDialogOpen] = useState(false);

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { doctors } from "@/lib/constants";;
-import type { Doctor } from "@/lib/types";
+import type { AuthUser, Doctor } from "@/lib/types";
 import {   } from "@/lib/constants";;
 import { useAppointmentStore } from "@/lib/stores/appointmentStore";
 import { useSessionConfigStore } from "@/lib/stores/sessionConfigStore";
@@ -12,13 +12,6 @@ import { cn } from "@/lib/utils";
 import { SESSION_META, SessionType } from "@/lib/constants";;
 
 const ALL_SESSIONS: SessionType[] = ["Morning", "Midday", "Afternoon", "Evening"];
-
-const SESSION_GRADIENT: Record<SessionType, string> = {
-  Morning:   "from-amber-400  to-orange-400",
-  Midday:    "from-sky-400    to-blue-500",
-  Afternoon: "from-teal-400   to-emerald-500",
-  Evening:   "from-indigo-400 to-violet-500",
-};
 
 const SESSION_CARD_BG: Record<SessionType, string> = {
   Morning:   "bg-amber-50  border-amber-200",
@@ -34,8 +27,7 @@ const SESSION_TEXT: Record<SessionType, string> = {
   Evening:   "text-indigo-700",
 };
 
-export default function SchedulesPage({ user }: { user: any }) {
-  const role = user?.role;
+export default function SchedulesPage({}: { user: AuthUser }) {
   const { appointments } = useAppointmentStore();
   const { configs, updateConfig, toggleSession } = useSessionConfigStore();
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(doctors[0]);
@@ -259,7 +251,7 @@ export default function SchedulesPage({ user }: { user: any }) {
                         {/* Today capacity progress */}
                         <div>
                           <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-                            <span>Today's bookings</span>
+                            <span>Today&apos;s bookings</span>
                             <span className="font-semibold">
                               {todayCount} / {maxTickets}
                             </span>

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { branches } from "@/lib/constants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,8 +12,6 @@ const ROLES = ["Administrator", "Doctor", "Receptionist"];
 const DEPARTMENTS = ["Front Desk", "Clinical", "Pharmacy", "Laboratory", "Management", "Administration"];
 
 export default function NewStaffPage() {
-  const router = useRouter();
-  
   const [submitted, setSubmitted] = useState(false);
   const [newStaffName, setNewStaffName] = useState("");
   const [error, setError] = useState("");
@@ -97,7 +94,7 @@ export default function NewStaffPage() {
               {[["First Name *", "firstName", "text", "e.g. Jane"], ["Last Name *", "lastName", "text", "e.g. Doe"]].map(([label, field, type, ph]) => (
                 <div key={field}>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">{label}</label>
-                  <input type={type} value={(form as any)[field]} onChange={e => set(field, e.target.value)} placeholder={ph}
+                  <input type={type} value={form[field as keyof typeof form]} onChange={e => set(field, e.target.value)} placeholder={ph}
                     className="w-full h-11 px-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none" required />
                 </div>
               ))}
@@ -139,7 +136,7 @@ export default function NewStaffPage() {
               {[["Phone *", "phone", "tel", "+1 (555) ..."], ["Email *", "email", "email", "employee@clinic.com"]].map(([label, field, type, ph]) => (
                 <div key={field}>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">{label}</label>
-                  <input type={type} value={(form as any)[field]} onChange={e => set(field, e.target.value)} placeholder={ph}
+                  <input type={type} value={form[field as keyof typeof form]} onChange={e => set(field, e.target.value)} placeholder={ph}
                     className="w-full h-11 px-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none" required />
                 </div>
               ))}

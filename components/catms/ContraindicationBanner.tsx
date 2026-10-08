@@ -41,7 +41,7 @@ interface ContraindicationRowBadgeProps {
   allergyName: string;
 }
 
-export function ContraindicationRowBadge({ patientName, allergyName }: ContraindicationRowBadgeProps) {
+export function ContraindicationRowBadge({ allergyName }: ContraindicationRowBadgeProps) {
   return (
     <span className="inline-flex items-center gap-1 bg-red-50 text-red-700 border border-red-200 text-xs font-semibold px-2 py-0.5 rounded-full">
       <AlertTriangle className="w-3 h-3" />

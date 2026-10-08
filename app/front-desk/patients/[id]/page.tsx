@@ -6,7 +6,6 @@ import { usePatientStore } from "@/lib/stores/patientStore";
 import { useAppointmentStore } from "@/lib/stores/appointmentStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AvatarWithName } from "@/components/catms/AvatarWithName";
 import { StatusPill } from "@/components/catms/StatusPill";
 import { ContraindicationRowBadge } from "@/components/catms/ContraindicationBanner";
 import {

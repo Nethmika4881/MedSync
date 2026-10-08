@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Shield, Phone, Mail, Globe, CheckCircle2, Building2, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { AuthUser } from "@/lib/types";
 
 const PROVIDER_COLORS = [
   "from-blue-500 to-blue-600",
@@ -15,7 +16,7 @@ const PROVIDER_COLORS = [
   "from-amber-500 to-amber-600",
 ];
 
-export default function InsurancePage({ user }: { user: any }) {
+export default function InsurancePage({ user }: { user: AuthUser }) {
   const role = user?.role;
   
   const [activeTab, setActiveTab] = useState("providers");
@@ -118,7 +119,7 @@ export default function InsurancePage({ user }: { user: any }) {
         {/* Packages Tab */}
         <TabsContent value="packages" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {insurancePackages.map((pkg, i) => {
+            {insurancePackages.map((pkg) => {
               const gradient = PROVIDER_COLORS[insuranceProviders.findIndex(p => p.providerId === pkg.providerId) % PROVIDER_COLORS.length];
               return (
                 <Card key={pkg.packageId} className="border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden">

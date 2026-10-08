@@ -4,20 +4,20 @@ import React, { useState } from "react";
 import { useClinicalStore } from "@/lib/stores/clinicalStore";
 import { useAppointmentStore } from "@/lib/stores/appointmentStore";
 import { usePatientStore } from "@/lib/stores/patientStore";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/catms/StatusPill";
 import { EmptyState } from "@/components/catms/EmptyState";
 import { SafetyInfoBanner } from "@/components/catms/SafetyInfoBanner";
-import { FileText, Edit, ClipboardPlus, Calendar, ArrowRight } from "lucide-react";
-import { AvatarWithName } from "@/components/catms/AvatarWithName";
+import { FileText, Edit, ClipboardPlus, Calendar } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import Link from "next/link";
+import type { AuthUser } from "@/lib/types";
 
-export default function ConsultationsPage({ user }: { user: any }) {
+export default function ConsultationsPage({ user }: { user: AuthUser }) {
   const { consultations } = useClinicalStore();
   const { appointments } = useAppointmentStore();
-  const { patients, allergies, conditions } = usePatientStore();
+  const { allergies, conditions } = usePatientStore();
   
   
   const [activeTab, setActiveTab] = useState("queue");
@@ -43,7 +43,7 @@ export default function ConsultationsPage({ user }: { user: any }) {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="bg-slate-100/50 p-1 rounded-xl">
           <TabsTrigger value="queue" className="rounded-lg px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-            <Calendar className="w-4 h-4 mr-2" /> Today's Queue ({todaysQueue.length})
+            <Calendar className="w-4 h-4 mr-2" /> Today&apos;s Queue ({todaysQueue.length})
           </TabsTrigger>
           <TabsTrigger value="records" className="rounded-lg px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm">
             <FileText className="w-4 h-4 mr-2" /> Past Records
