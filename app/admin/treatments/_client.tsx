@@ -50,7 +50,7 @@ function AdminCatalogueView() {
     is_insurable: true,
   });
 
-  const API_BASE = "/api/treatments";
+  const API_BASE = "/api/test-db/treatments";
 
   useEffect(() => {
     async function loadTreatments() {
