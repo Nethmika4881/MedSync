@@ -29,6 +29,60 @@ export interface CreateBranchInput {
   province: string;
 }
 
+export interface BranchStaffMember {
+  employeeId: string;
+  name: string;
+  role: string;
+}
+
+export interface BranchDetails {
+  branch_id: string;
+  branch_name: string;
+  is_active: boolean;
+  address_line1: string;
+  city: string;
+  province: string;
+  manager_name: string;
+  doctor_count: number;
+  patient_count: number;
+  staff: BranchStaffMember[];
+  available_staff: BranchStaffMember[];
+}
+
+export interface UpdateBranchDetailsInput {
+  branch_name: string;
+  address_line1: string;
+  city: string;
+  province: string;
+}
+
+export interface BranchTraffic {
+  branchId: string;
+  branchName: string;
+  patientCount: number;
+  percentage: number;
+}
+
+export interface warnings {
+  id: string;
+  branchId: string;
+  branchName: string;
+  type: "no_manager" | "no_doctors" | "no_slots";
+  message: string;
+  severity: "high" | "warning";
+}
+
+export interface PatientComplaint {
+  complaintId: string;
+  branchId: string;
+  branchName: string;
+  patientName: string;
+  subject: string;
+  message: string;
+  priority: string;
+  createdAt: string;
+}
+
 export async function getBranches(): Promise<BranchOverview[]> {
   try {
     // Branch data
@@ -120,33 +174,6 @@ export async function createBranch(data: CreateBranchInput) {
   }
 }
 
-export interface BranchStaffMember {
-  employeeId: string;
-  name: string;
-  role: string;
-}
-
-export interface BranchDetails {
-  branch_id: string;
-  branch_name: string;
-  is_active: boolean;
-  address_line1: string;
-  city: string;
-  province: string;
-  manager_name: string;
-  doctor_count: number;
-  patient_count: number;
-  staff: BranchStaffMember[];
-  available_staff: BranchStaffMember[];
-}
-
-export interface UpdateBranchDetailsInput {
-  branch_name: string;
-  address_line1: string;
-  city: string;
-  province: string;
-}
-
 export async function getBranchById(branchId: string) {
   try {
     const branch = `SELECT b.branch_id, b.branch_name, b.is_active, a.address_line1, a.city, a.province, u.full_name AS manager_name,
@@ -204,6 +231,146 @@ export async function deleteBranch(branchId: string) {
   catch (error: any) {
     console.error("Failed to delete branch:", error);
     return { success: false, error: error.message || "Failed to delete branch" };
+  }
+}
+
+export async function branchOverview(timeRange: "today" | "7d" | "30d" = "30d") {
+  try {
+    let dateCondition = "ts.available_date >= CURRENT_DATE - INTERVAL '30 days'";
+    if (timeRange === "today") {
+      dateCondition = "ts.available_date = CURRENT_DATE";
+    } else if (timeRange === "7d") {
+      dateCondition = "ts.available_date >= CURRENT_DATE - INTERVAL '7 days'";
+    }
+
+    const [trafficResults, warningsResults, complaintsResults] = await Promise.all([
+      db.query(`
+        SELECT b.branch_id AS "branchId", b.branch_name AS "branchName", COUNT(a.appointment_id) AS "patientCount"
+        FROM branch b
+        LEFT JOIN time_slot ts ON ts.branch_id = b.branch_id
+        LEFT JOIN appointment a ON a.time_slot_id = ts.time_slot_id 
+          AND a.status = 'Completed' AND ${dateCondition}
+        WHERE b.is_active = true
+        GROUP BY b.branch_id, b.branch_name
+        ORDER BY "patientCount" DESC
+      `),
+
+      db.query(`
+        SELECT b.branch_id, b.branch_name, b.manager_id,
+          (
+            SELECT COUNT(*) 
+            FROM employee e 
+            WHERE e.branch_id = b.branch_id 
+              AND e.role = 'Doctor' AND e.is_active = true
+          ) AS doctor_count,
+          (
+            SELECT COUNT(*) 
+            FROM time_slot ts 
+            WHERE ts.branch_id = b.branch_id 
+              AND ts.available_date >= CURRENT_DATE AND ts.available_date <= CURRENT_DATE + INTERVAL '7 days'
+          ) AS upcoming_slots_count
+        FROM branch b
+        WHERE b.is_active = true
+      `),
+
+      db.query(`
+        SELECT 
+          c.complaint_id AS "complaintId",
+          c.branch_id AS "branchId",
+          b.branch_name AS "branchName",
+          COALESCE(u.full_name, 'Anonymous Patient') AS "patientName",
+          c.subject,
+          c.message,
+          c.priority,
+          TO_CHAR(c.created_at, 'Mon DD, YYYY') AS "createdAt"
+        FROM branch_complaint c
+        JOIN branch b ON b.branch_id = c.branch_id
+        LEFT JOIN patient p ON p.patient_id = c.patient_id
+        LEFT JOIN app_user u ON u.user_id = p.patient_id
+        WHERE c.status = 'Pending'
+        ORDER BY c.created_at DESC
+        LIMIT 10
+      `),
+    ]);
+
+    const rawTraffic = trafficResults.rows.map((row) => ({
+      branchId: row.branchId,
+      branchName: row.branchName,
+      patientCount: Number(row.patientCount) || 0,
+    }));
+
+    const maxCount = Math.max(...rawTraffic.map((t) => t.patientCount), 1);
+    const traffic: BranchTraffic[] = rawTraffic.map((t) => ({
+      ...t,
+      percentage: Math.round((t.patientCount / maxCount) * 100),
+    }));
+
+    const operationalWarnings: warnings[] = [];
+    warningsResults.rows.forEach((b) => {
+      if (!b.manager_id) {
+        operationalWarnings.push({
+          id: `${b.branch_id}-no-manager`,
+          branchId: b.branch_id,
+          branchName: b.branch_name,
+          type: "no_manager",
+          message: "No branch manager assigned",
+          severity: "high",
+        });
+      }
+      if (Number(b.doctor_count) === 0) {
+        operationalWarnings.push({
+          id: `${b.branch_id}-no-doctors`,
+          branchId: b.branch_id,
+          branchName: b.branch_name,
+          type: "no_doctors",
+          message: "0 active doctors assigned to this location",
+          severity: "high",
+        });
+      }
+      if (Number(b.upcoming_slots_count) === 0) {
+        operationalWarnings.push({
+          id: `${b.branch_id}-no-slots`,
+          branchId: b.branch_id,
+          branchName: b.branch_name,
+          type: "no_slots",
+          message: "No time slots open for the next 7 days",
+          severity: "warning",
+        });
+      }
+    });
+
+    return {
+      success: true,
+      traffic,
+      operationalWarnings,
+      complaints: complaintsResults.rows as PatientComplaint[],
+    };
+  } 
+  catch (error: any) {
+    console.error("Failed to load branch overview analytics:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function complaints(complaintId: string) {
+  try {
+    const result = await db.query(
+      `UPDATE branch_complaint 
+       SET status = 'Resolved', resolved_at = CURRENT_TIMESTAMP 
+       WHERE complaint_id = $1`,
+      [complaintId]
+    );
+
+    if (result.rowCount === 0) {
+      return { success: false, error: "Complaint not found" };
+    }
+
+    revalidatePath("/admin/branches");
+    return { success: true };
+  } 
+  catch (error: any) {
+    console.error("Failed to resolve complaint:", error);
+    return { success: false, error: error.message };
   }
 }
 
@@ -333,5 +500,165 @@ export async function removeStaff(employeeId: string, branchId?: string) {
   catch (error: any) {
     console.error("Failed to remove staff:", error);
     return { success: false, error: error.message || "Failed to remove staff" };
+  }
+}
+
+export async function getBranchDetails(branchId: string) {
+  try {
+    const [branchResults, staffResults, availableStaffResults, treatmentsResults, visitsResults, invoicesResults, complaintsResults] = await Promise.all([
+
+      //Branch Details
+      db.query(`
+        SELECT b.branch_id, b.branch_name, b.is_active, a.address_line1, a.city, a.province, u.full_name AS manager_name
+        FROM branch b
+        LEFT JOIN address a ON b.address_id = a.address_id
+        LEFT JOIN app_user u ON b.manager_id = u.user_id
+        WHERE b.branch_id = $1
+      `, [branchId]),
+
+      //Active Staff and Doctors
+      db.query(`
+        SELECT e.employee_id AS "employeeId", u.full_name AS name, e.role, spec.title AS specialization
+        FROM employee e
+        JOIN app_user u ON e.employee_id = u.user_id
+        LEFT JOIN doctor d ON d.doctor_id = e.employee_id
+        LEFT JOIN (
+          SELECT DISTINCT ON (doctor_id) doctor_id, specialization_id
+          FROM doctor_specialization
+        ) ds ON ds.doctor_id = d.doctor_id
+        LEFT JOIN specialization spec ON spec.specialization_id = ds.specialization_id
+        WHERE e.branch_id = $1 AND e.is_active = true
+        ORDER BY e.role ASC, u.full_name ASC
+      `, [branchId]),
+
+      //Unassigned Staff
+      db.query(`
+        SELECT e.employee_id AS "employeeId", u.full_name AS name, e.role
+        FROM employee e
+        JOIN app_user u ON e.employee_id = u.user_id
+        WHERE e.is_active = true AND e.branch_id IS NULL
+      `),
+
+      //Treatments
+      db.query(`
+        SELECT t.treatment_id AS "treatmentId", t.treatment_name AS "treatmentName", t.category, t.base_price AS "basePrice",
+        COALESCE(bt.is_available, false) AS "isOffered"
+        FROM treatment_catalogue t
+        LEFT JOIN branch_treatment bt ON bt.treatment_id = t.treatment_id AND bt.branch_id = $1
+        ORDER BY t.category ASC, t.treatment_name ASC
+      `, [branchId]),
+
+      //Visits / Treatment History
+      db.query(`
+        SELECT 
+          a.appointment_id AS "appointmentId",
+          TO_CHAR(ts.available_date, 'YYYY-MM-DD') AS "visitDate",
+          TO_CHAR(ts.start_time, 'HH24:MI') AS "startTime",
+          a.status,
+          a.reason_for_visit AS "reason",
+          pat_u.full_name AS "patientName",
+          doc_u.full_name AS "doctorName",
+          inv.status AS "paymentStatus",
+          inv.net_amount AS "amount"
+        FROM appointment a
+        JOIN time_slot ts ON ts.time_slot_id = a.time_slot_id
+        JOIN patient p ON p.patient_id = a.patient_id
+        JOIN app_user pat_u ON pat_u.user_id = p.patient_id
+        JOIN employee doc_e ON doc_e.employee_id = ts.doctor_id
+        JOIN app_user doc_u ON doc_u.user_id = doc_e.employee_id
+        LEFT JOIN invoice inv ON inv.appointment_id = a.appointment_id
+        WHERE ts.branch_id = $1
+        ORDER BY ts.available_date DESC, ts.start_time DESC
+        LIMIT 20
+      `, [branchId]),
+
+      //Invoices & Financials
+      db.query(`
+        SELECT 
+          inv.invoice_id AS "invoiceId",
+          TO_CHAR(inv.created_at, 'YYYY-MM-DD') AS "invoiceDate",
+          inv.net_amount AS "netAmount",
+          inv.paid_amount AS "paidAmount",
+          inv.due_amount AS "dueAmount",
+          inv.status,
+          u.full_name AS "patientName"
+        FROM invoice inv
+        JOIN appointment a ON a.appointment_id = inv.appointment_id
+        JOIN time_slot ts ON ts.time_slot_id = a.time_slot_id
+        JOIN patient p ON p.patient_id = inv.patient_id
+        JOIN app_user u ON u.user_id = p.patient_id
+        WHERE ts.branch_id = $1
+        ORDER BY inv.created_at DESC
+        LIMIT 20
+      `, [branchId]),
+
+      //Complaints
+      db.query(`
+        SELECT 
+          c.complaint_id AS "complaintId",
+          COALESCE(u.full_name, 'Anonymous Patient') AS "patientName",
+          c.subject,
+          c.message,
+          c.priority,
+          c.status,
+          TO_CHAR(c.created_at, 'Mon DD, YYYY') AS "createdAt"
+        FROM branch_complaint c
+        LEFT JOIN patient p ON p.patient_id = c.patient_id
+        LEFT JOIN app_user u ON u.user_id = p.patient_id
+        WHERE c.branch_id = $1
+        ORDER BY c.created_at DESC
+      `, [branchId]),
+    ]);
+
+    if (branchResults.rows.length === 0) return null;
+
+    const branch = branchResults.rows[0];
+    const staff = staffResults.rows;
+    const invoices = invoicesResults.rows;
+
+    const totalRevenue = invoices.reduce((sum, inv) => sum + Number(inv.paidAmount || 0), 0);
+    const totalDue = invoices.reduce((sum, inv) => sum + Number(inv.dueAmount || 0), 0);
+
+    return {
+      branch: {
+        branch_id: branch.branch_id,
+        branch_name: branch.branch_name,
+        is_active: branch.is_active,
+        address_line1: branch.address_line1,
+        city: branch.city,
+        province: branch.province,
+        manager_name: branch.manager_name || "Unassigned",
+      },
+      staff,
+      available_staff: availableStaffResults.rows,
+      treatments: treatmentsResults.rows,
+      visits: visitsResults.rows,
+      invoices,
+      complaints: complaintsResults.rows,
+      metrics: {
+        doctorCount: staff.filter((s: any) => s.role === "Doctor").length,
+        staffCount: staff.filter((s: any) => s.role !== "Doctor").length,
+        totalRevenue,
+        totalDue,
+        pendingComplaints: complaintsResults.rows.filter((c: any) => c.status === "Pending").length,
+      }
+    };
+  } catch (error: any) {
+    console.error("getBranchCompleteDetails error:", error);
+    return null;
+  }
+}
+
+export async function branchTreatment(branchId: string, treatmentId: string, isAvailable: boolean) {
+  try {
+    await db.query(`
+      INSERT INTO branch_treatment (branch_id, treatment_id, is_available)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (branch_id, treatment_id)
+      DO UPDATE SET is_available = $3
+    `, [branchId, treatmentId, isAvailable]);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
   }
 }

@@ -4,9 +4,31 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, Users, Stethoscope, PlusCircle, AlertCircle, X, Loader2, Trash2 } from "lucide-react";
+import { 
+  MapPin, 
+  Users, 
+  Stethoscope, 
+  PlusCircle, 
+  AlertCircle, 
+  X, 
+  Loader2, 
+  Trash2, 
+  AlertTriangle, 
+  MessageSquare, 
+  CheckCircle2, 
+  TrendingUp 
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { createBranch, deleteBranch, getBranches } from "@/lib/actions/branches";
+import { 
+  createBranch,
+  deleteBranch,
+  getBranches,
+  branchOverview, 
+  complaints as resolveComplaint,
+  BranchTraffic, 
+  warnings as OperationalWarning, 
+  PatientComplaint 
+} from "@/lib/actions/branches";
 
 interface Branch {
   branch_id: string;
@@ -27,33 +49,24 @@ const BRANCH_GRADIENTS = [
   { bg: "from-orange-400 to-rose-500", shape: "bg-orange-100 text-orange-700", light: "bg-orange-50 border-orange-200 text-orange-700" },
 ];
 
-const PROVINCES = [
-  "Central Province",
-  "Eastern Province",
-  "North Central Province",
-  "Northern Province",
-  "North Western Province",
-  "Sabaragamuwa Province",
-  "Southern Province",
-  "Uva Province",
-  "Western Province",
-];
-
 export default function BranchesPage({ user }: { user: any }) {
   const role = user?.role;
-  
+
   const [branches, setBranches] = useState<Branch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    branch_name: "",
-    address_line1: "",
-    city: "",
-    province: "",
-  });
+  const [formData, setFormData] = useState({ branch_name: "", address_line1: "", city: "", province: "" });
+
+  // Analytics & Alerts States
+  const [timeRange, setTimeRange] = useState<"today" | "7d" | "30d">("30d");
+  const [trafficData, setTrafficData] = useState<BranchTraffic[]>([]);
+  const [warnings, setWarnings] = useState<OperationalWarning[]>([]);
+  const [complaints, setComplaints] = useState<PatientComplaint[]>([]);
+  const [activeAlertTab, setActiveAlertTab] = useState<"warnings" | "complaints">("warnings");
 
   const fetchBranches = async () => {
     try {
@@ -65,23 +78,49 @@ export default function BranchesPage({ user }: { user: any }) {
     }
   };
 
+  const loadAnalytics = async (range: "today" | "7d" | "30d") => {
+    try {
+      const res = await branchOverview(range);
+      if (!res.success) throw new Error(res.error || "Failed to load branch analytics");
+
+      setTrafficData(res.traffic || []);
+      setWarnings(res.operationalWarnings || []);
+      setComplaints(res.complaints || []);
+    } catch (err: any) {
+      setError(err.message || "Failed to load branch analytics");
+    }
+  };
+
   useEffect(() => {
     fetchBranches();
+    loadAnalytics(timeRange);
   }, []);
+
+  const handleRangeChange = (range: "today" | "7d" | "30d") => {
+    setTimeRange(range);
+    loadAnalytics(range);
+  };
+
+  const handleResolveComplaint = async (id: string) => {
+    const res = await resolveComplaint(id);
+    if (res.success) {
+      setComplaints((prev) => prev.filter((c) => c.complaintId !== id));
+    } else {
+      setError("error" in res ? res.error : "Failed to resolve complaint");
+    }
+  };
 
   const handleCreateBranch = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
-
     try {
       const result = await createBranch(formData);
       if (!result.success) throw new Error(result.error || "Failed to create branch");
-
       setIsModalOpen(false);
       setFormData({ branch_name: "", address_line1: "", city: "", province: "" });
       await fetchBranches();
-
+      await loadAnalytics(timeRange);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -89,21 +128,16 @@ export default function BranchesPage({ user }: { user: any }) {
     }
   };
 
-  // NEW: Delete Handler
   const handleDeleteBranch = async (e: React.MouseEvent, branchId: string, branchName: string) => {
-    e.preventDefault(); // Prevents the <Link> from triggering navigation
+    e.preventDefault();
     e.stopPropagation();
-
-    if (!confirm(`Are you sure you want to permanently delete ${branchName}? This cannot be undone.`)) {
-      return;
-    }
+    if (!confirm(`Are you sure you want to permanently delete ${branchName}?`)) return;
 
     try {
       const result = await deleteBranch(branchId);
       if (!result.success) throw new Error(result.error || "Failed to delete branch");
-
-      // Refresh the list after successful deletion
       await fetchBranches();
+      await loadAnalytics(timeRange);
     } catch (err: any) {
       alert(`Error deleting branch: ${err.message}`);
     }
@@ -116,12 +150,12 @@ export default function BranchesPage({ user }: { user: any }) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Branches</h2>
-          <p className="text-slate-500">Manage all MedSync clinic branches and locations.</p>
+          <p className="text-slate-500">branches Overview</p>
         </div>
         {role === "admin" && (
           <Button 
             onClick={() => setIsModalOpen(true)}
-            className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-xl h-10 px-5 transition-colors"
+            className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-xl h-10 px-5"
           >
             <PlusCircle className="w-4 h-4 mr-2" /> New Branch
           </Button>
@@ -135,11 +169,10 @@ export default function BranchesPage({ user }: { user: any }) {
         </div>
       )}
 
+      {/* Top Total Statistics */}
       <div className="grid grid-cols-3 gap-4">
         <Card className="border-slate-200 shadow-sm text-center p-5">
-          <div className="text-3xl font-black text-slate-900 mb-1">
-            {isLoading ? "-" : branches.length}
-          </div>
+          <div className="text-3xl font-black text-slate-900 mb-1">{isLoading ? "-" : branches.length}</div>
           <div className="text-sm text-slate-500 font-medium">Total Branches</div>
         </Card>
         <Card className="border-slate-200 shadow-sm text-center p-5">
@@ -150,12 +183,173 @@ export default function BranchesPage({ user }: { user: any }) {
         </Card>
         <Card className="border-slate-200 shadow-sm text-center p-5">
           <div className="text-3xl font-black text-slate-900 mb-1">
-             {isLoading ? "-" : branches.reduce((acc, b) => acc + b.patient_count, 0)}
+            {isLoading ? "-" : branches.reduce((acc, b) => acc + b.patient_count, 0)}
           </div>
           <div className="text-sm text-slate-500 font-medium">Active Patients</div>
         </Card>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/*Patient Traffic Bar Chart */}
+        <Card className="lg:col-span-7 min-h-[280px] border-slate-200 shadow-sm p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-teal-600" /> Patient Traffic by Branch
+                </h3>
+              </div>
+
+              {/* Time Pills */}
+              <div className="flex bg-slate-100 p-1 rounded-lg self-start sm:self-auto">
+                <button
+                  onClick={() => handleRangeChange("today")}
+                  className={cn(
+                    "px-3 py-1 text-xs font-semibold rounded-md transition-all",
+                    timeRange === "today" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                  )}
+                >
+                  Today
+                </button>
+                <button
+                  onClick={() => handleRangeChange("7d")}
+                  className={cn(
+                    "px-3 py-1 text-xs font-semibold rounded-md transition-all",
+                    timeRange === "7d" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                  )}
+                >
+                  7 Days
+                </button>
+                <button
+                  onClick={() => handleRangeChange("30d")}
+                  className={cn(
+                    "px-3 py-1 text-xs font-semibold rounded-md transition-all",
+                    timeRange === "30d" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                  )}
+                >
+                  30 Days
+                </button>
+              </div>
+            </div>
+
+            {/* Bar Chart */}
+            <div className="space-y-4">
+              {trafficData.length > 0 ? (
+                trafficData.map((item) => (
+                  <div key={item.branchId} className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-semibold">
+                      <span className="text-slate-700">{item.branchName}</span>
+                      <span className="text-slate-900 font-bold">{item.patientCount} visits</span>
+                    </div>
+                    {/*Track */}
+                    <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.max(item.percentage, 4)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="py-8 text-center text-sm text-slate-400">No traffic recorded for this range.</div>
+              )}
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-slate-100 mt-6 text-xs text-slate-400">
+            Ranked by total completed appointments.
+          </div>
+        </Card>
+
+        {/* complaints */}
+        <Card className="lg:col-span-5 min-h-[440px] border-slate-200 shadow-sm p-6 flex flex-col">
+          <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+            <div className="flex gap-4">
+              <button
+                onClick={() => setActiveAlertTab("warnings")}
+                className={cn(
+                  "text-xs font-bold pb-2 relative transition-colors",
+                  activeAlertTab === "warnings"
+                    ? "text-slate-900 border-b-2 border-slate-900"
+                    : "text-slate-400 hover:text-slate-600"
+                )}
+              >
+                Operational ({warnings.length})
+              </button>
+              <button
+                onClick={() => setActiveAlertTab("complaints")}
+                className={cn(
+                  "text-xs font-bold pb-2 relative transition-colors",
+                  activeAlertTab === "complaints"
+                    ? "text-slate-900 border-b-2 border-slate-900"
+                    : "text-slate-400 hover:text-slate-600"
+                )}
+              >
+                Patient Complaints ({complaints.length})
+              </button>
+            </div>
+          </div>
+
+
+          <div className="overflow-y-auto max-h-80 space-y-3 pr-1 flex-1">
+            {activeAlertTab === "warnings" ? (
+              warnings.length > 0 ? (
+                warnings.map((w) => (
+                  <div key={w.id} className="p-3 rounded-lg border border-amber-200 bg-amber-50/60 flex items-start gap-3">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <div className="text-xs">
+                      <Link href={`/admin/branches/${w.branchId}`} className="font-bold text-amber-900 hover:underline">
+                        {w.branchName}
+                      </Link>
+                      <p className="text-amber-800 mt-0.5">{w.message}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="py-12 text-center text-xs text-slate-400 flex flex-col items-center gap-2">
+                  <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                  All branches operational without warnings.
+                </div>
+              )
+            ) : (
+              complaints.length > 0 ? (
+                complaints.map((c) => (
+                  <div key={c.complaintId} className="p-3 rounded-lg border border-slate-200 bg-white hover:border-slate-300 transition-all text-xs space-y-1.5 shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-900">{c.branchName}</span>
+                      <span className={cn(
+                        "px-1.5 py-0.5 rounded text-[10px] font-bold uppercase",
+                        c.priority === "Urgent" ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-600"
+                      )}>
+                        {c.priority}
+                      </span>
+                    </div>
+                    <p className="font-semibold text-slate-800">{c.subject}</p>
+                    <p className="text-slate-500 text-[11px] line-clamp-2">{c.message}</p>
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[10px] text-slate-400">
+                      <span>{c.patientName} • {c.createdAt}</span>
+                      <button
+                        onClick={() => handleResolveComplaint(c.complaintId)}
+                        className="text-teal-600 hover:text-teal-700 font-semibold"
+                      >
+                        Mark Resolved
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="py-12 text-center text-xs text-slate-400 flex flex-col items-center gap-2">
+                  <MessageSquare className="w-6 h-6 text-slate-300" />
+                  No pending complaints.
+                </div>
+              )
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* Cards Grid*/}
       {isLoading ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((skeleton) => (
@@ -166,11 +360,11 @@ export default function BranchesPage({ user }: { user: any }) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {branches.map((branch, i) => {
             const theme = BRANCH_GRADIENTS[i % BRANCH_GRADIENTS.length];
-            const activeStaff = branch.staff;
+            const activeStaff = branch.staff || [];
 
             return (
               <Link key={branch.branch_id} href={`/admin/branches/${branch.branch_id}`} className="block relative group">
-                {/* NEW: Absolute positioned delete button */}
+                {/* Delete button */}
                 <button 
                   onClick={(e) => handleDeleteBranch(e, branch.branch_id, branch.branch_name)}
                   className="absolute top-4 right-4 z-20 p-2 bg-black/10 hover:bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200"
@@ -180,10 +374,8 @@ export default function BranchesPage({ user }: { user: any }) {
                 </button>
 
                 <Card className="border-slate-200 shadow-sm hover:shadow-xl transition-all overflow-hidden bg-white h-full cursor-pointer">
+                  {/* Banner header without UUID */}
                   <div className={cn("relative h-36 bg-gradient-to-br p-6 overflow-hidden", theme.bg)}>
-                    <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10" style={{ clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)" }} />
-                    <div className="absolute right-12 bottom-0 w-16 h-16 bg-white/10" style={{ clipPath: "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)" }} />
-                    
                     <div className="relative">
                       <div className="flex items-center gap-2 mb-1">
                         <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full", branch.is_active ? "bg-white/20 text-white" : "bg-black/20 text-white/80")}>
@@ -226,33 +418,11 @@ export default function BranchesPage({ user }: { user: any }) {
                           className={cn("w-9 h-9 flex items-center justify-center text-sm font-bold shrink-0", theme.shape)}
                           style={{ clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)" }}
                         >
-                          {branch.manager_name !== "Unassigned" ? branch.manager_name.split(' ').map((n: string) => n[0]).slice(0,2).join('') : "U"}
+                          {branch.manager_name !== "Unassigned" ? branch.manager_name.split(' ').map((n: string) => n[0]).slice(0, 2).join('') : "U"}
                         </div>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">{branch.manager_name}</p>
-                        </div>
+                        <p className="text-sm font-semibold text-slate-900">{branch.manager_name}</p>
                       </div>
                     </div>
-
-                    {activeStaff.length > 0 && (
-                      <div className="pt-4 border-t border-slate-100 mt-4">
-                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
-                          Active Staff ({activeStaff.length})
-                        </p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {activeStaff.slice(0, 5).map((s) => (
-                            <span key={s.employeeId} className={cn("text-[11px] font-semibold px-2 py-0.5 rounded-full border", theme.light)}>
-                              {s.name.split(' ')[0]}
-                            </span>
-                          ))}
-                          {activeStaff.length > 5 && (
-                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
-                              +{activeStaff.length - 5} more
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               </Link>
@@ -261,91 +431,56 @@ export default function BranchesPage({ user }: { user: any }) {
         </div>
       )}
 
+      {/*Create New Branch */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md shadow-2xl border-0 animate-in fade-in zoom-in-95 duration-200">
+          <Card className="w-full max-w-md shadow-2xl border-0">
             <div className="flex justify-between items-center p-6 border-b border-slate-100">
               <h3 className="text-lg font-bold text-slate-900">Create New Branch</h3>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
-              >
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
             <CardContent className="p-6">
               <form onSubmit={handleCreateBranch} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold text-slate-700">Branch Name *</label>
-                  <input 
-                    required
-                    type="text" 
-                    placeholder="e.g. Kandy South Clinic"
-                    value={formData.branch_name}
-                    onChange={(e) => setFormData({...formData, branch_name: e.target.value})}
-                    className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold text-slate-700">Address Line 1 *</label>
-                  <input 
-                    required
-                    type="text" 
-                    placeholder="e.g. 456 Mountain View Rd"
-                    value={formData.address_line1}
-                    onChange={(e) => setFormData({...formData, address_line1: e.target.value})}
-                    className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
-                  />
-                </div>
-
+                <input
+                  required
+                  type="text"
+                  placeholder="Branch Name *"
+                  value={formData.branch_name}
+                  onChange={(e) => setFormData({ ...formData, branch_name: e.target.value })}
+                  className="w-full h-10 px-3 rounded-lg border text-sm"
+                />
+                <input
+                  required
+                  type="text"
+                  placeholder="Address Line 1 *"
+                  value={formData.address_line1}
+                  onChange={(e) => setFormData({ ...formData, address_line1: e.target.value })}
+                  className="w-full h-10 px-3 rounded-lg border text-sm"
+                />
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-slate-700">City *</label>
-                    <input 
-                      required
-                      type="text" 
-                      placeholder="e.g. Kandy"
-                      value={formData.city}
-                      onChange={(e) => setFormData({...formData, city: e.target.value})}
-                      className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-slate-700">Province</label>
-                    <input 
-                      type="text" 
-                      list="branch-provinces"
-                      placeholder="Type or select a province"
-                      value={formData.province}
-                      onChange={(e) => setFormData({...formData, province: e.target.value})}
-                      className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
-                    />
-                    <datalist id="branch-provinces">
-                      {PROVINCES.map((province) => (
-                        <option key={province} value={province} />
-                      ))}
-                    </datalist>
-                  </div>
+                  <input
+                    required
+                    type="text"
+                    placeholder="City *"
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    className="w-full h-10 px-3 rounded-lg border text-sm"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Province"
+                    value={formData.province}
+                    onChange={(e) => setFormData({ ...formData, province: e.target.value })}
+                    className="w-full h-10 px-3 rounded-lg border text-sm"
+                  />
                 </div>
-
                 <div className="flex justify-end gap-3 pt-4">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setIsModalOpen(false)}
-                    className="rounded-lg"
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={isSubmitting}
-                    className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-lg"
-                  >
+                  <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                  <Button type="submit" disabled={isSubmitting} className="bg-[var(--brand-primary)] text-white">
                     {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                    {isSubmitting ? "Saving..." : "Create Branch"}
+                    Create Branch
                   </Button>
                 </div>
               </form>
