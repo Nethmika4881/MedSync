@@ -147,7 +147,6 @@ export default function BranchesPage({ user }: { user: any }) {
 
   return (
     <div className="space-y-6 animate-fade-in relative">
-      {/* Title Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Branches</h2>
@@ -190,10 +189,9 @@ export default function BranchesPage({ user }: { user: any }) {
         </Card>
       </div>
 
-      {/* ─── NEW: Traffic Comparison & Alerts Center ───────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Left: Patient Traffic Bar Chart (Tailwind Native) */}
+        {/*Patient Traffic Bar Chart */}
         <Card className="lg:col-span-7 min-h-[280px] border-slate-200 shadow-sm p-6 flex flex-col justify-between">
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
@@ -201,10 +199,9 @@ export default function BranchesPage({ user }: { user: any }) {
                 <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-teal-600" /> Patient Traffic by Branch
                 </h3>
-                {/* <p className="text-xs text-slate-500">Completed visits across locations</p> */}
               </div>
 
-              {/* Time Range Pills */}
+              {/* Time Pills */}
               <div className="flex bg-slate-100 p-1 rounded-lg self-start sm:self-auto">
                 <button
                   onClick={() => handleRangeChange("today")}
@@ -236,7 +233,7 @@ export default function BranchesPage({ user }: { user: any }) {
               </div>
             </div>
 
-            {/* Horizontal Bar Chart */}
+            {/* Bar Chart */}
             <div className="space-y-4">
               {trafficData.length > 0 ? (
                 trafficData.map((item) => (
@@ -245,7 +242,7 @@ export default function BranchesPage({ user }: { user: any }) {
                       <span className="text-slate-700">{item.branchName}</span>
                       <span className="text-slate-900 font-bold">{item.patientCount} visits</span>
                     </div>
-                    {/* The Bar Track */}
+                    {/*Track */}
                     <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full transition-all duration-500"
@@ -265,7 +262,7 @@ export default function BranchesPage({ user }: { user: any }) {
           </div>
         </Card>
 
-        {/* Right: Branch Alerts & Patient Feedback Feed */}
+        {/* complaints */}
         <Card className="lg:col-span-5 min-h-[440px] border-slate-200 shadow-sm p-6 flex flex-col">
           <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
             <div className="flex gap-4">
@@ -294,7 +291,7 @@ export default function BranchesPage({ user }: { user: any }) {
             </div>
           </div>
 
-          {/* Tab Content */}
+
           <div className="overflow-y-auto max-h-80 space-y-3 pr-1 flex-1">
             {activeAlertTab === "warnings" ? (
               warnings.length > 0 ? (
@@ -352,7 +349,7 @@ export default function BranchesPage({ user }: { user: any }) {
         </Card>
       </div>
 
-      {/* ─── Branch Cards Grid ────────────────────────────────────────────── */}
+      {/* Cards Grid*/}
       {isLoading ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((skeleton) => (
@@ -377,7 +374,7 @@ export default function BranchesPage({ user }: { user: any }) {
                 </button>
 
                 <Card className="border-slate-200 shadow-sm hover:shadow-xl transition-all overflow-hidden bg-white h-full cursor-pointer">
-                  {/* Banner header without raw UUID */}
+                  {/* Banner header without UUID */}
                   <div className={cn("relative h-36 bg-gradient-to-br p-6 overflow-hidden", theme.bg)}>
                     <div className="relative">
                       <div className="flex items-center gap-2 mb-1">
@@ -434,7 +431,7 @@ export default function BranchesPage({ user }: { user: any }) {
         </div>
       )}
 
-      {/* Modal for Creating New Branch */}
+      {/*Create New Branch */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <Card className="w-full max-w-md shadow-2xl border-0">
