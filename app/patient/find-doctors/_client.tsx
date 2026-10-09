@@ -16,8 +16,8 @@ import {
   DollarSign,
   Filter,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { BookingModal, getAvatarGradient } from "@/components/catms/BookingModal";
+import { cn, getSpecialtyGradient } from "@/lib/utils";
+import { BookingModal } from "@/components/catms/BookingModal";
 
 // ─── Info Pill ────────────────────────────────────────────────────────────────
 
@@ -47,7 +47,7 @@ function DoctorCard({
   doctor: DoctorDirectoryItem;
   onBook: (d: DoctorDirectoryItem) => void;
 }) {
-  const gradient = getAvatarGradient(doctor.avatar);
+  const gradient = getSpecialtyGradient(doctor.specialization);
 
   return (
     <div className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col">
