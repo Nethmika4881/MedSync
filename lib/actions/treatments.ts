@@ -12,10 +12,45 @@ export interface TreatmentInput {
   is_insurable?: boolean;
 }
 
-export async function getTreatments() {
+export async function getTreatments(page = 1, pageSize = 10) {
   try {
-    const result = await db.query(`SELECT * FROM treatment_catalogue ORDER BY created_at DESC`);
-    return { success: true, data: result.rows };
+    const currentPage = Math.max(1, Number(page) || 1);
+    const limit = Math.max(1, Number(pageSize) || 10);
+    const offset = (currentPage - 1) * limit;
+
+    const countResult = await db.query(
+      `SELECT COUNT(*) as total FROM treatment_catalogue WHERE is_active = TRUE`,
+    );
+
+    const result = await db.query(
+      `SELECT * FROM treatment_catalogue WHERE is_active = TRUE ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
+      [limit, offset],
+    );
+
+    const statsResult =
+      await db.query(`SELECT category, COUNT(*) AS count, AVG(base_price) AS average_price
+      FROM treatment_catalogue
+      WHERE is_active = TRUE
+      GROUP BY category`);
+
+    const count = Number(countResult.rows[0]?.total) || 0;
+    const pages = Math.ceil(count / limit);
+    const stats = statsResult.rows.reduce<
+      Record<string, { count: number; avgPrice: number }>
+    >((summary, row) => {
+      summary[row.category] = {
+        count: Number(row.count) || 0,
+        avgPrice: Number(row.average_price) || 0,
+      };
+      return summary;
+    }, {});
+
+    return {
+      success: true,
+      data: result.rows,
+      stats,
+      pagination: { count, pages, currentPage, pageSize: limit },
+    };
   } catch (error: any) {
     console.error("getTreatments error:", error);
     return { success: false, error: error.message };
@@ -33,9 +68,17 @@ export async function createTreatment(formData: TreatmentInput) {
       is_insurable = true,
     } = formData;
 
-    const result = await db.query(`INSERT INTO treatment_catalogue (category, treatment_name, base_price, duration, description, is_insurable)
+    const result = await db.query(
+      `INSERT INTO treatment_catalogue (category, treatment_name, base_price, duration, description, is_insurable)
       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`,
-      [category, treatment_name, Number(base_price), duration, description, is_insurable]
+      [
+        category,
+        treatment_name,
+        Number(base_price),
+        duration,
+        description,
+        is_insurable,
+      ],
     );
 
     return { success: true, data: result.rows[0] };
@@ -67,9 +110,19 @@ export async function updateTreatment(id: string, data: UpdateTreatmentInput) {
       is_active = true,
     } = data;
 
-    const result = await db.query(`UPDATE treatment_catalogue SET category = $1, treatment_name = $2, base_price = $3, duration = $4, description = $5, is_insurable = $6, is_active = $7,updated_at = NOW()
+    const result = await db.query(
+      `UPDATE treatment_catalogue SET category = $1, treatment_name = $2, base_price = $3, duration = $4, description = $5, is_insurable = $6, is_active = $7,updated_at = NOW()
       WHERE treatment_service_code = $8 RETURNING *;`,
-      [category, treatment_name, Number(base_price), duration, description, is_insurable, is_active, id,]
+      [
+        category,
+        treatment_name,
+        Number(base_price),
+        duration,
+        description,
+        is_insurable,
+        is_active,
+        id,
+      ],
     );
 
     if (result.rowCount === 0) {
@@ -86,9 +139,10 @@ export async function updateTreatment(id: string, data: UpdateTreatmentInput) {
 
 export async function deleteTreatment(id: string) {
   try {
-    const result = await db.query(`UPDATE treatment_catalogue SET is_active = false, updated_at = NOW() 
+    const result = await db.query(
+      `UPDATE treatment_catalogue SET is_active = false, updated_at = NOW() 
       WHERE treatment_service_code = $1 RETURNING *;`,
-      [id]
+      [id],
     );
 
     if (result.rowCount === 0) {
