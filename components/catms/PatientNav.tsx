@@ -16,6 +16,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
 import { logOut } from "@/lib/actions/auth";
 
@@ -36,13 +37,13 @@ export function PatientNav() {
   return (
     <>
       {/* ── Top Bar ── */}
-      <header className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
+      <header className="sticky top-0 z-40 w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
 
           {/* Brand */}
           <Link
             href="/patient/dashboard"
-            className="flex items-center gap-2 shrink-0 text-xl font-bold font-outfit text-slate-900 tracking-tight"
+            className="flex items-center gap-2 shrink-0 text-xl font-bold font-outfit text-slate-900 dark:text-white tracking-tight"
           >
             <HeartPulse className="w-7 h-7 text-[var(--brand-primary)]" />
             Med<span className="text-[var(--brand-primary)]">Sync</span>
@@ -60,7 +61,7 @@ export function PatientNav() {
                     "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all",
                     isActive
                       ? "bg-[var(--brand-primary)] text-white shadow-md shadow-brand-500/20"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
                   )}
                 >
                   <Icon className="w-4 h-4" />
@@ -71,21 +72,24 @@ export function PatientNav() {
           </nav>
 
           {/* Desktop Sign Out */}
-          <form action={logOut} className="hidden md:block shrink-0">
-            <button
-              type="submit"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 border border-slate-200 hover:border-red-200 transition-all"
-            >
-              <LogOut className="w-4 h-4" />
-              Sign Out
-            </button>
-          </form>
+          <div className="hidden md:flex items-center gap-2 shrink-0">
+            <ThemeToggle />
+            <form action={logOut}>
+              <button
+                type="submit"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-600 border border-slate-200 dark:border-slate-700 hover:border-red-200 transition-all"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </button>
+            </form>
+          </div>
 
           {/* Mobile Hamburger */}
           <button
             id="patient-nav-toggle"
             onClick={() => setMobileOpen((prev) => !prev)}
-            className="md:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+            className="md:hidden p-2 rounded-lg text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             aria-label="Toggle navigation menu"
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -112,10 +116,14 @@ export function PatientNav() {
         {/* Drawer panel */}
         <nav
           className={cn(
-            "absolute top-16 left-0 right-0 bg-white border-b border-slate-200 shadow-xl px-4 py-4 flex flex-col gap-1 transition-all duration-300",
+            "absolute top-16 left-0 right-0 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 shadow-xl px-4 py-4 flex flex-col gap-1 transition-all duration-300",
             mobileOpen ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
           )}
         >
+          <div className="flex items-center justify-between px-4 py-2 text-sm text-slate-600 dark:text-slate-300">
+            Theme
+            <ThemeToggle />
+          </div>
           {navLinks.map(({ label, href, icon: Icon }) => {
             const isActive = pathname === href || pathname.startsWith(href + "/");
             return (
@@ -127,7 +135,7 @@ export function PatientNav() {
                   "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
                   isActive
                     ? "bg-[var(--brand-primary)] text-white"
-                    : "text-slate-700 hover:bg-slate-100"
+                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                 )}
               >
                 <Icon className="w-5 h-5" />

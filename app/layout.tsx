@@ -6,6 +6,7 @@
 
 import "./globals.css";
 import React from "react";
+import { ThemeProvider } from "@/components/catms/ThemeProvider";
 
 export const metadata = {
   title: "MedSync | Clinic Management",
@@ -20,7 +21,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(() => {
+              const theme = localStorage.getItem("medsync-theme");
+              const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+              if (theme === "dark" || (!theme && prefersDark)) document.documentElement.classList.add("dark");
+            })();`,
+          }}
+        />
+      </head>
+      <body>
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

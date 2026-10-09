@@ -55,6 +55,36 @@
     --radius: 0.75rem;
   }
 
+  .dark {
+    --brand-primary-dark: #22b89a;
+    --bg-app: #0f172a;
+    --surface: #111827;
+    --border-subtle: #263244;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --success-bg: #123b29;
+    --danger-bg: #451a1a;
+    --warning-bg: #422006;
+    --info-bg: #172554;
+    --purple-bg: #2e1065;
+
+    --background: 222.2 47.4% 11.2%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 47.4% 11.2%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 47.4% 11.2%;
+    --popover-foreground: 210 40% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+  }
+
   * {
     @apply border-border;
     box-sizing: border-box;
@@ -66,8 +96,35 @@
     @apply bg-app text-[var(--text-primary)];
     font-family: 'Inter', 'Manrope', system-ui, sans-serif;
     line-height: 1.6;
+    overflow-x: hidden;
+    transition: background-color 0.2s ease, color 0.2s ease;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  @layer utilities {
+    /* Many screens use Tailwind's neutral utilities directly. Keep those
+       surfaces and text readable when the root theme changes. */
+    .dark .bg-white { background-color: #111827 !important; }
+    .dark .bg-white\/80 { background-color: rgb(2 6 23 / 0.8) !important; }
+    .dark .bg-slate-50 { background-color: #172033 !important; }
+    .dark .bg-slate-100 { background-color: #1e293b !important; }
+    .dark .bg-gray-50 { background-color: #172033 !important; }
+    .dark .bg-gray-100 { background-color: #1e293b !important; }
+    .dark .text-slate-900,
+    .dark .text-gray-900 { color: #f8fafc !important; }
+    .dark .text-slate-700,
+    .dark .text-slate-600,
+    .dark .text-gray-700 { color: #cbd5e1 !important; }
+    .dark .text-slate-500,
+    .dark .text-gray-500 { color: #94a3b8 !important; }
+    .dark .border-slate-100,
+    .dark .border-slate-200,
+    .dark .border-gray-200 { border-color: #263244 !important; }
+    .dark .hover\:bg-slate-50:hover,
+    .dark .hover\:bg-slate-100:hover,
+    .dark .hover\:bg-gray-50:hover { background-color: #263244 !important; }
+    .dark .hover\:text-slate-900:hover { color: #f8fafc !important; }
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -84,7 +141,7 @@
 
   /* === Cards === */
   .card-base {
-    @apply bg-white rounded-2xl shadow-card border border-[var(--border-subtle)] p-6;
+    @apply bg-white rounded-2xl shadow-card border border-[var(--border-subtle)] p-4 sm:p-6;
     transition: box-shadow 0.2s ease;
   }
   .card-hover:hover {
