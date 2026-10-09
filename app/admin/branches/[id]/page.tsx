@@ -202,7 +202,7 @@ export default function BranchDetailPage({ params }: { params: Promise<{ id: str
         </div>
       </Card>
 
-      {/* High-Level Metric Tiles */}
+      {/* Metric Tiles */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="border-slate-200 shadow-sm p-4 text-center">
           <div className="text-2xl font-black text-slate-900">{metrics.doctorCount}</div>
@@ -244,7 +244,7 @@ export default function BranchDetailPage({ params }: { params: Promise<{ id: str
         ))}
       </div>
 
-      {/* ─── TAB 1: OVERVIEW ─── */}
+      {/* OVERVIEW*/}
       {activeTab === "overview" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="border-slate-200 shadow-sm">
@@ -294,7 +294,7 @@ export default function BranchDetailPage({ params }: { params: Promise<{ id: str
         </div>
       )}
 
-      {/* ─── TAB 2: TREATMENTS & VISITS ─── */}
+      {/* TREATMENTS & VISITS */}
       {activeTab === "services" && (
         <div className="space-y-6">
           {/* Treatments Toggles */}
@@ -378,7 +378,7 @@ export default function BranchDetailPage({ params }: { params: Promise<{ id: str
         </div>
       )}
 
-      {/* ─── TAB 3: STAFF DIRECTORY ─── */}
+      {/* STAFF DIRECTORY */}
       {activeTab === "staff" && (
         <Card className="border-slate-200 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100">
@@ -412,7 +412,7 @@ export default function BranchDetailPage({ params }: { params: Promise<{ id: str
         </Card>
       )}
 
-      {/* ─── TAB 4: INVOICES ─── */}
+      {/*INVOICES*/}
       {activeTab === "invoices" && (
         <Card className="border-slate-200 shadow-sm">
           <CardHeader className="pb-3 border-b border-slate-100 flex justify-between items-center">
@@ -463,7 +463,7 @@ export default function BranchDetailPage({ params }: { params: Promise<{ id: str
         </Card>
       )}
 
-      {/* ─── TAB 5: COMPLAINTS ─── */}
+      {/*COMPLAINTS */}
       {activeTab === "complaints" && (
         <Card className="border-slate-200 shadow-sm">
           <CardHeader className="pb-3 border-b border-slate-100">
