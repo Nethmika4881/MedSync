@@ -1,10 +1,13 @@
 "use server";
 import db from "../db";
-import { staffDirectorySchema } from "../schemas";
+import { createStaffSchema, staffDirectorySchema } from "../schemas";
 import { getCurrentUser } from "./getcurrentuser";
 import { redirect } from "next/navigation";
+import { generateSalt, hashPassword } from "./passwordHasher";
 export async function getStaffDirectory(unsafeData: unknown = {}) {
   const user = await getCurrentUser();
+
+  //why here write "/login?clear=1" instead of "/login" ? -> it is because clear=1 remove authentication cookies or session data ...
   if (!user) redirect("/login?clear=1");
 
   if (user.role != "admin") throw new Error("Unauthorized");
@@ -97,4 +100,156 @@ export async function getStaffDirectory(unsafeData: unknown = {}) {
     pageSize: filters.pageSize,
     totalPages: Math.ceil(total / filters.pageSize),
   };
+}
+
+//here we use db transaction to create a staf member becauase otherwise db can be dirty.
+//here we dont use db.query()
+//because in db.query(),db means the pool
+//it automatically find a available  connection to execute the query
+//after running that statement it release the connection back to pool
+//why here in transactions db.query() usage is more dangerous ?
+//if the pool has 3 diff connections with db if we ran,
+//await db.query("BEGIN");
+//await db.query("INSERT INTO address ...");
+//await db.query("INSERT INTO app_user ...");
+//await db.query("COMMIT");
+//the problem is that each this statement can use diff connections
+//so it is not suitable in transactions so we have to make a db client and use it for whole transaction process
+
+//if cant use like this syntax because in one db.query() we cant write multiple commands so this method is correct.
+// await db.query(
+//   `
+//   BEGIN;
+
+//   INSERT INTO address (city)
+//   VALUES ($1);
+
+//   INSERT INTO app_user (email)
+//   VALUES ($2);
+
+//   COMMIT;
+//   `,
+//   ["Colombo", "test@gmail.com"]
+// );
+
+//thats why we have to use one client in whole transaction
+
+export async function createStaff(dirtyData: unknown = {}) {
+  const user = await getCurrentUser();
+
+  if (!user) redirect("/login?clear=1");
+  if (user.role !== "admin") throw new Error("Unauthorized");
+  const passed = createStaffSchema.safeParse(dirtyData);
+
+  if (!passed.success)
+    throw new Error("invalid data for create a staff member");
+
+  const data = passed.data;
+  const client = await db.connect();
+  try {
+    await client.query("begin"); //start to track the changes happening in the datbase but not permenanetly saved to db
+
+    const branchDetails = await client.query(
+      `
+      select branch_id,branch_name from branch
+      where branch_id = $1 and is_active = $2;
+      `,
+      [data.branchID, true],
+    );
+
+    if (branchDetails.rowCount === 0) {
+      throw new Error("not a branch as selected");
+    }
+    const addressDetails = await client.query(
+      `
+      insert into address(address_line1,address_line2,city,province,postal_code,country)
+      values($1,$2,$3,$4,$5,$6) 
+      returning address_id;
+      `,
+      [
+        data.addressLine1,
+        data.addressLine2,
+        data.city,
+        data.province,
+        data.postalCode,
+        data.country,
+      ],
+    );
+
+    const addressID = addressDetails.rows[0].address_id;
+
+    const contactResult = await client.query(`
+      insert into contact default values returning contact_id;
+      `);
+
+    const contactID = contactResult.rows[0].contact_id;
+
+    await client.query(
+      `
+      insert into contact_number(contact_id,number_type,number,is_primary)
+      values ($1,$2,$3,$4);
+      `,
+      [contactID, "Mobile", data.phone, true],
+    );
+
+    const salt = generateSalt();
+    const hashedPassword = await hashPassword(data.password, salt);
+    const userDetails = await client.query(
+      `
+      insert into app_user(address_id,contact_id,user_type,full_name,nic,email,gender,dob,password_hash,salt)
+      values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      returning user_id`,
+      [
+        addressID,
+        contactID,
+        "Employee",
+        `${data.firstName + " " + data.lastName}`,
+        data.nic,
+        data.email,
+        data.gender,
+        data.dob,
+        hashedPassword,
+        salt,
+      ],
+    );
+
+    const userID = userDetails.rows[0].user_id;
+
+    await client.query(
+      `
+      insert into employee (employee_id,branch_id,role,joined_date)
+      values($1,$2,$3,$4)  
+      `,
+      [userID, data.branchID, data.role, data.joinedDate || null],
+    );
+
+    if (data.role === "Doctor") {
+      await client.query(
+        `
+        insert into doctor(doctor_id,room_no,medical_licence_no,consultation_fee,years_experience,qualification )
+        values ($1,$2,$3,$4,$5,$6)`,
+
+        [
+          userID,
+          data.roomNo || null,
+          data.medicalLicenceNo || null,
+          data.consultationFee || 1500,
+          data.yearsExperience || null,
+          data.qualification || null,
+        ],
+      );
+    }
+    await client.query("commit"); //save to db permenantly
+
+    return {
+      success: true,
+      message: "staff member created successfully",
+      employeeID: userID,
+    };
+  } catch (err) {
+    await client.query("rollback"); //revert changes back if there was any errors
+    console.error("unable to create staff : " + err);
+  } finally {
+    client.release();
+  }
 }

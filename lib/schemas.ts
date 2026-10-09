@@ -101,3 +101,95 @@ export const staffDirectorySchema = z.object({
 });
 
 export type staffDirectoryType = z.infer<typeof staffDirectorySchema>;
+
+export const addingStaffSchema = z
+  .object({
+    firstName: z.string().trim().min(1, "First name is required").max(100),
+    lastName: z.string().trim().min(1, "Last name is required").max(100),
+
+    nic: z.string().trim().min(1, "NIC is required").max(20),
+    email: z.string().trim().email("Enter a valid email address"),
+    phone: z.string().trim().min(10, "Enter a valid phone number").max(20),
+
+    gender: z.enum(["Male", "Female", "Other"]),
+    dob: z.string().min(1, "Date of birth is required"),
+
+    addressLine1: z.string().trim().min(1, "Address is required").max(100),
+    addressLine2: z.string().trim().max(100).optional(),
+    city: z.string().trim().min(1, "City is required").max(50),
+    province: z.string().trim().max(50).optional(),
+    postalCode: z.string().trim().max(10).optional(),
+    country: z.string().trim().min(1).max(50).default("Sri Lanka"),
+
+    branchID: z.string().uuid("Select a valid branch"),
+    role: z.enum(["Admin", "FrontDesk", "Doctor"]),
+    joinedDate: z.string().optional(),
+
+    password: z.string().min(8, "Password must contain at least 8 characters"),
+    confirmPassword: z.string(),
+
+    medicalLicenceNo: z.string().trim().max(50).optional(),
+    roomNo: z.string().trim().max(5).optional(),
+    consultationFee: z.coerce.number().positive().optional(),
+    yearsExperience: z.coerce.number().int().min(0).optional(),
+    qualification: z.string().trim().max(150).optional(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  })
+  .refine(
+    (data) => data.role !== "Doctor" || Boolean(data.medicalLicenceNo?.trim()),
+    {
+      message: "Medical licence number is required for doctors",
+      path: ["medicalLicenceNo"],
+    },
+  );
+
+export type addStaffInput = z.infer<typeof addingStaffSchema>;
+
+export const createStaffSchema = z
+  .object({
+    firstName: z.string().trim().min(1, "First name is required").max(100),
+    lastName: z.string().trim().min(1, "Last name is required").max(100),
+
+    nic: z.string().trim().min(1, "NIC is required").max(20),
+    email: z.string().trim().email("Enter a valid email address"),
+    phone: z.string().trim().min(10, "Enter a valid phone number").max(20),
+
+    gender: z.enum(["Male", "Female", "Other"]),
+    dob: z.string().min(1, "Date of birth is required"),
+
+    addressLine1: z.string().trim().min(1, "Address is required").max(100),
+    addressLine2: z.string().trim().max(100).optional(),
+    city: z.string().trim().min(1, "City is required").max(50),
+    province: z.string().trim().max(50).optional(),
+    postalCode: z.string().trim().max(10).optional(),
+    country: z.string().trim().min(1).max(50).default("Sri Lanka"),
+
+    branchID: z.string().uuid("Select a valid branch"),
+    role: z.enum(["Admin", "FrontDesk", "Doctor"]),
+    joinedDate: z.string().optional(),
+
+    password: z.string().min(8, "Password must contain at least 8 characters"),
+    confirmPassword: z.string(),
+
+    medicalLicenceNo: z.string().trim().max(50).optional(),
+    roomNo: z.string().trim().max(5).optional(),
+    consultationFee: z.coerce.number().positive().optional(),
+    yearsExperience: z.coerce.number().int().min(0).optional(),
+    qualification: z.string().trim().max(150).optional(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  })
+  .refine(
+    (data) => data.role !== "Doctor" || Boolean(data.medicalLicenceNo?.trim()),
+    {
+      message: "Medical licence number is required for doctors",
+      path: ["medicalLicenceNo"],
+    },
+  );
+
+export type CreateStaffInput = z.infer<typeof createStaffSchema>;
