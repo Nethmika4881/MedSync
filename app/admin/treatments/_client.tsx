@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/catms/StatusPill";
 import toast, { Toaster } from "react-hot-toast";
 import {
-  Activity, ClipboardCheck, Clock, Plus, Search,
+  Activity, ClipboardCheck, Clock, Plus, Search, ChevronLeft, ChevronRight,
   FlaskConical, Radiation, Stethoscope, Dumbbell,
   Pencil, Trash2, DollarSign, Syringe, Scissors, Loader2
 } from "lucide-react";
@@ -41,6 +41,9 @@ function AdminCatalogueView() {
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ count: 0, pages: 0, pageSize: 10 });
+  const [categoryStats, setCategoryStats] = useState<Record<string, { count: number; avgPrice: number }>>({});
 
   // --- Modal & Loading States ---
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -57,18 +60,33 @@ function AdminCatalogueView() {
     is_insurable: true,
   });
 
-  useEffect(() => {
-    async function loadTreatments() {
-      const result = await getTreatments();
-      if (result.success) {
-        setTreatments(result.data ?? []);
-      } else {
-        toast.error("Failed to load treatments.");
-      }
-      setIsLoading(false);
+  const loadTreatments = async (requestedPage: number) => {
+    setIsLoading(true);
+    const result = await getTreatments(requestedPage, pagination.pageSize);
+    if (result.success) {
+      setTreatments(result.data ?? []);
+      setCategoryStats(result.stats ?? {});
+      setPagination(result.pagination ?? { count: 0, pages: 0, pageSize: 10 });
+      setPage(result.pagination?.currentPage ?? requestedPage);
+    } else {
+      toast.error("Failed to load treatments.");
     }
-    void loadTreatments();
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    void loadTreatments(1);
   }, []);
+
+  const goToPage = (nextPage: number) => {
+    if (nextPage < 1 || nextPage > pagination.pages || nextPage === page) return;
+    void loadTreatments(nextPage);
+  };
+
+  const reloadAfterMutation = async () => {
+    const targetPage = page > 1 && treatments.length === 1 ? page - 1 : page;
+    await loadTreatments(targetPage);
+  };
 
   const openAddModal = () => {
     setEditingId(null);
@@ -124,12 +142,10 @@ function AdminCatalogueView() {
 
     if (result.success) {
       if (editingId) {
-        setTreatments((prev) => prev.map((t) => (
-          t.treatment_service_code === editingId ? result.data : t
-        )));
+        await loadTreatments(page);
         toast.success("Treatment updated successfully");
       } else {
-        setTreatments((prev) => [result.data, ...prev]);
+        await loadTreatments(1);
         toast.success("Treatment added successfully");
       }
       setIsModalOpen(false);
@@ -145,7 +161,7 @@ function AdminCatalogueView() {
     setDeletingId(id);
     const result = await deleteTreatment(id);
     if (result.success) {
-      setTreatments((prev) => prev.filter((t) => t.treatment_service_code !== id));
+      await reloadAfterMutation();
       toast.success("Treatment deleted successfully");
     } else {
       toast.error(result.error ?? "Failed to delete treatment.");
@@ -161,9 +177,7 @@ function AdminCatalogueView() {
   });
 
   const stats = CATEGORIES.filter((c) => c !== "All").map((cat) => {
-    const categoryItems = treatments.filter((i) => i.category === cat);
-    const count = categoryItems.length;
-    const avgPrice = count > 0 ? categoryItems.reduce((sum, i) => sum + Number(i.base_price), 0) / count : 0;
+    const { count = 0, avgPrice = 0 } = categoryStats[cat] ?? {};
     return { cat, count, avgPrice, ...(CATEGORY_CONFIG[cat] || CATEGORY_CONFIG["Other"]) };
   });
 
@@ -204,6 +218,50 @@ function AdminCatalogueView() {
           <input type="text" placeholder="Search treatments..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full h-10 pl-9 pr-4 rounded-xl border border-slate-200 text-sm outline-none bg-white" />
         </div>
       </div>
+
+      {pagination.pages > 1 && (
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-sm text-slate-500">
+            Showing {(page - 1) * pagination.pageSize + 1}-
+            {Math.min(page * pagination.pageSize, pagination.count)} of {pagination.count} treatments
+          </p>
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => goToPage(page - 1)}
+              disabled={page === 1 || isLoading}
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            {Array.from({ length: pagination.pages }, (_, index) => index + 1).map((pageNumber) => (
+              <Button
+                key={pageNumber}
+                type="button"
+                variant={pageNumber === page ? "default" : "outline"}
+                size="sm"
+                onClick={() => goToPage(pageNumber)}
+                disabled={isLoading}
+                className={pageNumber === page ? "bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white" : ""}
+              >
+                {pageNumber}
+              </Button>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => goToPage(page + 1)}
+              disabled={page === pagination.pages || isLoading}
+              aria-label="Next page"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       <Card className="border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">

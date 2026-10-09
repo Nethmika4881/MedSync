@@ -18,6 +18,9 @@ export function Header() {
     }
     const last = segments[segments.length - 1];
     if (last === "new") return "Register New";
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(last)) {
+      return "Branch Details";
+    }
     return last.charAt(0).toUpperCase() + last.slice(1);
   };
 
