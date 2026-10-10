@@ -1,7 +1,7 @@
 "use server";
 import db from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { requireDoctor } from "@/lib/server/doctorAuth";
+import { clinicToday, requireDoctor } from "@/lib/server/doctorAuth";
 import { toActionError } from "@/lib/server/actionError";
 import { appointmentIdSchema, saveConsultationSchema } from "@/lib/server/doctorSchemas";
 import {
@@ -22,7 +22,18 @@ export async function getConsultationWorkspace(
   appointmentId: string
 ): Promise<ConsultationWorkspace | null> {
   const doctor = await requireDoctor();
-  return fetchConsultationWorkspace(db, doctor.userId, appointmentIdSchema.parse(appointmentId));
+  const id = appointmentIdSchema.parse(appointmentId);
+  const workspace = await fetchConsultationWorkspace(db, doctor.userId, id);
+  if (workspace && workspace.appointment.dateTime.slice(0, 10) > clinicToday()) return null;
+  return workspace;
+}
+
+async function rejectFutureConsultation(doctorId: string, appointmentId: string) {
+  const workspace = await fetchConsultationWorkspace(db, doctorId, appointmentId);
+  if (!workspace) throw new Error("Appointment not found for this doctor.");
+  if (workspace.appointment.dateTime.slice(0, 10) > clinicToday()) {
+    throw new Error("Future-day consultations cannot be edited or completed yet.");
+  }
 }
 
 // The doctor's saved consultations, newest first.
@@ -38,6 +49,7 @@ export async function saveConsultationDraft(
   try {
     const doctor = await requireDoctor();
     const valid = saveConsultationSchema.parse(input);
+    await rejectFutureConsultation(doctor.userId, valid.appointmentId);
     const consultationId = await saveConsultationDraftSql(db, doctor.userId, valid);
     revalidatePath("/doctor", "layout");
     return { ok: true, data: { consultationId } };
@@ -53,6 +65,7 @@ export async function completeConsultation(
   try {
     const doctor = await requireDoctor();
     const valid = saveConsultationSchema.parse(input);
+    await rejectFutureConsultation(doctor.userId, valid.appointmentId);
     const invoiceId = await completeConsultationSql(db, doctor.userId, valid);
     revalidatePath("/doctor", "layout");
     return { ok: true, data: { invoiceId } };

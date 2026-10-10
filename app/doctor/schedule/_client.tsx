@@ -153,6 +153,10 @@ export default function MySchedulePage({ date, today, appointments, weeklyHours 
                             >
                               View Record
                             </Link>
+                          ) : appt.dateTime.slice(0, 10) > today ? (
+                            <span className="text-xs font-semibold text-slate-400 px-3 py-1.5">
+                              Available on {formatDay(appt.dateTime.slice(0, 10))}
+                            </span>
                           ) : (
                             <StartConsultationButton appointmentId={appt.appointmentId} status={appt.status} />
                           )}

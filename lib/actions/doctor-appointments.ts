@@ -31,7 +31,13 @@ export async function getUnfinishedConsultations(): Promise<Appointment[]> {
 export async function startConsultation(appointmentId: string): Promise<ActionResult> {
   try {
     const doctor = await requireDoctor();
-    await startConsultationSql(db, doctor.userId, appointmentIdSchema.parse(appointmentId));
+    const id = appointmentIdSchema.parse(appointmentId);
+    const appointment = await fetchDoctorAppointment(db, doctor.userId, id);
+    if (!appointment) throw new Error("Appointment not found for this doctor.");
+    if (appointment.dateTime.slice(0, 10) > clinicToday()) {
+      throw new Error("Future-day consultations cannot be started yet.");
+    }
+    await startConsultationSql(db, doctor.userId, id);
     revalidatePath("/doctor", "layout");
     return { ok: true, data: undefined };
   } catch (error) {

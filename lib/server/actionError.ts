@@ -7,6 +7,9 @@ export function toActionError(error: unknown): string {
   if (error instanceof Error && error.message.startsWith("Unauthorized")) {
     return "Please sign in again as a doctor.";
   }
+  if (error instanceof Error && error.message.startsWith("Future-day consultations")) {
+    return error.message;
+  }
   const code = (error as { code?: string } | null)?.code;
   if (code === "P0001" && error instanceof Error) {
     return error.message;
