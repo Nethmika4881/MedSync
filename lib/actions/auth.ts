@@ -113,8 +113,8 @@ export default async function registerFunction(unsafeData: RegisterFormValues) {
       const contactID = contactResult.rows[0].contact_id;
       await client.query(
         `
-          insert into contact_number(contact_id,number)
-          values ($1,$2)
+          insert into contact_number(contact_id,number_type,number)
+          values ($1,'Mobile',$2)
           returning contact_id
           `,
         [contactID, data.phoneNumber],
@@ -167,6 +167,27 @@ export default async function registerFunction(unsafeData: RegisterFormValues) {
               data.qualification,
             ],
           );
+
+          const specializationTitle = data.specialization?.trim();
+          if (specializationTitle) {
+            // Reuse an existing specialization (case-insensitive), otherwise create it.
+            const existing = await client.query(
+              `select specialization_id from specialization where lower(title) = lower($1)`,
+              [specializationTitle],
+            );
+            let specializationId = existing.rows[0]?.specialization_id;
+            if (!specializationId) {
+              const created = await client.query(
+                `insert into specialization (title) values ($1) returning specialization_id`,
+                [specializationTitle],
+              );
+              specializationId = created.rows[0].specialization_id;
+            }
+            await client.query(
+              `insert into doctor_specialization (doctor_id, specialization_id) values ($1, $2)`,
+              [user.rows[0].user_id, specializationId],
+            );
+          }
         }
       } else if (user.rows[0].user_type === "Patient") {
         await client.query(

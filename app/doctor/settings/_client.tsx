@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { changeDoctorPassword, updateDoctorProfile } from "@/lib/actions/doctor-profile";
 import { addScheduleSlot, removeScheduleSlot, updateScheduleSlot } from "@/lib/actions/doctor-schedule";
-import { formatMoney } from "@/lib/doctorFormat";
+import { formatDay, formatMoney } from "@/lib/doctorFormat";
 import type { BranchOption, DoctorProfile } from "@/lib/doctorTypes";
 import { cn } from "@/lib/utils";
 
@@ -47,30 +47,118 @@ function ReadOnlyField({ label, value }: { label: string; value: string }) {
   );
 }
 
+type ProfileForm = {
+  fullName: string;
+  email: string;
+  nic: string;
+  dob: string;
+  gender: string;
+  phone: string;
+  licenceNo: string;
+  specialization: string;
+  branchId: string;
+  consultationFee: string;
+  roomNo: string;
+  qualification: string;
+  yearsExperience: string;
+  isAvailable: boolean;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  province: string;
+  postalCode: string;
+};
+
+function toForm(p: DoctorProfile): ProfileForm {
+  return {
+    fullName: p.fullName,
+    email: p.email,
+    nic: p.nic,
+    dob: p.dob,
+    gender: p.gender,
+    phone: p.phone,
+    licenceNo: p.licenceNo,
+    specialization: p.specializations,
+    branchId: p.branchId,
+    consultationFee: String(p.consultationFee),
+    roomNo: p.roomNo,
+    qualification: p.qualification,
+    yearsExperience: p.yearsExperience === null ? "" : String(p.yearsExperience),
+    isAvailable: p.isAvailable,
+    addressLine1: p.addressLine1,
+    addressLine2: p.addressLine2,
+    city: p.city,
+    province: p.province,
+    postalCode: p.postalCode,
+  };
+}
+
+function TextField({
+  id, label, value, onChange, type = "text", maxLength, className,
+}: {
+  id: string; label: string; value: string; onChange: (v: string) => void;
+  type?: string; maxLength?: number; className?: string;
+}) {
+  return (
+    <div className={cn("space-y-1.5", className)}>
+      <Label htmlFor={id}>{label}</Label>
+      <Input id={id} type={type} value={value} maxLength={maxLength} onChange={(e) => onChange(e.target.value)} />
+    </div>
+  );
+}
+
 export default function DoctorSettingsPage({ profile, schedule, branches }: SettingsProps) {
   const router = useRouter();
 
   //  Profile
-  const [roomNo, setRoomNo] = useState(profile.roomNo);
-  const [qualification, setQualification] = useState(profile.qualification);
-  const [yearsExperience, setYearsExperience] = useState(profile.yearsExperience === null ? "" : String(profile.yearsExperience));
-  const [phone, setPhone] = useState(profile.phone);
-  const [isAvailable, setIsAvailable] = useState(profile.isAvailable);
+  const [form, setForm] = useState<ProfileForm>(() => toForm(profile));
   const [profileNotice, setProfileNotice] = useState<Notice>(null);
   const [profilePending, startProfile] = useTransition();
+  const [editing, setEditing] = useState(false);
+
+  const setField = <K extends keyof ProfileForm>(key: K, value: ProfileForm[K]) =>
+    setForm((f) => ({ ...f, [key]: value }));
+
+  function startEditing() {
+    setProfileNotice(null);
+    setEditing(true);
+  }
+
+  // Throw away unsaved changes and show the saved values again.
+  function cancelEditing() {
+    setForm(toForm(profile));
+    setProfileNotice(null);
+    setEditing(false);
+  }
 
   function handleSaveProfile() {
     setProfileNotice(null);
+    const fee = form.consultationFee.trim() === "" ? Number.NaN : Number(form.consultationFee);
     startProfile(async () => {
       const result = await updateDoctorProfile({
-        roomNo,
-        qualification,
-        yearsExperience: yearsExperience.trim() === "" ? null : Number(yearsExperience),
-        isAvailable,
-        phone,
+        fullName: form.fullName,
+        email: form.email,
+        nic: form.nic,
+        dob: form.dob,
+        gender: form.gender as "Male" | "Female" | "Other",
+        licenceNo: form.licenceNo,
+        specialization: form.specialization,
+        branchId: form.branchId,
+        consultationFee: fee,
+        roomNo: form.roomNo,
+        qualification: form.qualification,
+        yearsExperience: form.yearsExperience.trim() === "" ? null : Number(form.yearsExperience),
+        isAvailable: form.isAvailable,
+        phone: form.phone,
+        addressLine1: form.addressLine1,
+        addressLine2: form.addressLine2,
+        city: form.city,
+        province: form.province,
+        postalCode: form.postalCode,
       });
       if (!result.ok) return setProfileNotice({ type: "error", text: result.error });
       setProfileNotice({ type: "success", text: "Profile updated." });
+      setEditing(false);
       router.refresh();
     });
   }
@@ -81,6 +169,15 @@ export default function DoctorSettingsPage({ profile, schedule, branches }: Sett
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordNotice, setPasswordNotice] = useState<Notice>(null);
   const [passwordPending, startPassword] = useTransition();
+  const [changingPassword, setChangingPassword] = useState(false);
+
+  function cancelPasswordChange() {
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordNotice(null);
+    setChangingPassword(false);
+  }
   function handleChangePassword() {
     setPasswordNotice(null);
     if (newPassword !== confirmPassword) {
@@ -92,6 +189,7 @@ export default function DoctorSettingsPage({ profile, schedule, branches }: Sett
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
+      setChangingPassword(false);
       setPasswordNotice({ type: "success", text: "Password changed." });
     });
   }
@@ -179,91 +277,191 @@ export default function DoctorSettingsPage({ profile, schedule, branches }: Sett
       {/* Profile */}
       <Card className="border-slate-200 shadow-sm">
         <CardHeader className="border-b border-slate-100">
-          <CardTitle className="text-base font-semibold text-slate-900 flex items-center gap-2">
-            <UserCog className="w-4 h-4 text-slate-400" /> Profile
-          </CardTitle>
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle className="text-base font-semibold text-slate-900 flex items-center gap-2">
+              <UserCog className="w-4 h-4 text-slate-400" /> Profile
+            </CardTitle>
+            {!editing && (
+              <Button variant="outline" size="sm" onClick={startEditing} className="rounded-lg">
+                <Pencil className="w-3.5 h-3.5 mr-1.5" /> Edit
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="p-6 space-y-6">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <ReadOnlyField label="Name" value={profile.fullName} />
-            <ReadOnlyField label="Email" value={profile.email} />
-            <ReadOnlyField label="Licence No." value={profile.licenceNo} />
-            <ReadOnlyField label="Branch" value={profile.branchName} />
-            <ReadOnlyField label="Specializations" value={profile.specializations} />
-            <ReadOnlyField label="Consultation Fee" value={formatMoney(profile.consultationFee)} />
-          </div>
+          {editing ? (
+            <>
+              <div className="space-y-4">
+                <p className="text-sm font-semibold text-slate-900">Personal</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <TextField id="fullName" label="Full Name" value={form.fullName} maxLength={255} onChange={(v) => setField("fullName", v)} />
+                  <TextField id="email" label="Email" type="email" value={form.email} maxLength={255} onChange={(v) => setField("email", v)} />
+                  <TextField id="nic" label="NIC" value={form.nic} maxLength={20} onChange={(v) => setField("nic", v)} />
+                  <TextField id="dob" label="Date of Birth" type="date" value={form.dob} onChange={(v) => setField("dob", v)} />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="gender">Gender</Label>
+                    <Select value={form.gender} onValueChange={(v) => setField("gender", v)}>
+                      <SelectTrigger id="gender"><SelectValue placeholder="Select gender" /></SelectTrigger>
+                      <SelectContent>
+                        {["Male", "Female", "Other"].map((g) => (<SelectItem key={g} value={g}>{g}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <TextField id="phone" label="Phone" value={form.phone} maxLength={20} onChange={(v) => setField("phone", v)} />
+                </div>
+              </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
-            <div className="space-y-1.5">
-              <Label htmlFor="room">Room No.</Label>
-              <Input id="room" value={roomNo} maxLength={5} onChange={(e) => setRoomNo(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" value={phone} maxLength={20} onChange={(e) => setPhone(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="qualification">Qualification</Label>
-              <Input id="qualification" value={qualification} maxLength={150} onChange={(e) => setQualification(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="years">Years of Experience</Label>
-              <Input id="years" type="number" min={0} max={70} value={yearsExperience} onChange={(e) => setYearsExperience(e.target.value)} />
-            </div>
-          </div>
+              <div className="space-y-4 pt-4 border-t border-slate-100">
+                <p className="text-sm font-semibold text-slate-900">Professional</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <TextField id="licence" label="Medical Licence No." value={form.licenceNo} maxLength={50} onChange={(v) => setField("licenceNo", v)} />
+                  <TextField id="specialization" label="Specialization" value={form.specialization} maxLength={100} onChange={(v) => setField("specialization", v)} />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="profile-branch">Branch</Label>
+                    <Select value={form.branchId} onValueChange={(v) => setField("branchId", v)}>
+                      <SelectTrigger id="profile-branch"><SelectValue placeholder="Select a branch" /></SelectTrigger>
+                      <SelectContent>
+                        {branches.map((b) => (<SelectItem key={b.branchId} value={b.branchId}>{b.branchName}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <TextField id="fee" label="Consultation Fee (Rs.)" type="number" value={form.consultationFee} onChange={(v) => setField("consultationFee", v)} />
+                  <TextField id="room" label="Room No." value={form.roomNo} maxLength={5} onChange={(v) => setField("roomNo", v)} />
+                  <TextField id="years" label="Years of Experience" type="number" value={form.yearsExperience} onChange={(v) => setField("yearsExperience", v)} />
+                  <TextField id="qualification" label="Qualification" value={form.qualification} maxLength={150} className="sm:col-span-2" onChange={(v) => setField("qualification", v)} />
+                </div>
+                <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-slate-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]"
+                    checked={form.isAvailable}
+                    onChange={(e) => setField("isAvailable", e.target.checked)}
+                  />
+                  Accepting new appointments
+                </label>
+              </div>
 
-          <label className="flex items-center gap-2 text-sm text-slate-700">
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded border-slate-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]"
-              checked={isAvailable}
-              onChange={(e) => setIsAvailable(e.target.checked)}
-            />
-            Accepting new appointments
-          </label>
+              <div className="space-y-4 pt-4 border-t border-slate-100">
+                <p className="text-sm font-semibold text-slate-900">Address</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <TextField id="address1" label="Address Line 1" value={form.addressLine1} maxLength={100} className="sm:col-span-2" onChange={(v) => setField("addressLine1", v)} />
+                  <TextField id="address2" label="Address Line 2" value={form.addressLine2} maxLength={100} className="sm:col-span-2" onChange={(v) => setField("addressLine2", v)} />
+                  <TextField id="city" label="City" value={form.city} maxLength={50} onChange={(v) => setField("city", v)} />
+                  <TextField id="province" label="Province" value={form.province} maxLength={50} onChange={(v) => setField("province", v)} />
+                  <TextField id="postal" label="Postal Code" value={form.postalCode} maxLength={10} onChange={(v) => setField("postalCode", v)} />
+                </div>
+              </div>
 
-          <NoticeLine notice={profileNotice} />
-          <div className="flex justify-end">
-            <Button onClick={handleSaveProfile} disabled={profilePending}
-              className="rounded-xl bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)]">
-              {profilePending ? "Saving..." : "Save Profile"}
-            </Button>
-          </div>
+              <NoticeLine notice={profileNotice} />
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={cancelEditing} disabled={profilePending} className="rounded-xl">
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveProfile} disabled={profilePending}
+                  className="rounded-xl bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)]">
+                  {profilePending ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="space-y-4">
+                <p className="text-sm font-semibold text-slate-900">Personal</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <ReadOnlyField label="Name" value={form.fullName} />
+                  <ReadOnlyField label="Email" value={form.email} />
+                  <ReadOnlyField label="Phone" value={form.phone} />
+                  <ReadOnlyField label="NIC" value={form.nic} />
+                  <ReadOnlyField label="Date of Birth" value={form.dob ? formatDay(form.dob) : ""} />
+                  <ReadOnlyField label="Gender" value={form.gender} />
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-4 border-t border-slate-100">
+                <p className="text-sm font-semibold text-slate-900">Professional</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <ReadOnlyField label="Licence No." value={form.licenceNo} />
+                  <ReadOnlyField label="Specialization" value={form.specialization} />
+                  <ReadOnlyField label="Branch" value={branches.find((b) => b.branchId === form.branchId)?.branchName ?? profile.branchName} />
+                  <ReadOnlyField label="Consultation Fee" value={form.consultationFee === "" ? "" : formatMoney(Number(form.consultationFee))} />
+                  <ReadOnlyField label="Room No." value={form.roomNo} />
+                  <ReadOnlyField label="Years of Experience" value={form.yearsExperience === "" ? "" : `${form.yearsExperience} years`} />
+                  <ReadOnlyField label="Qualification" value={form.qualification} />
+                  <ReadOnlyField label="Availability" value={form.isAvailable ? "Accepting new appointments" : "Not accepting new appointments"} />
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100">
+                <ReadOnlyField
+                  label="Address"
+                  value={[form.addressLine1, form.addressLine2, form.city, form.province, form.postalCode].filter(Boolean).join(", ")}
+                />
+              </div>
+              <NoticeLine notice={profileNotice} />
+            </>
+          )}
         </CardContent>
       </Card>
 
       {/* Password */}
       <Card className="border-slate-200 shadow-sm">
         <CardHeader className="border-b border-slate-100">
-          <CardTitle className="text-base font-semibold text-slate-900 flex items-center gap-2">
-            <KeyRound className="w-4 h-4 text-slate-400" /> Change Password
-          </CardTitle>
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle className="text-base font-semibold text-slate-900 flex items-center gap-2">
+              <KeyRound className="w-4 h-4 text-slate-400" /> Password
+            </CardTitle>
+            {!changingPassword && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setPasswordNotice(null);
+                  setChangingPassword(true);
+                }}
+                className="rounded-lg"
+              >
+                <Pencil className="w-3.5 h-3.5 mr-1.5" /> Change
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="p-6 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="current-password">Current Password</Label>
-              <Input id="current-password" type="password" autoComplete="current-password" value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="new-password">New Password</Label>
-              <Input id="new-password" type="password" autoComplete="new-password" value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="confirm-password">Confirm New Password</Label>
-              <Input id="confirm-password" type="password" autoComplete="new-password" value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)} />
-            </div>
-          </div>
-          <NoticeLine notice={passwordNotice} />
-          <div className="flex justify-end">
-            <Button onClick={handleChangePassword} disabled={passwordPending || !currentPassword || !newPassword}
-              className="rounded-xl bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)]">
-              {passwordPending ? "Updating..." : "Update Password"}
-            </Button>
-          </div>
+          {changingPassword ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="current-password">Current Password</Label>
+                  <Input id="current-password" type="password" autoComplete="current-password" value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="new-password">New Password</Label>
+                  <Input id="new-password" type="password" autoComplete="new-password" value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="confirm-password">Confirm New Password</Label>
+                  <Input id="confirm-password" type="password" autoComplete="new-password" value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)} />
+                </div>
+              </div>
+              <NoticeLine notice={passwordNotice} />
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={cancelPasswordChange} disabled={passwordPending} className="rounded-xl">
+                  Cancel
+                </Button>
+                <Button onClick={handleChangePassword} disabled={passwordPending || !currentPassword || !newPassword}
+                  className="rounded-xl bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)]">
+                  {passwordPending ? "Updating..." : "Update Password"}
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-slate-500">Use a strong password that you do not use anywhere else.</p>
+              <NoticeLine notice={passwordNotice} />
+            </>
+          )}
         </CardContent>
       </Card>
 

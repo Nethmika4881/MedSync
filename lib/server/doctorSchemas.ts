@@ -58,6 +58,21 @@ export const scheduleSlotSchema = z
 export const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date");
 
 export const updateProfileSchema = z.object({
+  fullName: z.string().trim().min(2, "Full name must be at least 2 characters").max(255, "Full name is too long"),
+  email: z.string().trim().email("Enter a valid email address").max(255, "Email is too long"),
+  nic: z.string().trim().min(1, "NIC is required").max(20, "NIC can be at most 20 characters"),
+  dob: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date of birth is invalid")
+    .refine((v) => v <= new Date().toISOString().slice(0, 10), "Date of birth must be in the past"),
+  gender: z.enum(["Male", "Female", "Other"], { errorMap: () => ({ message: "Select a gender" }) }),
+  licenceNo: z.string().trim().min(1, "Medical licence number is required").max(50, "Licence number is too long"),
+  specialization: z.string().trim().max(100, "Specialization is too long"),
+  branchId: uuid,
+  consultationFee: z
+    .number({ invalid_type_error: "Enter the consultation fee" })
+    .min(0, "Consultation fee can't be negative")
+    .max(1000000, "Consultation fee looks too high"),
   roomNo: z.string().trim().max(5, "Room number can be at most 5 characters"),
   qualification: z.string().trim().max(150, "Qualification is too long"),
   yearsExperience: z
@@ -72,6 +87,11 @@ export const updateProfileSchema = z.object({
     .trim()
     .max(20, "Phone number is too long")
     .regex(/^[0-9+\-\s()]*$/, "Phone number can only contain digits, spaces, + - ( )"),
+  addressLine1: z.string().trim().min(1, "Address line 1 is required").max(100, "Address line 1 is too long"),
+  addressLine2: z.string().trim().max(100, "Address line 2 is too long"),
+  city: z.string().trim().min(1, "City is required").max(50, "City is too long"),
+  province: z.string().trim().max(50, "Province is too long"),
+  postalCode: z.string().trim().max(10, "Postal code can be at most 10 characters"),
 });
 
 export const changePasswordSchema = z.object({

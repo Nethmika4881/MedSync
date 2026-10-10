@@ -4,6 +4,7 @@ import ReportsPage from "./_client";
 import {
   getBranchAppointmentReport,
   getDoctorRevenueReport,
+  getOutstandingBalanceReport,
 } from "@/lib/actions/reports";
 import { getBranches } from "@/lib/actions/branches";
 type ReportsSearchParams = {
@@ -25,7 +26,12 @@ export default async function Page({
   const thirtyDaysBefore = new Date(today);
   thirtyDaysBefore.setDate(today.getDate() - 30);
 
-  const [reportDetails, branchDetails, doctorRevenueDetails] =
+  const [
+    reportDetails,
+    branchDetails,
+    doctorRevenueDetails,
+    outstandingBalanceDetails,
+  ] =
     await Promise.all([
       getBranchAppointmentReport({
         startDate:
@@ -38,6 +44,12 @@ export default async function Page({
         startDate:
           params.startDate || thirtyDaysBefore.toISOString().slice(0, 10), //toisostring what does is pass date as a string
         endDate: params.endDate ?? today.toISOString().slice(0, 10), //slice(0,10) takes 10 characters from the 0th character
+        branchID: params.branchID,
+      }),
+      getOutstandingBalanceReport({
+        startDate:
+          params.startDate || thirtyDaysBefore.toISOString().slice(0, 10),
+        endDate: params.endDate ?? today.toISOString().slice(0, 10),
         branchID: params.branchID,
       }),
     ]);
@@ -55,6 +67,7 @@ export default async function Page({
       reportDetails={reportDetails}
       branchDetails={branchDetails}
       doctorRevenueDetails={doctorRevenueDetails}
+      outstandingBalanceDetails={outstandingBalanceDetails}
     />
   );
 }
