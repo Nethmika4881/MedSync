@@ -348,7 +348,6 @@ export interface Employee {
   avatar: string;
   hireDate: string;
   isActive: boolean;
-  department: string;
 }
 
 // ─── Appointments — UI constants ──────────────────────────────────────────────

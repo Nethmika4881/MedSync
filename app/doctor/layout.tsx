@@ -1,6 +1,7 @@
 import React from "react";
 import { Sidebar } from "@/components/catms/Sidebar";
 import { Header } from "@/components/catms/Header";
+import { SidebarInset } from "@/components/catms/SidebarInset";
 
 export default function DoctorLayout({
   children,
@@ -10,10 +11,10 @@ export default function DoctorLayout({
   return (
     <div className="min-h-screen bg-[var(--bg-app)] flex">
       <Sidebar />
-      <div className="flex-1 lg:pl-64 flex flex-col min-h-screen transition-all">
+      <SidebarInset>
         <Header />
-        <main className="flex-1 p-8 overflow-x-hidden">{children}</main>
-      </div>
+        <main className="flex-1 p-4 sm:p-8 overflow-x-hidden">{children}</main>
+      </SidebarInset>
     </div>
   );
 }

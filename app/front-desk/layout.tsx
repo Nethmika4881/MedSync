@@ -1,11 +1,8 @@
-// IMPORTANT: All SQL queries in this group must append AND branch_id = $n
-// using the user's active branch. Never run unscoped global queries from Front Desk routes.
-
 import React from "react";
 import { Sidebar } from "@/components/catms/Sidebar";
 import { Header } from "@/components/catms/Header";
 import { Building2 } from "lucide-react";
-
+import { SidebarInset } from "@/components/catms/SidebarInset";
 
 export default function FrontDeskLayout({
   children,
@@ -15,7 +12,7 @@ export default function FrontDeskLayout({
   return (
     <div className="min-h-screen bg-[var(--bg-app)] flex">
       <Sidebar />
-      <div className="flex-1 lg:pl-64 flex flex-col min-h-screen transition-all">
+      <SidebarInset>
         <Header />
 
         {/* Active Branch Indicator for Front Desk */}
@@ -28,8 +25,8 @@ export default function FrontDeskLayout({
             Front Desk Portal
           </span>
         </div>
-        <main className="flex-1 p-8 overflow-x-hidden">{children}</main>
-      </div>
+        <main className="flex-1 p-4 md:p-8 overflow-x-hidden">{children}</main>
+      </SidebarInset>
     </div>
   );
 }

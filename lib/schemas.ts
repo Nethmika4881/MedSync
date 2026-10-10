@@ -61,18 +61,29 @@ export const registerSchema = baseSchema
     message: "Passwords do not match",
     path: ["confirmPassword"],
   })
-  .refine((data) => data.role !== "Employee" || data.employeeRole !== undefined, {
-    message: "Please select an employee role",
-    path: ["employeeRole"],
-  })
-  .refine((data) => data.employeeRole === undefined || data.employeeRole === "Doctor", {
-    message: "Admin and front desk accounts must be created by an administrator",
-    path: ["employeeRole"],
-  })
-  .refine((data) => data.role !== "Employee" || Boolean(data.medicalLicenceNo?.trim()), {
-    message: "Medical licence number is required for doctors",
-    path: ["medicalLicenceNo"],
-  });
+  .refine(
+    (data) => data.role !== "Employee" || data.employeeRole !== undefined,
+    {
+      message: "Please select an employee role",
+      path: ["employeeRole"],
+    },
+  )
+  .refine(
+    (data) => data.employeeRole === undefined || data.employeeRole === "Doctor",
+    {
+      message:
+        "Admin and front desk accounts must be created by an administrator",
+      path: ["employeeRole"],
+    },
+  )
+  .refine(
+    (data) =>
+      data.role !== "Employee" || Boolean(data.medicalLicenceNo?.trim()),
+    {
+      message: "Medical licence number is required for doctors",
+      path: ["medicalLicenceNo"],
+    },
+  );
 
 export type RegisterFormValues = z.infer<typeof registerSchema>;
 
@@ -80,3 +91,120 @@ export const signInSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 });
+export const staffDirectorySchema = z.object({
+  search: z.string().trim().max(100).default(""),
+  branchID: z.string().uuid().optional(),
+  role: z.enum(["Doctor", "FrontDesk", "Admin"]).optional(),
+  status: z.enum(["all", "active", "inactive"]).default("all"),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export type staffDirectoryType = z.infer<typeof staffDirectorySchema>;
+
+export const addingStaffSchema = z
+  .object({
+    firstName: z.string().trim().min(1, "First name is required").max(100),
+    lastName: z.string().trim().min(1, "Last name is required").max(100),
+
+    nic: z.string().trim().min(1, "NIC is required").max(20),
+    email: z.string().trim().email("Enter a valid email address"),
+    phone: z.string().trim().min(10, "Enter a valid phone number").max(20),
+
+    gender: z.enum(["Male", "Female", "Other"]),
+    dob: z.string().min(1, "Date of birth is required"),
+
+    addressLine1: z.string().trim().min(1, "Address is required").max(100),
+    addressLine2: z.string().trim().max(100).optional(),
+    city: z.string().trim().min(1, "City is required").max(50),
+    province: z.string().trim().max(50).optional(),
+    postalCode: z.string().trim().max(10).optional(),
+    country: z.string().trim().min(1).max(50).default("Sri Lanka"),
+
+    branchID: z.string().uuid("Select a valid branch"),
+    role: z.enum(["Admin", "FrontDesk", "Doctor"]),
+    joinedDate: z.string().optional(),
+
+    password: z.string().min(8, "Password must contain at least 8 characters"),
+    confirmPassword: z.string(),
+
+    medicalLicenceNo: z.string().trim().max(50).optional(),
+    roomNo: z.string().trim().max(5).optional(),
+    consultationFee: z.coerce.number().positive().optional(),
+    yearsExperience: z.coerce.number().int().min(0).optional(),
+    qualification: z.string().trim().max(150).optional(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  })
+  .refine(
+    (data) => data.role !== "Doctor" || Boolean(data.medicalLicenceNo?.trim()),
+    {
+      message: "Medical licence number is required for doctors",
+      path: ["medicalLicenceNo"],
+    },
+  );
+
+export type addStaffInput = z.infer<typeof addingStaffSchema>;
+
+export const createStaffSchema = z
+  .object({
+    firstName: z.string().trim().min(1, "First name is required").max(100),
+    lastName: z.string().trim().min(1, "Last name is required").max(100),
+
+    nic: z.string().trim().min(1, "NIC is required").max(20),
+    email: z.string().trim().email("Enter a valid email address"),
+    phone: z.string().trim().min(10, "Enter a valid phone number").max(20),
+
+    gender: z.enum(["Male", "Female", "Other"]),
+    dob: z.string().min(1, "Date of birth is required"),
+
+    addressLine1: z.string().trim().min(1, "Address is required").max(100),
+    addressLine2: z.string().trim().max(100).optional(),
+    city: z.string().trim().min(1, "City is required").max(50),
+    province: z.string().trim().max(50).optional(),
+    postalCode: z.string().trim().max(10).optional(),
+    country: z.string().trim().min(1).max(50).default("Sri Lanka"),
+
+    branchID: z.string().uuid("Select a valid branch"),
+    role: z.enum(["Admin", "FrontDesk", "Doctor"]),
+    joinedDate: z.string().optional(),
+
+    password: z.string().min(8, "Password must contain at least 8 characters"),
+    confirmPassword: z.string(),
+
+    medicalLicenceNo: z.string().trim().max(50).optional(),
+    roomNo: z.string().trim().max(5).optional(),
+    consultationFee: z.coerce.number().positive().optional(),
+    yearsExperience: z.coerce.number().int().min(0).optional(),
+    qualification: z.string().trim().max(150).optional(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  })
+  .refine(
+    (data) => data.role !== "Doctor" || Boolean(data.medicalLicenceNo?.trim()),
+    {
+      message: "Medical licence number is required for doctors",
+      path: ["medicalLicenceNo"],
+    },
+  );
+
+export type CreateStaffInput = z.infer<typeof createStaffSchema>;
+
+export const appointmentReportSchema = z
+  .object({
+    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid start date"),
+
+    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid end date"),
+
+    branchID: z.string().uuid("Invalid branch").optional(), //if not provided branch id then we report all branches hehe
+  })
+  .refine((data) => data.startDate <= data.endDate, {
+    message: "Start date must be before or equal to end date",
+    path: ["endDate"],
+  });
+
+export type AppointmentReportFilters = z.infer<typeof appointmentReportSchema>;
