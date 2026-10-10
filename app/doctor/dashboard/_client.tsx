@@ -20,14 +20,16 @@ interface DashboardProps {
   user: AuthUser;
   today: string;
   appointments: Appointment[]; // today and the following six days
+  unfinished: Appointment[]; // started on an earlier day and never completed
 }
 
-export default function DashboardPage({ user, today, appointments }: DashboardProps) {
+export default function DashboardPage({ user, today, appointments, unfinished }: DashboardProps) {
   const todays = appointments.filter((a) => a.dateTime.slice(0, 10) === today);
   const waiting = todays.filter((a) => a.status === "Confirmed" || a.status === "Checked-in");
-  const inProgress = todays.filter((a) => a.status === "In-Progress");
+  // Open consultations: started today, plus any from earlier days that were never completed.
+  const inProgress = [...unfinished, ...todays.filter((a) => a.status === "In-Progress")];
   const completed = todays.filter((a) => a.status === "Completed");
-  const queue = todays.filter((a) => a.status !== "Completed");
+  const queue = [...unfinished, ...todays.filter((a) => a.status !== "Completed")];
 
   const weekChart = Array.from({ length: 7 }, (_, i) => {
     const date = shiftDay(today, i);
@@ -103,12 +105,20 @@ export default function DashboardPage({ user, today, appointments }: DashboardPr
                   <div key={appt.appointmentId} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-12 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-                        <span className="text-xs font-bold text-blue-600">{formatClockTime(appt.dateTime)}</span>
+                        <span className="text-xs font-bold text-blue-600">
+                          {appt.dateTime.slice(0, 10) < today
+                            ? formatDay(appt.dateTime.slice(0, 10)).split(" ").slice(0, 2).join(" ")
+                            : formatClockTime(appt.dateTime)}
+                        </span>
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-slate-900 truncate">{appt.patientName}</p>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-xs text-slate-500">#{appt.ticketNumber}</span>
+                          {appt.dateTime.slice(0, 10) < today ? (
+                            <span className="text-xs font-semibold text-amber-600">Unfinished</span>
+                          ) : (
+                            <span className="text-xs text-slate-500">#{appt.ticketNumber}</span>
+                          )}
                           <StatusPill status={appt.status} />
                         </div>
                       </div>

@@ -64,6 +64,25 @@ export async function fetchDoctorAppointments(
   return rows.map(mapAppointmentRow);
 }
 
+// Consultations that were started on an earlier day and never completed.
+// They still need the doctor's attention, so the dashboard and the bell both show them.
+export async function fetchUnfinishedConsultations(
+  db: Queryable,
+  doctorId: string,
+  beforeDate: string
+): Promise<Appointment[]> {
+  const { rows } = await db.query(
+    `SELECT ${QUEUE_COLUMNS}
+     FROM v_doctor_queue
+     WHERE doctor_id = $1
+       AND status = 'InProgress'
+       AND available_date < $2::date
+     ORDER BY estimated_time DESC, queue_number`,
+    [doctorId, beforeDate]
+  );
+  return rows.map(mapAppointmentRow);
+}
+
 // One appointment, only if it belongs to this doctor.
 export async function fetchDoctorAppointment(
   db: Queryable,

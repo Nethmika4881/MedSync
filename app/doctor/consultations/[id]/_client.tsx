@@ -259,9 +259,16 @@ export default function ConsultationWorkspacePage({ workspace, catalogue, medica
               <Label htmlFor="followUp">Follow-up required</Label>
             </div>
             {followUpRequired && (
-              <div className="space-y-2 max-w-xs">
+              <div className="space-y-2 w-44">
                 <Label htmlFor="followUpDate">Follow-up date</Label>
-                <Input id="followUpDate" type="date" value={followUpDate} onChange={(e) => setFollowUpDate(e.target.value)} disabled={isLocked} />
+                <Input
+                  id="followUpDate"
+                  type="date"
+                  value={followUpDate}
+                  min={appt.dateTime.slice(0, 10)}
+                  onChange={(e) => setFollowUpDate(e.target.value)}
+                  disabled={isLocked}
+                />
               </div>
             )}
           </div>

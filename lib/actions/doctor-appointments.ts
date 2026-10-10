@@ -6,6 +6,7 @@ import { toActionError } from "@/lib/server/actionError";
 import { appointmentIdSchema, dateSchema } from "@/lib/server/doctorSchemas";
 import {
   fetchDoctorAppointments,
+  fetchUnfinishedConsultations,
   startConsultation as startConsultationSql,
 } from "@/lib/server/sql/doctorAppointments";
 import type { ActionResult } from "@/lib/doctorTypes";
@@ -19,6 +20,12 @@ export async function getDoctorAppointments(
   const from = dateSchema.parse(fromDate ?? clinicToday());
   const to = dateSchema.parse(toDate ?? from);
   return fetchDoctorAppointments(db, doctor.userId, from, to);
+}
+
+// In-progress consultations from before today that were never completed.
+export async function getUnfinishedConsultations(): Promise<Appointment[]> {
+  const doctor = await requireDoctor();
+  return fetchUnfinishedConsultations(db, doctor.userId, clinicToday());
 }
 
 export async function startConsultation(appointmentId: string): Promise<ActionResult> {
