@@ -11,7 +11,6 @@ import {
   Percent, 
   Trash2, 
   Search, 
-  Filter, 
   CheckCircle2, 
   AlertCircle, 
   Loader2, 
@@ -64,7 +63,7 @@ const DEFAULT_THEME = {
   text: "text-slate-700",
 };
 
-export default function PackagesClientPage({ user }: { user: any }) {
+export default function PackagesClientPage() {
   const [packages, setPackages] = useState<Packages[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");

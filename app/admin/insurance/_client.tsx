@@ -19,7 +19,6 @@ import {
   AlertCircle, 
   CheckCircle2, 
   Loader2, 
-  SlidersHorizontal,
   Layers
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -45,6 +44,7 @@ interface ClientPageProps {
 }
 
 export default function InsuranceClientPage({ user }: ClientPageProps) {
+  void user;
   const [stats, setStats] = useState<InsuranceStats>({
     totalInsuredPatients: 0,
     activePoliciesCount: 0,

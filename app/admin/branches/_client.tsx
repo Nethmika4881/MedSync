@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -68,7 +68,7 @@ export default function BranchesPage({ user }: { user: any }) {
   const [complaints, setComplaints] = useState<PatientComplaint[]>([]);
   const [activeAlertTab, setActiveAlertTab] = useState<"warnings" | "complaints">("warnings");
 
-  const fetchBranches = async () => {
+  const fetchBranches = useCallback(async () => {
     try {
       setBranches(await getBranches());
     } catch (err: any) {
@@ -76,9 +76,9 @@ export default function BranchesPage({ user }: { user: any }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const loadAnalytics = async (range: "today" | "7d" | "30d") => {
+  const loadAnalytics = useCallback(async (range: "today" | "7d" | "30d") => {
     try {
       const res = await branchOverview(range);
       if (!res.success) throw new Error(res.error || "Failed to load branch analytics");
@@ -89,12 +89,12 @@ export default function BranchesPage({ user }: { user: any }) {
     } catch (err: any) {
       setError(err.message || "Failed to load branch analytics");
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchBranches();
-    loadAnalytics(timeRange);
-  }, []);
+    void fetchBranches();
+    void loadAnalytics("30d");
+  }, [fetchBranches, loadAnalytics]);
 
   const handleRangeChange = (range: "today" | "7d" | "30d") => {
     setTimeRange(range);
@@ -360,7 +360,6 @@ export default function BranchesPage({ user }: { user: any }) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {branches.map((branch, i) => {
             const theme = BRANCH_GRADIENTS[i % BRANCH_GRADIENTS.length];
-            const activeStaff = branch.staff || [];
 
             return (
               <Link key={branch.branch_id} href={`/admin/branches/${branch.branch_id}`} className="block relative group">

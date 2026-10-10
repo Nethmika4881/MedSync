@@ -16,7 +16,7 @@ import type { AuthUser } from "@/lib/types";
 import { useRouter, usePathname } from "next/navigation";
 
 // ─── Utility to download CSV ────────────────────────────────────────────────
-const downloadCSV = (data: Record<string, unknown>[], filename: string) => {
+const downloadCSV = <T extends object>(data: T[], filename: string) => {
   if (data.length === 0) return;
   const headers = Object.keys(data[0]).join(",");
   const rows = data
@@ -38,6 +38,28 @@ const downloadCSV = (data: Record<string, unknown>[], filename: string) => {
   document.body.removeChild(a);
 };
 
+type BranchAppointmentRow = {
+  date: string;
+  branchID: string;
+  branchName: string;
+  scheduled: number;
+  completed: number;
+  cancelled: number;
+};
+
+type BranchOption = {
+  branch_id: string;
+  branch_name: string;
+};
+
+type DoctorRevenueRow = {
+  doctorID: string;
+  doctor: string;
+  specialization: string;
+  consultations: number;
+  revenue: number;
+};
+
 type OutstandingBalanceRow = {
   patientID: string;
   patientName: string;
@@ -48,44 +70,19 @@ type OutstandingBalanceRow = {
   unpaidInvoices: number;
 };
 
-const treatmentCategoryData = [
-  { category: "General Consultation", count: 1240, revenue: 62000 },
-  { category: "Diagnostic Imaging", count: 450, revenue: 112500 },
-  { category: "Laboratory Tests", count: 890, revenue: 44500 },
-  { category: "Minor Surgery", count: 120, revenue: 96000 },
-  { category: "Physical Therapy", count: 320, revenue: 25600 },
-];
+type TreatmentReportRow = {
+  category: string;
+  count: number;
+  revenue: number;
+};
 
-const insuranceVsOutofPocketData = [
-  {
-    month: "September 2026",
-    totalRevenue: 125000,
-    insuranceCovered: 85000,
-    outOfPocket: 40000,
-    insuranceRatio: "68%",
-  },
-  {
-    month: "August 2026",
-    totalRevenue: 118000,
-    insuranceCovered: 78000,
-    outOfPocket: 40000,
-    insuranceRatio: "66%",
-  },
-  {
-    month: "July 2026",
-    totalRevenue: 132000,
-    insuranceCovered: 92000,
-    outOfPocket: 40000,
-    insuranceRatio: "70%",
-  },
-  {
-    month: "June 2026",
-    totalRevenue: 110000,
-    insuranceCovered: 71000,
-    outOfPocket: 39000,
-    insuranceRatio: "65%",
-  },
-];
+type InsuranceReportRow = {
+  month: string;
+  totalRevenue: number;
+  insuranceCovered: number;
+  outOfPocket: number;
+  insuranceRatio: string;
+};
 
 export default function ReportsPage({
   user,
@@ -100,17 +97,20 @@ export default function ReportsPage({
   insuranceDetails = [],
 }: {
   user: AuthUser;
-  reportDetails: any[];
-  branchDetails: any[];
+  reportDetails: BranchAppointmentRow[];
+  branchDetails: BranchOption[];
   branchID?: string;
   startDate: string;
   endDate: string;
-  doctorRevenueDetails: any[];
+  doctorRevenueDetails: DoctorRevenueRow[];
   outstandingBalanceDetails: OutstandingBalanceRow[];
-  treatmentDetails?: any[];
-  insuranceDetails?: any[];
+  treatmentDetails?: TreatmentReportRow[];
+  insuranceDetails?: InsuranceReportRow[];
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const role = user?.role;
+
   if (!role || role !== "admin") {
     return (
       <div className="flex items-center justify-center h-96 text-slate-500">
@@ -119,11 +119,11 @@ export default function ReportsPage({
     );
   }
 
-  const router = useRouter();
-  const pathname = usePathname();
   const branchAppointmentsData = reportDetails;
   const doctorRevenueData = doctorRevenueDetails;
   const outstandingBalancesData = outstandingBalanceDetails;
+  const treatmentCategoryData = treatmentDetails;
+  const insuranceVsOutofPocketData = insuranceDetails;
   function handleFilterSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
@@ -298,7 +298,7 @@ export default function ReportsPage({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {branchAppointmentsData.map((row, i) => (
+                  {branchAppointmentsData.map((row) => (
                     <TableRow key={`${row.date}-${row.branchID}`}>
                       <TableCell>{row.date}</TableCell>
                       <TableCell className="font-medium">
@@ -348,8 +348,8 @@ export default function ReportsPage({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {doctorRevenueData.map((row, i) => (
-                    <TableRow key={i}>
+                  {doctorRevenueData.map((row) => (
+                    <TableRow key={row.doctorID}>
                       <TableCell className="font-medium">
                         {row.doctor}
                       </TableCell>
@@ -470,8 +470,8 @@ export default function ReportsPage({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {treatmentCategoryData.map((row, i) => (
-                    <TableRow key={i}>
+                  {treatmentCategoryData.map((row) => (
+                    <TableRow key={row.category}>
                       <TableCell className="font-medium">
                         {row.category}
                       </TableCell>
@@ -524,8 +524,8 @@ export default function ReportsPage({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {insuranceVsOutofPocketData.map((row, i) => (
-                    <TableRow key={i}>
+                  {insuranceVsOutofPocketData.map((row) => (
+                    <TableRow key={row.month}>
                       <TableCell className="font-medium">{row.month}</TableCell>
                       <TableCell className="text-right font-bold text-slate-700">
                         ${row.totalRevenue.toLocaleString()}
