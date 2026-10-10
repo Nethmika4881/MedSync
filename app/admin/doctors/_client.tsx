@@ -4,9 +4,8 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { AuthUser, Doctor } from "@/lib/types";
 import { } from "@/lib/constants";;
-import { branches } from "@/lib/constants";;
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, MapPin, Calendar, Clock, Star, Plus, Trash2, DollarSign } from "lucide-react";
+import { Search, MapPin, Calendar, Clock, Star, Plus, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getAvatarGradient } from "@/components/catms/BookingModal";
 import { DoctorDirectoryItem } from "@/lib/actions/doctors";
@@ -26,11 +25,21 @@ export default function DoctorsPage({ user, doctor }: { user: AuthUser, doctor: 
 
   const specialties: string[] = ["All", ...Array.from(new Set(doctor.map((doctor) => doctor.specialization)))];
 
-  const filteredDoctors = doctor.filter((d: Doctor) =>
-    (selectedSpecialty === "All" || d.specialization === selectedSpecialty) &&
-    (d.name.toLowerCase().includes(searchTerm.toLowerCase()) || d.specialization.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const normalizedSearch = searchTerm.trim().toLowerCase();
 
+  const filteredDoctors = doctor.filter((doctor) => {
+    const matchesSpecialty =
+      selectedSpecialty === "All" ||
+      doctor.specialization === selectedSpecialty;
+
+    const matchesSearch =
+      normalizedSearch === "" ||
+      doctor.name.toLowerCase().includes(normalizedSearch) ||
+      doctor.specialization.toLowerCase().includes(normalizedSearch) ||
+      doctor.branchName.toLowerCase().includes(normalizedSearch);
+
+    return matchesSpecialty && matchesSearch;
+  });
   return (
     <div className="space-y-6 animate-fade-in relative pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -83,20 +92,10 @@ export default function DoctorsPage({ user, doctor }: { user: AuthUser, doctor: 
       {filteredDoctors.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredDoctors.map((doctor: Doctor) => {
-            const branch = branches.find(b => b.branchId === doctor.branchId);
             const gradient = getAvatarGradient(doctor.avatar);
 
             return (
               <Card key={doctor.doctorId} className="border-slate-200 shadow-sm hover:shadow-md transition-all group overflow-hidden flex flex-col relative">
-                {isAdmin && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); deleteDoctor(doctor.doctorId); }}
-                    className="absolute top-2 left-2 z-10 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-colors shadow-sm"
-                    title="Delete Doctor"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
                 <div className={`h-24 bg-gradient-to-r ${gradient} relative`}>
                   <div className="absolute -bottom-8 left-6">
                     <div className="p-1.5 bg-white rounded-2xl shadow-sm">
@@ -104,10 +103,6 @@ export default function DoctorsPage({ user, doctor }: { user: AuthUser, doctor: 
                         {doctor.avatar.replace(/[0-9]/g, "")}
                       </div>
                     </div>
-                  </div>
-                  <div className="absolute top-4 right-4 bg-white/80 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-slate-700 flex items-center gap-1 shadow-sm">
-                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                    {doctor.rating}
                   </div>
                 </div>
                 <CardContent className="pt-12 pb-6 px-6 flex-1 flex flex-col">
@@ -117,11 +112,24 @@ export default function DoctorsPage({ user, doctor }: { user: AuthUser, doctor: 
                     </h3>
                     <p className="text-[var(--brand-primary)] font-semibold text-sm">{doctor.specialization}</p>
                   </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span
+                      className={`w-2 h-2 rounded-full ${doctor.isAvailable ? "bg-emerald-500" : "bg-slate-300"
+                        }`}
+                    />
 
+                    <span className="text-xs text-slate-500">
+                      {doctor.isAvailable
+                        ? "Accepting appointments"
+                        : "Currently unavailable"}
+                    </span>
+                  </div>
                   <div className="space-y-2.5 mb-6 flex-1">
                     <div className="flex items-start gap-2.5 text-sm text-slate-600">
                       <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                      <span className="leading-tight">{branch?.name || "Main Clinic"}<br /><span className="text-xs text-slate-400">{branch?.address}</span></span>
+                      <span className="leading-tight">
+                        {doctor.branchName}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2.5 text-sm text-slate-600">
                       <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
@@ -139,7 +147,7 @@ export default function DoctorsPage({ user, doctor }: { user: AuthUser, doctor: 
                       <span className="font-bold text-slate-900">${doctor.consultationFee}</span>
                     </div>
                     <Button
-                      onClick={() => router.push(`/doctors/${doctor.doctorId}`)}
+                      onClick={() => router.push(`admin/doctors/${doctor.doctorId}`)}
                       className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-all"
                     >
                       View Profile
