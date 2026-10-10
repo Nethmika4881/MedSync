@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Download, FileSpreadsheet } from "lucide-react";
 import type { AuthUser } from "@/lib/types";
+import { useRouter, usePathname } from "next/navigation";
 
 // ─── Utility to download CSV ────────────────────────────────────────────────
 const downloadCSV = (data: Record<string, unknown>[], filename: string) => {
@@ -36,35 +37,6 @@ const downloadCSV = (data: Record<string, unknown>[], filename: string) => {
   a.click();
   document.body.removeChild(a);
 };
-
-// ─── Mock Data ──────────────────────────────────────────────────────────────
-
-const doctorRevenueData = [
-  {
-    doctor: "Dr. Sarah Mitchell",
-    specialization: "Cardiologist",
-    consultations: 145,
-    revenue: 21750,
-  },
-  {
-    doctor: "Dr. Michael Chen",
-    specialization: "Neurologist",
-    consultations: 98,
-    revenue: 19600,
-  },
-  {
-    doctor: "Dr. Emily Carter",
-    specialization: "Pediatrician",
-    consultations: 210,
-    revenue: 16800,
-  },
-  {
-    doctor: "Dr. James Wilson",
-    specialization: "General Practice",
-    consultations: 320,
-    revenue: 16000,
-  },
-];
 
 const outstandingBalancesData = [
   {
@@ -143,12 +115,21 @@ const insuranceVsOutofPocketData = [
 export default function ReportsPage({
   user,
   reportDetails,
+  branchDetails,
+  branchID,
+  startDate,
+  endDate,
+  doctorRevenueDetails,
 }: {
   user: AuthUser;
   reportDetails: any[];
+  branchDetails: any[];
+  branchID?: string;
+  startDate: string;
+  endDate: string;
+  doctorRevenueDetails: any[];
 }) {
   const role = user?.role;
-
   if (!role || role !== "admin") {
     return (
       <div className="flex items-center justify-center h-96 text-slate-500">
@@ -157,8 +138,30 @@ export default function ReportsPage({
     );
   }
 
+  const router = useRouter();
+  const pathname = usePathname();
   const branchAppointmentsData = reportDetails;
+  const doctorRevenueData = doctorRevenueDetails;
+  function handleFilterSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
 
+    const formData = new FormData(e.currentTarget);
+
+    const selectedStartDate = String(formData.get("startDate") || "");
+    const selectedEndDate = String(formData.get("endDate") || "");
+    const selectedBranch = String(formData.get("branchID") || "");
+
+    const params = new URLSearchParams();
+
+    params.set("startDate", selectedStartDate);
+    params.set("endDate", selectedEndDate);
+
+    if (selectedBranch) {
+      params.set("branchID", selectedBranch);
+    }
+
+    router.push(`${pathname}?${params.toString()}`);
+  }
   return (
     <div className="space-y-6 animate-fade-in pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -171,6 +174,80 @@ export default function ReportsPage({
           </p>
         </div>
       </div>
+
+      <form
+        onSubmit={handleFilterSubmit}
+        className="grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-4"
+      >
+        <div>
+          <label
+            htmlFor="report-start-date"
+            className="mb-1 block text-sm font-medium text-slate-700"
+          >
+            Start Date
+          </label>
+
+          <input
+            id="report-start-date"
+            name="startDate"
+            type="date"
+            defaultValue={startDate}
+            required
+            className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[var(--brand-primary)]"
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="report-end-date"
+            className="mb-1 block text-sm font-medium text-slate-700"
+          >
+            End Date
+          </label>
+
+          <input
+            id="report-end-date"
+            name="endDate"
+            type="date"
+            defaultValue={endDate}
+            required
+            className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[var(--brand-primary)]"
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="report-branch"
+            className="mb-1 block text-sm font-medium text-slate-700"
+          >
+            Branch
+          </label>
+
+          <select
+            id="report-branch"
+            name="branchID"
+            defaultValue={branchID || ""}
+            className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[var(--brand-primary)]"
+          >
+            <option value="">All branches</option>
+
+            {branchDetails.map((branch) => (
+              <option key={branch.branch_id} value={branch.branch_id}>
+                {branch.branch_name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-end">
+          <Button
+            type="submit"
+            className="h-10 w-full bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-secondary)]"
+          >
+            Apply Filters
+          </Button>
+        </div>
+      </form>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
         <Tabs defaultValue="appointments" className="w-full">

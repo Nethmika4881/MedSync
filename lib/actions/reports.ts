@@ -38,3 +38,35 @@ export async function getBranchAppointmentReport(unsafeData: unknown = {}) {
 
   return result.rows;
 }
+
+export async function getDoctorRevenueReport(unsafe: unknown = {}) {
+  const user = await getCurrentUser();
+
+  if (!user) redirect("/login?clear=1");
+
+  if (user.role != "admin") throw new Error("Unauthorized");
+
+  const passed = appointmentReportSchema.safeParse(unsafe);
+
+  if (!passed.success) throw new Error("Try again! Dirty Data ");
+
+  const filters = passed.data;
+  //coalesce :it returns the first null value
+  const result = await db.query(
+    `
+    select doctor.doctor_id::uuid  as "doctorID" ,count(appointment.appointment_id)::int as "consultations",app_user.full_name::text as doctor,sum(invoice.net_amount) :: float8 as "revenue" ,coalesce(specialization.title,'Not Assigned') as "specialization"
+    from doctor 
+    join app_user on app_user.user_id = doctor.doctor_id
+    join time_slot  on time_slot.doctor_id=doctor.doctor_id
+    join appointment on appointment.time_slot_id = time_slot.time_slot_id
+    join invoice on invoice.appointment_id = appointment.appointment_id
+    left join doctor_specialization on doctor_specialization.doctor_id=doctor.doctor_id
+    left join specialization on specialization.specialization_id=doctor_specialization.specialization_id
+    where (appointment.status='Completed') and (time_slot.available_date between $1::date and $2::date) and ($3::uuid is null or time_slot.branch_id=$3)
+    group by doctor.doctor_id,app_user.full_name,specialization.title order by revenue desc
+    `,
+    [filters.startDate, filters.endDate, filters.branchID ?? null],
+  );
+
+  return result.rows;
+}
