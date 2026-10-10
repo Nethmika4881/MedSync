@@ -4,14 +4,18 @@ import ReportsPage from "./_client";
 import {
   getBranchAppointmentReport,
   getDoctorRevenueReport,
+  getInsuranceReport,
   getOutstandingBalanceReport,
+  getTreatmentReport,
 } from "@/lib/actions/reports";
 import { getBranches } from "@/lib/actions/branches";
+
 type ReportsSearchParams = {
   startDate?: string;
   endDate?: string;
   branchID?: string;
 };
+
 export default async function Page({
   searchParams,
 }: {
@@ -31,6 +35,8 @@ export default async function Page({
     branchDetails,
     doctorRevenueDetails,
     outstandingBalanceDetails,
+    treatmentDetails,
+    insuranceDetails,
   ] =
     await Promise.all([
       getBranchAppointmentReport({
@@ -52,10 +58,23 @@ export default async function Page({
         endDate: params.endDate ?? today.toISOString().slice(0, 10),
         branchID: params.branchID,
       }),
+      getTreatmentReport({
+        startDate:
+          params.startDate || thirtyDaysBefore.toISOString().slice(0, 10),
+        endDate: params.endDate ?? today.toISOString().slice(0, 10),
+        branchID: params.branchID,
+      }),
+      getInsuranceReport({
+        startDate:
+          params.startDate || thirtyDaysBefore.toISOString().slice(0, 10),
+        endDate: params.endDate ?? today.toISOString().slice(0, 10),
+        branchID: params.branchID,
+      }),
     ]);
 
   console.log(reportDetails);
   console.log(branchDetails);
+
   return (
     <ReportsPage
       user={user}
@@ -68,6 +87,8 @@ export default async function Page({
       branchDetails={branchDetails}
       doctorRevenueDetails={doctorRevenueDetails}
       outstandingBalanceDetails={outstandingBalanceDetails}
+      treatmentDetails={treatmentDetails}
+      insuranceDetails={insuranceDetails}
     />
   );
 }

@@ -96,6 +96,8 @@ export default function ReportsPage({
   endDate,
   doctorRevenueDetails,
   outstandingBalanceDetails,
+  treatmentDetails = [],
+  insuranceDetails = [],
 }: {
   user: AuthUser;
   reportDetails: any[];
@@ -105,6 +107,8 @@ export default function ReportsPage({
   endDate: string;
   doctorRevenueDetails: any[];
   outstandingBalanceDetails: OutstandingBalanceRow[];
+  treatmentDetails?: any[];
+  insuranceDetails?: any[];
 }) {
   const role = user?.role;
   if (!role || role !== "admin") {
