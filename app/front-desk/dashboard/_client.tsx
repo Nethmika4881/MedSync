@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Calendar, Activity, CreditCard, Clock, CheckCircle2 } from "lucide-react";
+import { Users, Calendar, Activity, CreditCard, Clock, CheckCircle2, UserPlus, CalendarPlus, Receipt } from "lucide-react";
 import { revenueByMonth, appointmentsByMonth } from "@/lib/constants";;
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { StatusPill } from "@/components/catms/StatusPill";
@@ -83,12 +83,36 @@ export default function DashboardPage({
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back, {user?.name.split(' ')[0]}!</h2>
           <p className="text-slate-500">Here&apos;s what&apos;s happening at your clinic today.</p>
         </div>
+
+        {role === "receptionist" && (
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Link href="/front-desk/patients/new">
+              <Button size="sm" className="rounded-xl h-9 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white shadow-sm text-xs font-semibold">
+                <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+                Register Patient
+              </Button>
+            </Link>
+            <Link href="/front-desk/appointments/new">
+              <Button size="sm" variant="outline" className="rounded-xl h-9 border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold">
+                <CalendarPlus className="w-3.5 h-3.5 mr-1.5 text-blue-600" />
+                Book Appointment
+              </Button>
+            </Link>
+            <Link href="/front-desk/billing">
+              <Button size="sm" variant="outline" className="rounded-xl h-9 border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold">
+                <Receipt className="w-3.5 h-3.5 mr-1.5 text-emerald-600" />
+                Billing Desk
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
+
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
