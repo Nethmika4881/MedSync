@@ -12,11 +12,21 @@ import type { AuthUser } from "@/lib/types";
 import { ClipboardPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import type { FrontDeskStats, WaitingPatient } from "@/lib/actions/frontdesk-dashboard";
 
-export default function DashboardPage({ user }: { user: AuthUser }) {
+export default function DashboardPage({
+  user,
+  initialStats,
+  initialQueue = [],
+}: {
+  user: AuthUser;
+  initialStats?: FrontDeskStats;
+  initialQueue?: WaitingPatient[];
+}) {
+
   const role = user?.role;
-  
-  
+
+
   const { appointments } = useAppointmentStore();
 
 
@@ -32,6 +42,14 @@ export default function DashboardPage({ user }: { user: AuthUser }) {
 
   // Generic metrics based on role
   const getMetrics = () => {
+    if (role === "receptionist" && initialStats) {
+      return [
+        { title: "Today's Appointments", value: String(initialStats.todayAppointments), icon: Calendar, color: "text-blue-600", bg: "bg-blue-100" },
+        { title: "Waiting in Lobby", value: String(initialStats.waitingQueue), icon: Clock, color: "text-amber-600", bg: "bg-amber-100" },
+        { title: "Completed Visits", value: String(initialStats.completedToday), icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-100" },
+        { title: "Unpaid Invoices", value: String(initialStats.unpaidInvoices), icon: CreditCard, color: "text-rose-600", bg: "bg-rose-100" },
+      ];
+    }
     switch (role) {
       case "doctor":
         return [
