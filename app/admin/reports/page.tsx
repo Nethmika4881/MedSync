@@ -1,8 +1,11 @@
 import { getCurrentUser } from "@/lib/actions/getcurrentuser";
 import { redirect } from "next/navigation";
 import ReportsPage from "./_client";
-import { getBranchAppointmentReport } from "@/lib/actions/reports";
-
+import {
+  getBranchAppointmentReport,
+  getDoctorRevenueReport,
+} from "@/lib/actions/reports";
+import { getBranches } from "@/lib/actions/branches";
 type ReportsSearchParams = {
   startDate?: string;
   endDate?: string;
@@ -22,12 +25,36 @@ export default async function Page({
   const thirtyDaysBefore = new Date(today);
   thirtyDaysBefore.setDate(today.getDate() - 30);
 
-  const reportDetails = await getBranchAppointmentReport({
-    startDate: params.startDate || thirtyDaysBefore.toISOString().slice(0, 10), //toisostring what does is pass date as a string
-    endDate: params.endDate ?? today.toISOString().slice(0, 10), //slice(0,10) takes 10 characters from the 0th character
-    branchID: params.branchID,
-  });
+  const [reportDetails, branchDetails, doctorRevenueDetails] =
+    await Promise.all([
+      getBranchAppointmentReport({
+        startDate:
+          params.startDate || thirtyDaysBefore.toISOString().slice(0, 10), //toisostring what does is pass date as a string
+        endDate: params.endDate ?? today.toISOString().slice(0, 10), //slice(0,10) takes 10 characters from the 0th character
+        branchID: params.branchID,
+      }),
+      getBranches(),
+      getDoctorRevenueReport({
+        startDate:
+          params.startDate || thirtyDaysBefore.toISOString().slice(0, 10), //toisostring what does is pass date as a string
+        endDate: params.endDate ?? today.toISOString().slice(0, 10), //slice(0,10) takes 10 characters from the 0th character
+        branchID: params.branchID,
+      }),
+    ]);
 
   console.log(reportDetails);
-  return <ReportsPage user={user} reportDetails={reportDetails} />;
+  console.log(branchDetails);
+  return (
+    <ReportsPage
+      user={user}
+      startDate={
+        params.startDate ?? thirtyDaysBefore.toISOString().slice(0, 10)
+      }
+      endDate={params.endDate ?? today.toISOString().slice(0, 10)}
+      branchID={params.branchID}
+      reportDetails={reportDetails}
+      branchDetails={branchDetails}
+      doctorRevenueDetails={doctorRevenueDetails}
+    />
+  );
 }
