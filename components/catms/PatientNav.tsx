@@ -12,6 +12,7 @@ import {
   Pill,
   Receipt,
   ShieldCheck,
+  MessageSquarePlus,
   LogOut,
   Menu,
   X,
@@ -27,6 +28,7 @@ const navLinks = [
   { label: "Prescriptions",   href: "/patient/prescriptions", icon: Pill },
   { label: "Billing",         href: "/patient/billing",       icon: Receipt },
   { label: "Claims",          href: "/patient/claims",        icon: ShieldCheck },
+  { label: "Complaints",      href: "/patient/complaints",    icon: MessageSquarePlus },
 ];
 
 export function PatientNav() {
