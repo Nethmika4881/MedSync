@@ -104,7 +104,7 @@ export default function PatientDashboardClient({ user }: { user: AuthUser }) {
       {/* ── Welcome Banner ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl p-6 sm:p-8 shadow-sm">
         <div className="space-y-1">
-          <h2 className="text-2xl sm:text-3xl font-bold font-outfit tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-bold font-outfit tracking-tight text-white">
             Welcome back, {firstName}!
           </h2>
           <p className="text-slate-300 text-sm max-w-xl">
@@ -187,11 +187,10 @@ export default function PatientDashboardClient({ user }: { user: AuthUser }) {
           <Card className="border-slate-200 shadow-xs hover:border-[var(--brand-primary)] hover:shadow-md transition-all h-full">
             <CardContent className="p-5 flex items-start gap-4">
               <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform ${
-                  hasOutstanding
+                className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform ${hasOutstanding
                     ? "bg-amber-50 text-amber-600"
                     : "bg-emerald-50 text-emerald-600"
-                }`}
+                  }`}
               >
                 <CreditCard className="w-6 h-6" />
               </div>
@@ -200,9 +199,8 @@ export default function PatientDashboardClient({ user }: { user: AuthUser }) {
                   Outstanding Bills
                 </p>
                 <h3
-                  className={`text-2xl font-bold mt-0.5 ${
-                    hasOutstanding ? "text-amber-600" : "text-slate-900"
-                  }`}
+                  className={`text-2xl font-bold mt-0.5 ${hasOutstanding ? "text-amber-600" : "text-slate-900"
+                    }`}
                 >
                   {data.outstandingBalance}
                 </h3>

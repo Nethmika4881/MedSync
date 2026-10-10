@@ -4,6 +4,7 @@ import React from "react";
 import { usePathname } from "next/navigation";
 import { Search, Bell, Menu } from "lucide-react";
 import { useSidebarStore } from "@/lib/stores/sidebarStore";
+import { DoctorNotificationBell } from "@/components/doctor/DoctorNotificationBell";
 
 export function Header() {
   const pathname = usePathname();
@@ -57,7 +58,11 @@ export function Header() {
             className="w-64 h-9 pl-9 pr-4 rounded-full bg-slate-100 border-transparent text-sm focus:bg-white focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/20 transition-all outline-none"
           />
         </div>
-        <Bell className="w-5 h-5 text-slate-400 cursor-pointer hover:text-slate-700 transition-colors" />
+        {pathname.startsWith("/doctor") ? (
+          <DoctorNotificationBell />
+        ) : (
+          <Bell className="w-5 h-5 text-slate-400 cursor-pointer hover:text-slate-700 transition-colors" />
+        )}
       </div>
     </header>
   );

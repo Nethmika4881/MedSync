@@ -49,7 +49,7 @@ export default function DashboardPage({ user, today, appointments }: DashboardPr
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back, {user?.name.split(' ')[0]}!</h2>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back, {user?.name}!</h2>
           <p className="text-slate-500">Here&apos;s what&apos;s happening at your clinic today.</p>
         </div>
       </div>

@@ -541,10 +541,10 @@ export async function getBranchDetails(branchId: string) {
 
       //Treatments
       db.query(`
-        SELECT t.treatment_id AS "treatmentId", t.treatment_name AS "treatmentName", t.category, t.base_price AS "basePrice",
+        SELECT t.treatment_service_code AS "treatmentId", t.treatment_name AS "treatmentName", t.category, t.base_price AS "basePrice",
         COALESCE(bt.is_available, false) AS "isOffered"
         FROM treatment_catalogue t
-        LEFT JOIN branch_treatment bt ON bt.treatment_id = t.treatment_id AND bt.branch_id = $1
+        LEFT JOIN branch_treatment bt ON bt.treatment_service_code = t.treatment_service_code AND bt.branch_id = $1
         ORDER BY t.category ASC, t.treatment_name ASC
       `, [branchId]),
 
@@ -652,9 +652,9 @@ export async function getBranchDetails(branchId: string) {
 export async function branchTreatment(branchId: string, treatmentId: string, isAvailable: boolean) {
   try {
     await db.query(`
-      INSERT INTO branch_treatment (branch_id, treatment_id, is_available)
+      INSERT INTO branch_treatment (branch_id, treatment_service_code, is_available)
       VALUES ($1, $2, $3)
-      ON CONFLICT (branch_id, treatment_id)
+      ON CONFLICT (branch_id, treatment_service_code)
       DO UPDATE SET is_available = $3
     `, [branchId, treatmentId, isAvailable]);
     return { success: true };
