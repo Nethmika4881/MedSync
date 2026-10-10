@@ -2,21 +2,20 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useDoctorStore } from "@/lib/stores/doctorStore";
 import type { AuthUser, Doctor } from "@/lib/types";
-import {   } from "@/lib/constants";;
+import { } from "@/lib/constants";;
 import { branches } from "@/lib/constants";;
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, MapPin, Calendar, Clock, Star, Plus, Trash2, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getAvatarGradient } from "@/components/catms/BookingModal";
+import { DoctorDirectoryItem } from "@/lib/actions/doctors";
 
-export default function DoctorsPage({ user }: { user: AuthUser }) {
+export default function DoctorsPage({ user, doctor }: { user: AuthUser, doctor: DoctorDirectoryItem[] }) {
   const role = user?.role;
   const router = useRouter();
-  
-  
-  const { doctors, deleteDoctor } = useDoctorStore();
+
+
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>("All");
@@ -25,9 +24,9 @@ export default function DoctorsPage({ user }: { user: AuthUser }) {
 
   const isAdmin = role === "admin";
 
-  const specialties: string[] = ["All", ...Array.from(new Set(doctors.map((d: Doctor) => d.specialization)))];
+  const specialties: string[] = ["All", ...Array.from(new Set(doctor.map((doctor) => doctor.specialization)))];
 
-  const filteredDoctors = doctors.filter((d: Doctor) =>
+  const filteredDoctors = doctor.filter((d: Doctor) =>
     (selectedSpecialty === "All" || d.specialization === selectedSpecialty) &&
     (d.name.toLowerCase().includes(searchTerm.toLowerCase()) || d.specialization.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -41,11 +40,11 @@ export default function DoctorsPage({ user }: { user: AuthUser }) {
         </div>
         {isAdmin && (
           <div className="flex items-center gap-3">
-            <Button onClick={() => router.push("/doctors/fees")} variant="outline" className="rounded-xl h-10 px-4 flex items-center gap-2 text-slate-600">
+            <Button onClick={() => router.push("/admin/doctors/fees")} variant="outline" className="rounded-xl h-10 px-4 flex items-center gap-2 text-slate-600">
               <DollarSign className="w-4 h-4" />
               Manage Fees
             </Button>
-            <Button onClick={() => router.push("/doctors/new")} className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-10 px-4 flex items-center gap-2">
+            <Button onClick={() => router.push("/admin/doctors/new")} className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-10 px-4 flex items-center gap-2">
               <Plus className="w-4 h-4" />
               New Doctor
             </Button>

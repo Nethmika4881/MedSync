@@ -17,7 +17,7 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
     const session = await getUserfromSession(await cookies());
     if (!session) return null;
     const result = await db.query(
-      `SELECT
+      `select
       u.user_id,
       u.full_name,
       u.email,
@@ -26,11 +26,11 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
       e.branch_id AS employee_branch_id,
       e.is_active AS employee_is_active,
       p.registered_branch_id AS patient_branch_id
-   FROM app_user u
-   LEFT JOIN employee e ON e.employee_id = u.user_id
-   LEFT JOIN patient p ON p.patient_id = u.user_id
-   WHERE u.user_id = $1
-     AND u.is_active = true`,
+   from app_user u
+   left join   employee e ON e.employee_id = u.user_id
+   left join  patient p ON p.patient_id = u.user_id
+   where u.user_id = $1
+     and u.is_active = true`,
       [session.id],
     );
     const user = result.rows[0];
