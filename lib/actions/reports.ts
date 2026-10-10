@@ -112,3 +112,94 @@ export async function getOutstandingBalanceReport(unsafe: unknown = {}) {
 
   return result.rows;
 }
+
+export async function getTreatmentReport(unsafe: unknown = {}) {
+  const user = await getCurrentUser();
+
+  if (!user) redirect("/login?clear=1");
+  if (user.role != "admin") throw new Error("Unauthorized");
+
+  const passed = appointmentReportSchema.safeParse(unsafe);
+  if (!passed.success) throw new Error("Try again! Dirty Data ");
+
+  const filters = passed.data;
+
+  const result = await db.query(
+    `
+    select 
+      tc.category::text as "category",
+      coalesce(sum(at.quantity), count(*))::int as "count",
+      coalesce(sum(at.line_total), 0)::float8 as "revenue"
+    from appointment_treatment at
+    join treatment_catalogue tc on tc.treatment_service_code = at.treatment_service_code
+    join appointment a on a.appointment_id = at.appointment_id
+    join time_slot ts on ts.time_slot_id = a.time_slot_id
+    where (a.status != 'Cancelled')
+      and (ts.available_date between $1::date and $2::date)
+      and ($3::uuid is null or ts.branch_id = $3)
+    group by tc.category
+    order by "revenue" desc, "count" desc
+    `,
+    [filters.startDate, filters.endDate, filters.branchID ?? null],
+  );
+
+  return result.rows;
+}
+export async function getInsuranceReport(unsafe: unknown = {}) {
+  const user = await getCurrentUser();
+
+  if (!user) redirect("/login?clear=1");
+  if (user.role != "admin") throw new Error("Unauthorized");
+
+  const passed = appointmentReportSchema.safeParse(unsafe);
+  if (!passed.success) throw new Error("Try again! Dirty Data ");
+
+  const filters = passed.data;
+
+  const result = await db.query(
+    `
+    select
+      to_char(date_trunc('month', time_slot.available_date), 'FMMonth YYYY')::text as "month",
+      date_trunc('month', time_slot.available_date) as "month_order",
+      coalesce(sum(invoice.net_amount), 0)::float8 as "totalRevenue",
+      coalesce(sum(
+        case 
+          when insurance.insurance_id is not null 
+          then (invoice.net_amount * (100 - coalesce(insurance_package.copayment_percentage, 0)) / 100.0)
+          else 0 
+        end
+      ), 0)::float8 as "insuranceCovered"
+    from invoice
+    join appointment on appointment.appointment_id = invoice.appointment_id
+    join time_slot on time_slot.time_slot_id = appointment.time_slot_id
+    left join insurance on insurance.patient_id = appointment.patient_id and insurance.status = 'Active'
+    left join insurance_package on insurance_package.insurance_package_id = insurance.insurance_package_id
+    where (time_slot.available_date between $1::date and $2::date)
+      and ($3::uuid is null or time_slot.branch_id = $3)
+    group by date_trunc('month', time_slot.available_date)
+    order by "month_order" desc
+    `,
+    [filters.startDate, filters.endDate, filters.branchID ?? null],
+  );
+
+  return result.rows.map((row) => {
+    const totalRevenue = Math.round(Number(row.totalRevenue) || 0);
+    const insuranceCovered = Math.round(Number(row.insuranceCovered) || 0);
+    const outOfPocket = Math.max(0, totalRevenue - insuranceCovered);
+    const insuranceRatio =
+      totalRevenue > 0
+        ? `${Math.round((insuranceCovered / totalRevenue) * 100)}%`
+        : "0%";
+
+    return {
+      month: row.month,
+      totalRevenue,
+      insuranceCovered,
+      outOfPocket,
+      insuranceRatio,
+    };
+  });
+}
+
+
+
