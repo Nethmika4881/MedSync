@@ -16,17 +16,21 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
   try {
     const session = await getUserfromSession(await cookies());
     if (!session) return null;
-
     const result = await db.query(
-      `SELECT u.user_id, u.full_name, u.email,
-              COALESCE(e.branch_id, p.registered_branch_id) AS branch_id,
-              CASE WHEN u.user_type = 'Patient' THEN 'Patient'
-                   ELSE e.role::text END AS login_role
-       FROM app_user u
-       LEFT JOIN employee e ON e.employee_id = u.user_id
-       LEFT JOIN patient p ON p.patient_id = u.user_id
-       WHERE u.user_id = $1 AND u.is_active = true
-         AND (u.user_type = 'Patient' OR e.is_active = true)`,
+      `SELECT
+      u.user_id,
+      u.full_name,
+      u.email,
+      u.user_type,
+      e.role,
+      e.branch_id AS employee_branch_id,
+      e.is_active AS employee_is_active,
+      p.registered_branch_id AS patient_branch_id
+   FROM app_user u
+   LEFT JOIN employee e ON e.employee_id = u.user_id
+   LEFT JOIN patient p ON p.patient_id = u.user_id
+   WHERE u.user_id = $1
+     AND u.is_active = true`,
       [session.id],
     );
     const user = result.rows[0];
