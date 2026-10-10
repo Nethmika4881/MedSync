@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function ClaimsRedirect() {
-  redirect("/billing");
+  redirect("/front-desk/billing");
 }
