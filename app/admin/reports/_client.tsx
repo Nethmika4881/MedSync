@@ -38,40 +38,15 @@ const downloadCSV = (data: Record<string, unknown>[], filename: string) => {
   document.body.removeChild(a);
 };
 
-const outstandingBalancesData = [
-  {
-    patientId: "PAT-1042",
-    name: "John Smith",
-    lastVisit: "2026-09-10",
-    totalBilled: 450,
-    amountPaid: 200,
-    outstanding: 250,
-  },
-  {
-    patientId: "PAT-2093",
-    name: "Alice Johnson",
-    lastVisit: "2026-08-22",
-    totalBilled: 1200,
-    amountPaid: 500,
-    outstanding: 700,
-  },
-  {
-    patientId: "PAT-3118",
-    name: "Robert Brown",
-    lastVisit: "2026-09-01",
-    totalBilled: 150,
-    amountPaid: 0,
-    outstanding: 150,
-  },
-  {
-    patientId: "PAT-0844",
-    name: "Emma Davis",
-    lastVisit: "2026-07-15",
-    totalBilled: 3000,
-    amountPaid: 1500,
-    outstanding: 1500,
-  },
-];
+type OutstandingBalanceRow = {
+  patientID: string;
+  patientName: string;
+  lastVisit: string;
+  totalBilled: number;
+  amountPaid: number;
+  outstanding: number;
+  unpaidInvoices: number;
+};
 
 const treatmentCategoryData = [
   { category: "General Consultation", count: 1240, revenue: 62000 },
@@ -120,6 +95,7 @@ export default function ReportsPage({
   startDate,
   endDate,
   doctorRevenueDetails,
+  outstandingBalanceDetails,
 }: {
   user: AuthUser;
   reportDetails: any[];
@@ -128,6 +104,7 @@ export default function ReportsPage({
   startDate: string;
   endDate: string;
   doctorRevenueDetails: any[];
+  outstandingBalanceDetails: OutstandingBalanceRow[];
 }) {
   const role = user?.role;
   if (!role || role !== "admin") {
@@ -142,6 +119,7 @@ export default function ReportsPage({
   const pathname = usePathname();
   const branchAppointmentsData = reportDetails;
   const doctorRevenueData = doctorRevenueDetails;
+  const outstandingBalancesData = outstandingBalanceDetails;
   function handleFilterSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
@@ -412,6 +390,7 @@ export default function ReportsPage({
                     <TableHead>Patient ID</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Last Visit</TableHead>
+                    <TableHead className="text-right">Unpaid Invoices</TableHead>
                     <TableHead className="text-right">Total Billed</TableHead>
                     <TableHead className="text-right">Amount Paid</TableHead>
                     <TableHead className="text-right text-red-500">
@@ -420,13 +399,28 @@ export default function ReportsPage({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {outstandingBalancesData.map((row, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="text-slate-500">
-                        {row.patientId}
+                  {outstandingBalancesData.length === 0 && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={7}
+                        className="py-8 text-center text-slate-500"
+                      >
+                        No outstanding balances for the selected filters.
                       </TableCell>
-                      <TableCell className="font-medium">{row.name}</TableCell>
+                    </TableRow>
+                  )}
+                  {outstandingBalancesData.map((row) => (
+                    <TableRow key={row.patientID}>
+                      <TableCell className="text-slate-500">
+                        {row.patientID.slice(0, 8).toUpperCase()}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {row.patientName}
+                      </TableCell>
                       <TableCell>{row.lastVisit}</TableCell>
+                      <TableCell className="text-right">
+                        {row.unpaidInvoices}
+                      </TableCell>
                       <TableCell className="text-right">
                         ${row.totalBilled.toLocaleString()}
                       </TableCell>
