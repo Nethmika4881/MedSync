@@ -144,14 +144,52 @@ export default function DashboardPage({
         </Card>
 
         {/* Upcoming List / Doctor's Today's Queue */}
+        {/* Receptionist Waiting Queue / Doctor's Queue / Patient List */}
         <Card className="border-slate-200 shadow-sm">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-slate-900">
-              {role === "doctor" ? "Today's Schedule Queue" : "Upcoming Appointments"}
+              {role === "receptionist"
+                ? "Lobby Waiting Queue"
+                : role === "doctor"
+                  ? "Today's Schedule Queue"
+                  : "Upcoming Appointments"}
             </CardTitle>
           </CardHeader>
           <CardContent className="px-0">
-            {role === "doctor" ? (
+            {role === "receptionist" ? (
+              initialQueue.length > 0 ? (
+                <div className="divide-y divide-slate-100 max-h-[360px] overflow-y-auto">
+                  {initialQueue.map((item) => (
+                    <div
+                      key={item.appointmentId}
+                      className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/60 flex flex-col items-center justify-center shrink-0">
+                          <span className="text-[9px] font-bold text-amber-600 uppercase leading-none">Token</span>
+                          <span className="text-sm font-bold text-amber-800 leading-tight">#{item.queueNumber}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-slate-900 truncate">{item.patientName}</p>
+                          <p className="text-xs text-slate-500 truncate">{item.doctorName}</p>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          Waiting
+                        </span>
+                        <p className="text-[11px] text-slate-400 mt-1">{item.sessionTime}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-8 text-center text-slate-500 text-sm">
+                  <Clock className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                  No patients currently waiting in the lobby.
+                </div>
+              )
+            ) : role === "doctor" ? (
               doctorQueue.length > 0 ? (
                 <div className="divide-y divide-slate-100">
                   {doctorQueue.map((appt) => (
@@ -183,7 +221,7 @@ export default function DashboardPage({
               )
             ) : upcomingAppts.length > 0 ? (
               <div className="divide-y divide-slate-100">
-                {upcomingAppts.map(appt => (
+                {upcomingAppts.map((appt) => (
                   <div key={appt.appointmentId} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-blue-50 flex flex-col items-center justify-center shrink-0">
