@@ -91,8 +91,17 @@ export async function getDoctorBookableSlots(
     if (!UUID_REGEX.test(doctorId)) return [];
     if (date && !DATE_REGEX.test(date)) return [];
 
+    // Dated sessions are generated from the doctor's weekly working hours. This is idempotent,
+    // so it only creates what is missing for the next two weeks.
+    await db.query("SELECT fn_sync_time_slots($1::uuid, CURRENT_DATE, CURRENT_DATE + $2::int)", [doctorId, 14]);
+
     const values: unknown[] = [doctorId];
-    let dateFilter = "AND s.available_date >= CURRENT_DATE";
+    // A same-day session is bookable only before its start time. Use the
+    // clinic timezone so the result does not depend on the database host TZ.
+    const clinicNow = "(CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Colombo')";
+    let dateFilter = `AND (s.available_date > ${clinicNow}::date
+                          OR (s.available_date = ${clinicNow}::date
+                              AND s.start_time > ${clinicNow}::time))`;
     if (date) {
       values.push(date);
       dateFilter += ` AND s.available_date = $${values.length}`;
@@ -253,6 +262,9 @@ export async function bookPatientAppointment(
          s.current_serving_number
        FROM time_slot s
        WHERE s.time_slot_id = $1
+         AND (s.available_date > (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Colombo')::date
+              OR (s.available_date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Colombo')::date
+                  AND s.start_time > (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Colombo')::time))
        FOR UPDATE`,
       [input.timeSlotId]
     );
