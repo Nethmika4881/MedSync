@@ -110,17 +110,40 @@ export interface DoctorProfile {
   yearsExperience: number | null;
   consultationFee: number;
   isAvailable: boolean;
+  branchId: string;
   branchName: string;
   phone: string;
   specializations: string;
+  nic: string;
+  dob: string; // "YYYY-MM-DD"
+  gender: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  province: string;
+  postalCode: string;
 }
 
 export interface UpdateProfileInput {
+  fullName: string;
+  email: string;
+  nic: string;
+  dob: string; // "YYYY-MM-DD"
+  gender: "Male" | "Female" | "Other";
+  licenceNo: string;
+  specialization: string; // "" clears it
+  branchId: string;
+  consultationFee: number;
   roomNo: string;
   qualification: string;
   yearsExperience: number | null;
   isAvailable: boolean;
   phone: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  province: string;
+  postalCode: string;
 }
 
 export interface ChangePasswordInput {
@@ -165,4 +188,23 @@ export interface PatientDetail {
   emergencyContactPhone: string;
   emergencyContactRelationship: string;
   history: PatientHistoryVisit[]; // newest first
+}
+
+//  Notifications (derived from appointments, records and treatment orders; nothing is stored)
+
+export type DoctorNotificationKind =
+  | "checked_in"
+  | "in_progress"
+  | "follow_up"
+  | "treatment_done"
+  | "new_booking"
+  | "cancelled";
+
+export interface DoctorNotification {
+  id: string;
+  kind: DoctorNotificationKind;
+  title: string;
+  detail: string;
+  at: string | null; // "YYYY-MM-DDTHH:mm:ss"
+  href: string;
 }

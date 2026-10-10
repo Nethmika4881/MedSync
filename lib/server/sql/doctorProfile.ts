@@ -12,9 +12,18 @@ export async function fetchDoctorProfile(db: Queryable, doctorId: string): Promi
             years_experience                AS "yearsExperience",
             consultation_fee::float8        AS "consultationFee",
             COALESCE(is_available, TRUE)    AS "isAvailable",
+            branch_id                       AS "branchId",
             branch_name                     AS "branchName",
             COALESCE(phone, '')             AS "phone",
-            COALESCE(specializations, '')   AS "specializations"
+            COALESCE(specializations, '')   AS "specializations",
+            address_line1                   AS "addressLine1",
+            COALESCE(address_line2, '')     AS "addressLine2",
+            city                            AS "city",
+            COALESCE(province, '')          AS "province",
+            COALESCE(postal_code, '')       AS "postalCode",
+            nic                             AS "nic",
+            TO_CHAR(dob, 'YYYY-MM-DD')      AS "dob",
+            COALESCE(gender, '')            AS "gender"
      FROM v_doctor_profile
      WHERE doctor_id = $1`,
     [doctorId]
@@ -31,9 +40,18 @@ export async function fetchDoctorProfile(db: Queryable, doctorId: string): Promi
     yearsExperience: r.yearsExperience === null ? null : Number(r.yearsExperience),
     consultationFee: Number(r.consultationFee),
     isAvailable: Boolean(r.isAvailable),
+    branchId: String(r.branchId),
     branchName: String(r.branchName),
     phone: String(r.phone),
     specializations: String(r.specializations),
+    addressLine1: String(r.addressLine1),
+    addressLine2: String(r.addressLine2),
+    city: String(r.city),
+    province: String(r.province),
+    postalCode: String(r.postalCode),
+    nic: String(r.nic),
+    dob: String(r.dob),
+    gender: String(r.gender),
   };
 }
 
@@ -42,14 +60,32 @@ export async function updateDoctorProfile(
   doctorId: string,
   input: UpdateProfileInput
 ): Promise<void> {
-  await db.query("CALL sp_update_doctor_profile($1::uuid, $2, $3, $4::int, $5::boolean, $6)", [
-    doctorId,
-    input.roomNo,
-    input.qualification,
-    input.yearsExperience,
-    input.isAvailable,
-    input.phone,
-  ]);
+  await db.query(
+    "CALL sp_update_doctor_profile($1::uuid, $2, $3, $4::int, $5::boolean, $6, $7, $8, $9, $10, $11, " +
+      "$12, $13, $14, $15::date, $16, $17, $18::numeric, $19::uuid, $20)",
+    [
+      doctorId,
+      input.roomNo,
+      input.qualification,
+      input.yearsExperience,
+      input.isAvailable,
+      input.phone,
+      input.addressLine1,
+      input.addressLine2,
+      input.city,
+      input.province,
+      input.postalCode,
+      input.fullName,
+      input.email,
+      input.nic,
+      input.dob,
+      input.gender,
+      input.licenceNo,
+      input.consultationFee,
+      input.branchId,
+      input.specialization,
+    ]
+  );
 }
 
 // The stored hash and salt, for checking the current password.

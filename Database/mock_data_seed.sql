@@ -14,6 +14,15 @@
 -- Every user account password: password123
 -- =============================================================================
 
+-- The seed inserts consultation records, treatments and prescriptions for appointments that are
+-- already Completed. The lock_completed_consultation trigger (V17) rejects exactly that, so it is
+-- switched off for this load only. Everything is one transaction: if the seed fails, the triggers
+-- are left enabled.
+BEGIN;
+ALTER TABLE consultation_record   DISABLE TRIGGER lock_completed_consultation;
+ALTER TABLE prescription          DISABLE TRIGGER lock_completed_consultation;
+ALTER TABLE appointment_treatment DISABLE TRIGGER lock_completed_consultation;
+
 DO $$
 DECLARE
     -- Shared credential constants (password = 'password123')
@@ -1066,3 +1075,8 @@ RAISE NOTICE '   18 Time slots  |  30 Appointments  |  10 Invoices';
 RAISE NOTICE '   All passwords: password123';
 
 END $$;
+
+ALTER TABLE consultation_record   ENABLE TRIGGER lock_completed_consultation;
+ALTER TABLE prescription          ENABLE TRIGGER lock_completed_consultation;
+ALTER TABLE appointment_treatment ENABLE TRIGGER lock_completed_consultation;
+COMMIT;
