@@ -43,6 +43,14 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
       blurb: "",
     };
   } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     console.error("[auth/getCurrentUser] Could not load user:", error);
     return null;
   }

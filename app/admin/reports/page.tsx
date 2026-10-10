@@ -23,7 +23,9 @@ export default async function Page({
 }) {
   const params = await searchParams;
   const user = await getCurrentUser();
-  if (!user) redirect("/login?clear=1");
+  if (!user || user.role !== "admin") {
+    redirect("/login?clear=1");
+  }
 
   const today = new Date();
 

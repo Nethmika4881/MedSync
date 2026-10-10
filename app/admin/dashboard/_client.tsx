@@ -15,18 +15,6 @@ import { useAppointmentStore } from "@/lib/stores/appointmentStore";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-interface BranchSummary {
-  branchId: string;
-  branchName: string;
-  isActive: boolean;
-  city: string;
-  province: string;
-  managerName: string;
-  doctorCount: number;
-  staffCount: number;
-  patientCount: number;
-}
-
 type AdminDashboardData = DashboardData;
 
 export default function DashboardPage({ user }: { user: any }) {

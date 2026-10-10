@@ -1,14 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useClinicalStore } from "@/lib/stores/clinicalStore";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useCallback, useEffect, useState } from "react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { StatusPill } from "@/components/catms/StatusPill";
 import toast, { Toaster } from "react-hot-toast";
 import {
-  Activity, ClipboardCheck, Clock, Plus, Search, ChevronLeft, ChevronRight,
-  FlaskConical, Radiation, Stethoscope, Dumbbell,
+  Activity, Plus, Search, ChevronLeft, ChevronRight,
+  FlaskConical, Radiation, Stethoscope,
   Pencil, Trash2, DollarSign, Syringe, Scissors, Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -60,7 +58,7 @@ function AdminCatalogueView() {
     is_insurable: true,
   });
 
-  const loadTreatments = async (requestedPage: number) => {
+  const loadTreatments = useCallback(async (requestedPage: number) => {
     setIsLoading(true);
     const result = await getTreatments(requestedPage, pagination.pageSize);
     if (result.success) {
@@ -72,11 +70,11 @@ function AdminCatalogueView() {
       toast.error("Failed to load treatments.");
     }
     setIsLoading(false);
-  };
+  }, [pagination.pageSize]);
 
   useEffect(() => {
     void loadTreatments(1);
-  }, []);
+  }, [loadTreatments]);
 
   const goToPage = (nextPage: number) => {
     if (nextPage < 1 || nextPage > pagination.pages || nextPage === page) return;
@@ -367,8 +365,7 @@ function AdminCatalogueView() {
   );
 }
 
-function DoctorTaskView({ user }: { user: any }) {
-  const { treatments } = useClinicalStore();
+function DoctorTaskView() {
   return <div className="p-8">Doctor view placeholder</div>;
 }
 
@@ -376,6 +373,6 @@ export default function TreatmentsPage({ user }: { user: any }) {
   const role = user?.role;
   if (!role) return null;
   if (role === "admin") return <AdminCatalogueView />;
-  if (role === "doctor") return <DoctorTaskView user={user} />;
+  if (role === "doctor") return <DoctorTaskView />;
   return <div className="flex items-center justify-center h-96 text-slate-500">No permission.</div>;
 }

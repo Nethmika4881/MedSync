@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useEffect, useState, use } from "react";
+import React, { useCallback, useEffect, useState, use } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
   ArrowLeft, MapPin, Users, Stethoscope, Shield, 
-  Pencil, Loader2, X, Search, DollarSign, 
-  CheckCircle2, AlertTriangle, FileText, Activity, MessageSquare
+  Pencil, Loader2, X, CheckCircle2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
@@ -42,7 +41,7 @@ export default function BranchDetailPage({ params }: { params: Promise<{ id: str
   const [newStaffId, setNewStaffId] = useState("");
   const [staffSearchQuery, setStaffSearchQuery] = useState("");
 
-  const loadDetails = async () => {
+  const loadDetails = useCallback(async () => {
     try {
       const details = await getBranchDetails(branchId);
       const fallback = details ? null : await getBranchById(branchId);
@@ -77,11 +76,11 @@ export default function BranchDetailPage({ params }: { params: Promise<{ id: str
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [branchId]);
 
   useEffect(() => {
-    loadDetails();
-  }, [branchId]);
+    void loadDetails();
+  }, [loadDetails]);
 
   const handleToggleTreatment = async (treatmentId: string, currentStatus: boolean) => {
     const res = await branchTreatment(branchId, treatmentId, !currentStatus);
