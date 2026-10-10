@@ -9,5 +9,5 @@ export default async function PatientsPage() {
 
   const patients = await getBranchPatients(user.branchId);
 
-  return <PatientsClientPage initialPatients={patients} />;
+  return <PatientsClientPage initialPatients={patients} branchId={user.branchId} />;
 }

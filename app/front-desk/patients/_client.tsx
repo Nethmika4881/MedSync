@@ -1,28 +1,37 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, UserPlus, Phone, Mail, Activity, ArrowRight, Users, MapPin } from "lucide-react";
+import { Search, UserPlus, Phone, Mail, Activity, ArrowRight, Users, MapPin, Loader2 } from "lucide-react";
 import { AvatarWithName } from "@/components/catms/AvatarWithName";
 import { EmptyState } from "@/components/catms/EmptyState";
-import type { FrontDeskPatientSummary } from "@/lib/actions/frontdesk-patients";
+import { getBranchPatients, type FrontDeskPatientSummary } from "@/lib/actions/frontdesk-patients";
 
 export default function PatientsClientPage({
     initialPatients = [],
+    branchId,
 }: {
     initialPatients: FrontDeskPatientSummary[];
+    branchId?: string;
 }) {
     const router = useRouter();
     const [searchTerm, setSearchTerm] = useState("");
+    const [patients, setPatients] = useState<FrontDeskPatientSummary[]>(initialPatients);
+    const [isSearching, startTransition] = useTransition();
 
-    const filteredPatients = initialPatients.filter((p) =>
-        p.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.nic.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (p.phone && p.phone.includes(searchTerm)) ||
-        p.patientId.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Live debounced server search
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            startTransition(async () => {
+                const results = await getBranchPatients(branchId, searchTerm);
+                setPatients(results);
+            });
+        }, 300);
+
+        return () => clearTimeout(handler);
+    }, [searchTerm, branchId]);
 
     const getAge = (dobString: string) => {
         if (!dobString) return "--";
@@ -37,11 +46,15 @@ export default function PatientsClientPage({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-bold font-outfit text-slate-900 tracking-tight">Patient Directory</h2>
-                    <p className="text-slate-500 text-sm">View and manage registered clinic patients.</p>
+                    <p className="text-slate-500 text-sm">Search and manage registered clinic patients.</p>
                 </div>
                 <div className="flex flex-col sm:flex-row w-full sm:w-auto items-stretch sm:items-center gap-3">
-                    <div className="relative group w-full sm:w-64">
-                        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <div className="relative group w-full sm:w-72">
+                        {isSearching ? (
+                            <Loader2 className="w-4 h-4 text-[var(--brand-primary)] absolute left-3 top-1/2 -translate-y-1/2 animate-spin" />
+                        ) : (
+                            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        )}
                         <input
                             type="text"
                             placeholder="Search by name, NIC, phone..."
@@ -62,7 +75,7 @@ export default function PatientsClientPage({
 
             {/* Patients Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredPatients.map((patient) => (
+                {patients.map((patient) => (
                     <Card
                         key={patient.patientId}
                         className="border-slate-200 shadow-sm hover:shadow-md transition-all group cursor-pointer rounded-2xl overflow-hidden hover:border-slate-300"
@@ -124,7 +137,7 @@ export default function PatientsClientPage({
                 ))}
             </div>
 
-            {filteredPatients.length === 0 && (
+            {patients.length === 0 && (
                 <Card className="border-slate-200 shadow-sm rounded-2xl">
                     <EmptyState
                         icon={Users}
