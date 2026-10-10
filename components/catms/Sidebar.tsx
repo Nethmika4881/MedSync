@@ -25,9 +25,11 @@ export function Sidebar() {
   const role = getRoleFromPath(pathname);
   const { open, close, collapsed } = useSidebarStore();
 
-  // Close the mobile drawer after navigating.
+  // Close the mobile drawer after navigating. Only write to the store when the drawer is
+  // actually open: an unconditional set() would persist the default state before the
+  // saved `collapsed` value has been rehydrated, and wipe it.
   useEffect(() => {
-    close();
+    if (useSidebarStore.getState().open) close();
   }, [pathname, close]);
 
   // Patients use a top-nav layout — no sidebar.

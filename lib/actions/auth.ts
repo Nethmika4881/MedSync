@@ -113,8 +113,8 @@ export default async function registerFunction(unsafeData: RegisterFormValues) {
       const contactID = contactResult.rows[0].contact_id;
       await client.query(
         `
-          insert into contact_number(contact_id,number)
-          values ($1,$2)
+          insert into contact_number(contact_id,number_type,number)
+          values ($1,'Mobile',$2)
           returning contact_id
           `,
         [contactID, data.phoneNumber],
