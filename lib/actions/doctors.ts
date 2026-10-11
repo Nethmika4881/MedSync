@@ -4,6 +4,7 @@
 // Uses only the actual migration-defined schema (V3, V4, V5).
 // No schema was modified to support this file.
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import type { Appointment } from "@/lib/types";
 import { mapAppointmentRow } from "@/lib/server/sql/doctorAppointments";
 import { z } from "zod";
@@ -35,6 +36,17 @@ export interface AdminDoctorProfile {
   avatar: string;
 }
 const doctorIdSchema = z.string().uuid();
+const doctorFeeSchema = z.object({
+  doctorId: doctorIdSchema,
+  consultationFee: z
+    .number({ invalid_type_error: "Enter a valid consultation fee" })
+    .min(0, "Consultation fee cannot be negative")
+    .max(1000000, "Consultation fee is too high"),
+});
+
+export type UpdateDoctorFeeResult =
+  | { ok: true; consultationFee: number }
+  | { ok: false; error: string };
 export interface DoctorDirectoryItem {
   doctorId: string;
   name: string;
@@ -289,4 +301,63 @@ export async function getAdminDoctorAppointments(
   );
 
   return rows.map(mapAppointmentRow);
+}
+
+export async function updateAdminDoctorFee(
+  input: unknown,
+): Promise<UpdateDoctorFeeResult> {
+  const currentUser = await getCurrentUser();
+
+  if (!currentUser || currentUser.role !== "admin") {
+    return {
+      ok: false,
+      error: "Only administrators can update consultation fees.",
+    };
+  }
+
+  const parsed = doctorFeeSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid fee details.",
+    };
+  }
+
+  try {
+    const { rows } = await db.query(
+      `
+        update doctor
+        set consultation_fee = $2,
+            updated_at = now()
+        where doctor_id = $1
+        returning consultation_fee::float8 as "consultationFee"
+      `,
+      [parsed.data.doctorId, parsed.data.consultationFee],
+    );
+
+    if (!rows[0]) {
+      return {
+        ok: false,
+        error: "Doctor not found.",
+      };
+    }
+
+    const consultationFee = Number(rows[0].consultationFee);
+
+    revalidatePath("/admin/doctors");
+    revalidatePath("/admin/doctors/fees");
+    revalidatePath(`/admin/doctors/${parsed.data.doctorId}`);
+
+    return {
+      ok: true,
+      consultationFee,
+    };
+  } catch (error) {
+    console.error("[updateAdminDoctorFee] Failed to update fee:", error);
+    return {
+      ok: false,
+      error: "Unable to update the consultation fee. Please try again.",
+    };
+  }
 }
