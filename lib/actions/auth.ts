@@ -46,11 +46,17 @@ export async function signIn(unsafeData: signinschema) {
     const role = z.enum(userLoginRoles).safeParse(user.login_role);
     if (!role.success) return "Unable to log you in";
 
-    const isCorrectPassword = await comparePassword({
-      hashedPassword: user.password_hash,
-      password: data.password,
-      salt: user.salt,
-    });
+    let isCorrectPassword = false;
+    try {
+      isCorrectPassword = await comparePassword({
+        hashedPassword: user.password_hash,
+        password: data.password,
+        salt: user.salt,
+      });
+    } catch {
+      isCorrectPassword = false;
+    }
+
     if (!isCorrectPassword) return "Unable to log you in";
 
     await createUserSession({ id: user.user_id, role: role.data }, await cookies());
