@@ -24,7 +24,15 @@ export async function getBranchPatients(
 ): Promise<FrontDeskPatientSummary[]> {
     try {
         const user = await getCurrentUser();
-        const effectiveBranchId = branchId || user?.branchId;
+        if (!user || (user.role !== "receptionist" && user.role !== "admin" && user.role !== "doctor")) {
+            return [];
+        }
+
+        // Enforce branch-level access control: non-admins are scoped to their assigned branch
+        const effectiveBranchId = user.role === "admin" ? (branchId || user.branchId) : user.branchId;
+        if (!effectiveBranchId && user.role !== "admin") {
+            return [];
+        }
 
         let sql = `
       SELECT
@@ -71,6 +79,13 @@ export async function getBranchPatients(
 
 export async function getBranchPatientById(patientId: string): Promise<FrontDeskPatientSummary | null> {
     try {
+        const user = await getCurrentUser();
+        if (!user || (user.role !== "receptionist" && user.role !== "admin" && user.role !== "doctor")) {
+            return null;
+        }
+
+        const effectiveBranchId = user.role === "admin" ? null : user.branchId;
+
         const sql = `
       SELECT
         p.patient_id AS "patientId",
@@ -89,10 +104,10 @@ export async function getBranchPatientById(patientId: string): Promise<FrontDesk
       JOIN app_user u ON u.user_id = p.patient_id
       LEFT JOIN contact_number cn ON cn.contact_id = u.contact_id AND cn.is_primary = true
       LEFT JOIN address addr ON addr.address_id = u.address_id
-      WHERE p.patient_id = $1::uuid
+      WHERE p.patient_id = $1::uuid AND ($2::uuid IS NULL OR p.registered_branch_id = $2::uuid)
     `;
 
-        const { rows } = await db.query(sql, [patientId]);
+        const { rows } = await db.query(sql, [patientId, effectiveBranchId]);
         return (rows[0] as FrontDeskPatientSummary) || null;
     } catch (error) {
         console.error("[getBranchPatientById] Failed to fetch patient:", error);

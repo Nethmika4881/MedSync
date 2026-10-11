@@ -2,6 +2,8 @@
 
 import db from "../db";
 import { revalidatePath } from "next/cache";
+import { getCurrentUser } from "@/lib/actions/getcurrentuser";
+import { z } from "zod";
 
 export interface BranchStaff {
   employeeId: string;
@@ -85,6 +87,29 @@ export interface PatientComplaint {
 
 export async function getBranches(): Promise<BranchOverview[]> {
   try {
+    const user = await getCurrentUser();
+
+    // If unauthenticated or non-admin, return public/basic branch directory without staff or patient details
+    if (!user || user.role !== "admin") {
+      const branchResult = await db.query(
+        `SELECT b.branch_id, b.branch_name, b.is_active, a.address_line1, a.city, a.province 
+         FROM branch b JOIN address a ON b.address_id = a.address_id 
+         WHERE b.is_active = TRUE ORDER BY b.branch_name ASC;`
+      );
+      return branchResult.rows.map((branch) => ({
+        branch_id: branch.branch_id,
+        branch_name: branch.branch_name,
+        is_active: branch.is_active,
+        address_line1: branch.address_line1,
+        city: branch.city,
+        province: branch.province,
+        patient_count: 0,
+        doctor_count: 0,
+        staff: [],
+        manager_name: "Unassigned",
+      }));
+    }
+
     // Branch data
     const branch = `SELECT b.branch_id, b.branch_name, b.is_active, b.manager_id, a.address_line1, a.city, a.province 
       FROM branch b JOIN address a ON b.address_id = a.address_id ORDER BY b.created_at ASC;`;
@@ -133,6 +158,11 @@ export async function getBranches(): Promise<BranchOverview[]> {
 }
 
 export async function createBranch(data: CreateBranchInput) {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "admin") {
+    return { success: false, error: "Unauthorized" };
+  }
+
   const { branch_name, address_line1, city, province } = data;
 
   if (!branch_name || !address_line1 || !city || !province) {
@@ -176,6 +206,10 @@ export async function createBranch(data: CreateBranchInput) {
 
 export async function getBranchById(branchId: string) {
   try {
+    const user = await getCurrentUser();
+    if (!user) return null;
+    if (user.role !== "admin" && user.branchId !== branchId) return null;
+
     const branch = `SELECT b.branch_id, b.branch_name, b.is_active, a.address_line1, a.city, a.province, u.full_name AS manager_name,
         (SELECT COUNT(*) FROM employee e WHERE e.branch_id = b.branch_id AND e.role = 'Doctor') AS doctor_count,
         (SELECT COUNT(*) FROM patient p WHERE p.registered_branch_id = b.branch_id) AS patient_count
@@ -221,6 +255,11 @@ export async function getBranchById(branchId: string) {
 
 export async function deleteBranch(branchId: string) {
   try {
+    const user = await getCurrentUser();
+    if (!user || user.role !== "admin") {
+      return { success: false, error: "Unauthorized" };
+    }
+
     await db.query(`DELETE FROM branch WHERE branch_id = $1`, [branchId]);
 
     revalidatePath("/admin/branches");
@@ -236,12 +275,22 @@ export async function deleteBranch(branchId: string) {
 
 export async function branchOverview(timeRange: "today" | "7d" | "30d" = "30d") {
   try {
-    let dateCondition = "ts.available_date >= CURRENT_DATE - INTERVAL '30 days'";
-    if (timeRange === "today") {
-      dateCondition = "ts.available_date = CURRENT_DATE";
-    } else if (timeRange === "7d") {
-      dateCondition = "ts.available_date >= CURRENT_DATE - INTERVAL '7 days'";
+    const user = await getCurrentUser();
+    if (!user || user.role !== "admin") {
+      return { success: false, error: "Unauthorized" };
     }
+
+    const timeRangeSchema = z.enum(["today", "7d", "30d"]);
+    const parsedRange = timeRangeSchema.safeParse(timeRange);
+    const safeRange = parsedRange.success ? parsedRange.data : "30d";
+
+    const DATE_CONDITIONS = {
+      today: "ts.available_date = CURRENT_DATE",
+      "7d": "ts.available_date >= CURRENT_DATE - INTERVAL '7 days'",
+      "30d": "ts.available_date >= CURRENT_DATE - INTERVAL '30 days'",
+    } as const;
+
+    const dateCondition = DATE_CONDITIONS[safeRange];
 
     const [trafficResults, warningsResults, complaintsResults] = await Promise.all([
       db.query(`
@@ -354,6 +403,11 @@ export async function branchOverview(timeRange: "today" | "7d" | "30d" = "30d") 
 
 export async function complaints(complaintId: string) {
   try {
+    const user = await getCurrentUser();
+    if (!user || (user.role !== "admin" && user.role !== "receptionist")) {
+      return { success: false, error: "Unauthorized" };
+    }
+
     const result = await db.query(
       `UPDATE branch_complaint 
        SET status = 'Resolved', resolved_at = CURRENT_TIMESTAMP 
@@ -378,6 +432,11 @@ export async function updateBranchDetails(
   branchId: string,
   data: UpdateBranchDetailsInput
 ) {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "admin") {
+    return { success: false, error: "Unauthorized" };
+  }
+
   const { branch_name, address_line1, city, province } = data;
 
   if (!branch_name || !address_line1 || !city || !province) {
@@ -430,6 +489,11 @@ export async function updateBranchDetails(
 
 export async function assignManager(branchId: string, managerId: string) {
   try {
+    const user = await getCurrentUser();
+    if (!user || user.role !== "admin") {
+      return { success: false, error: "Unauthorized" };
+    }
+
     await db.query(
       `UPDATE branch SET manager_id = $1 WHERE branch_id = $2`,
       [managerId, branchId]
@@ -448,6 +512,11 @@ export async function assignManager(branchId: string, managerId: string) {
 
 export async function removeManager(branchId: string) {
   try {
+    const user = await getCurrentUser();
+    if (!user || user.role !== "admin") {
+      return { success: false, error: "Unauthorized" };
+    }
+
     await db.query(
       `UPDATE branch SET manager_id = NULL WHERE branch_id = $1`,
       [branchId]
@@ -466,6 +535,11 @@ export async function removeManager(branchId: string) {
 
 export async function assignStaff(branchId: string, employeeId: string) {
   try {
+    const user = await getCurrentUser();
+    if (!user || user.role !== "admin") {
+      return { success: false, error: "Unauthorized" };
+    }
+
     await db.query(
       `UPDATE employee SET branch_id = $1 WHERE employee_id = $2`,
       [branchId, employeeId]
@@ -484,6 +558,11 @@ export async function assignStaff(branchId: string, employeeId: string) {
 
 export async function removeStaff(employeeId: string, branchId?: string) {
   try {
+    const user = await getCurrentUser();
+    if (!user || user.role !== "admin") {
+      return { success: false, error: "Unauthorized" };
+    }
+
     await db.query(
       `UPDATE employee SET branch_id = NULL WHERE employee_id = $1`,
       [employeeId]
@@ -505,6 +584,11 @@ export async function removeStaff(employeeId: string, branchId?: string) {
 
 export async function getBranchDetails(branchId: string) {
   try {
+    const user = await getCurrentUser();
+    if (!user || (user.role !== "admin" && user.branchId !== branchId)) {
+      return null;
+    }
+
     const [branchResults, staffResults, availableStaffResults, treatmentsResults, visitsResults, invoicesResults, complaintsResults] = await Promise.all([
 
       //Branch Details
@@ -651,6 +735,11 @@ export async function getBranchDetails(branchId: string) {
 
 export async function branchTreatment(branchId: string, treatmentId: string, isAvailable: boolean) {
   try {
+    const user = await getCurrentUser();
+    if (!user || user.role !== "admin") {
+      return { success: false, error: "Unauthorized" };
+    }
+
     await db.query(`
       INSERT INTO branch_treatment (branch_id, treatment_service_code, is_available)
       VALUES ($1, $2, $3)

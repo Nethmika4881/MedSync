@@ -4,6 +4,7 @@ import db from "@/lib/db";
 import { getCurrentUser } from "@/lib/actions/getcurrentuser";
 import { generateSalt, hashPassword } from "@/lib/actions/passwordHasher";
 import { revalidatePath } from "next/cache";
+import crypto from "crypto";
 
 export interface RegisterPatientInput {
     firstName: string;
@@ -23,15 +24,18 @@ export interface RegisterPatientInput {
 }
 
 export async function registerBranchPatient(input: RegisterPatientInput) {
+    const user = await getCurrentUser();
+    if (!user || (user.role !== "receptionist" && user.role !== "admin")) {
+        return { success: false, error: "Unauthorized: Front desk or admin access required." };
+    }
+
+    const branchId = user.role === "admin" ? (input.branchId || user.branchId) : user.branchId;
+    if (!branchId) {
+        return { success: false, error: "Active branch ID is required for patient registration." };
+    }
+
     const client = await db.connect();
     try {
-        const user = await getCurrentUser();
-        const branchId = input.branchId || user?.branchId;
-
-        if (!branchId) {
-            return { success: false, error: "Active branch ID is required for patient registration." };
-        }
-
         await client.query("BEGIN");
 
         // 1. Create Address
@@ -55,11 +59,11 @@ export async function registerBranchPatient(input: RegisterPatientInput) {
             [contactId, input.phone]
         );
 
-        // 3. Create App User with hashed temporary password
+        // 3. Create App User with hashed random temporary password
         const fullName = `${input.firstName} ${input.lastName}`.trim();
         const salt = generateSalt();
-        const defaultPassword = "ChangeMe@123";
-        const passwordHash = await hashPassword(defaultPassword, salt);
+        const temporaryPassword = `Tmp#${crypto.randomBytes(6).toString("base64url")}`;
+        const passwordHash = await hashPassword(temporaryPassword, salt);
 
         const userRes = await client.query(
             `INSERT INTO app_user (
@@ -107,6 +111,7 @@ export async function registerBranchPatient(input: RegisterPatientInput) {
         return {
             success: true,
             patientId: newUserId,
+            temporaryPassword,
             message: `Patient ${fullName} registered successfully!`,
         };
     } catch (error: any) {

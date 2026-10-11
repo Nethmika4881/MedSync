@@ -2,7 +2,9 @@
 
 import db from "@/lib/db";
 import { getCurrentUser } from "@/lib/actions/getcurrentuser";
+import { comparePassword, generateSalt, hashPassword } from "@/lib/actions/passwordHasher";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 export type AdminProfileData = {
   userId: string;
@@ -24,7 +26,7 @@ export type AdminProfileData = {
 
 export async function getProfile(): Promise<AdminProfileData | null> {
   const user = await getCurrentUser();
-  if (!user) return null;
+  if (!user || user.role !== "admin") return null;
 
   const result = await db.query(
     `
@@ -69,10 +71,10 @@ export async function updateProfile(data: {
   postalCode: string;
 }) {
   const user = await getCurrentUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user || user.role !== "admin") throw new Error("Unauthorized");
 
   const userRecord = await db.query(
-    `SELECT user_id, address_id, contact_id FROM app_user WHERE user_id = $1LIMIT 1;`,
+    `SELECT user_id, address_id, contact_id FROM app_user WHERE user_id = $1 LIMIT 1;`,
     [user.userId]
   );
 
@@ -98,7 +100,7 @@ export async function updateProfile(data: {
       SET address_line1 = $1, address_line2 = $2, city = $3, province = $4, postal_code = $5, updated_at = NOW()
       WHERE address_id = $6
       `,
-      [data.addressLine1, data.addressLine2, data.city, data.province, data.postalCode, address_id,]
+      [data.addressLine1, data.addressLine2, data.city, data.province, data.postalCode, address_id]
     );
   }
 
@@ -132,13 +134,29 @@ export async function updateProfile(data: {
   return { success: true, message: "Profile updated successfully." };
 }
 
-export async function updatePassword(data: {currentPass: string; newPass: string;}) 
-{
+const updatePasswordSchema = z.object({
+  currentPass: z.string().min(1, "Current password is required"),
+  newPass: z
+    .string()
+    .min(8, "Password must be at least 8 characters long")
+    .max(128, "Password is too long"),
+});
+
+export async function updatePassword(data: { currentPass: string; newPass: string }) {
   const user = await getCurrentUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user || user.role !== "admin") throw new Error("Unauthorized");
+
+  const validated = updatePasswordSchema.safeParse(data);
+  if (!validated.success) {
+    throw new Error(validated.error.errors[0]?.message || "Invalid password format.");
+  }
+
+  if (data.currentPass === data.newPass) {
+    throw new Error("New password must be different from your current password.");
+  }
 
   const userRes = await db.query(
-    `SELECT user_id, password_hash FROM app_user WHERE user_id = $1 LIMIT 1;`,
+    `SELECT user_id, password_hash, salt FROM app_user WHERE user_id = $1 LIMIT 1;`,
     [user.userId]
   );
 
@@ -146,19 +164,34 @@ export async function updatePassword(data: {currentPass: string; newPass: string
     throw new Error("User record not found.");
   }
 
-  const { user_id, password_hash } = userRes.rows[0];
+  const { user_id, password_hash, salt } = userRes.rows[0];
 
-  if (password_hash !== data.currentPass) {
+  let matches = false;
+  if (salt && password_hash && password_hash.length === 128) {
+    try {
+      matches = await comparePassword({
+        hashedPassword: password_hash,
+        password: data.currentPass,
+        salt: salt,
+      });
+    } catch {
+      matches = false;
+    }
+  } else if (password_hash && password_hash === data.currentPass) {
+    // Migration fallback for accounts with legacy plaintext passwords
+    matches = true;
+  }
+
+  if (!matches) {
     throw new Error("Current password does not match our records.");
   }
 
-  if (data.currentPass === data.newPass) {
-  throw new Error("New password must be different from your current password.");
-}
+  const newSalt = generateSalt();
+  const newHash = await hashPassword(data.newPass, newSalt);
 
   await db.query(
-    `UPDATE app_user SET password_hash = $1, updated_at = NOW() WHERE user_id = $2`,
-    [data.newPass, user_id]
+    `UPDATE app_user SET password_hash = $1, salt = $2, updated_at = NOW() WHERE user_id = $3`,
+    [newHash, newSalt, user_id]
   );
 
   return { success: true, message: "Password updated successfully." };
