@@ -5,7 +5,6 @@ import { toast, Toaster } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  CalendarPlus,
   ArrowLeft,
   CheckCircle2,
   Search,
@@ -15,8 +14,8 @@ import {
   Ticket,
   Loader2,
   AlertCircle,
-  Stethoscope,
-  User,
+  UserCheck,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
@@ -24,6 +23,7 @@ import { getBranchPatients, type FrontDeskPatientSummary } from "@/lib/actions/f
 import { getDoctorDirectory, type DoctorDirectoryItem } from "@/lib/actions/doctors";
 import { getDoctorBookableSlots, type BookableSlot } from "@/lib/actions/patient-booking";
 import { bookAppointment } from "@/lib/actions/appointments";
+import { checkInPatientAppointment } from "@/lib/actions/frontdesk-appointments";
 
 const VISIT_TYPES = [
   "General Checkup",
@@ -279,6 +279,7 @@ export default function NewAppointmentPage({ user }: { user: any }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [generatedTicket, setGeneratedTicket] = useState<number | null>(null);
+  const [isWalkIn, setIsWalkIn] = useState(false);
   const [error, setError] = useState("");
 
   const [form, setForm] = useState({
@@ -337,6 +338,16 @@ export default function NewAppointmentPage({ user }: { user: any }) {
   const selectedDoctor = doctors.find((d) => d.doctorId === form.doctorId);
   const selectedSlot = availableSlots.find((s) => s.timeSlotId === form.timeSlotId);
 
+  const handleToggleWalkIn = () => {
+    const nextState = !isWalkIn;
+    setIsWalkIn(nextState);
+    if (nextState) {
+      setForm((f) => ({ ...f, visitType: "Walk-in" }));
+    } else {
+      setForm((f) => ({ ...f, visitType: "General Checkup" }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.patientId) {
@@ -360,12 +371,24 @@ export default function NewAppointmentPage({ user }: { user: any }) {
         time_slot_id: form.timeSlotId,
         patient_id: form.patientId,
         created_by: user.userId,
-        source: "Booked",
+        source: isWalkIn ? "Walkin" : "Booked",
         reason_for_visit: `${form.visitType}${form.notes ? `: ${form.notes}` : ""}`,
       });
 
       if (res.success && res.data) {
-        toast.success(res.message || "Appointment booked successfully!");
+        // If Walk-In mode is enabled, immediately check the patient in
+        if (isWalkIn) {
+          try {
+            await checkInPatientAppointment(res.data.appointmentId);
+            toast.success("Walk-in booked and patient checked in immediately!");
+          } catch (ciErr) {
+            console.error("Immediate check-in error:", ciErr);
+            toast.success("Appointment booked! (Please confirm check-in manually)");
+          }
+        } else {
+          toast.success(res.message || "Appointment booked successfully!");
+        }
+
         setGeneratedTicket(res.data.queueNumber);
         setSubmitted(true);
       } else {
@@ -387,19 +410,36 @@ export default function NewAppointmentPage({ user }: { user: any }) {
       <div className="max-w-xl mx-auto text-center py-16 animate-fade-in">
         <Toaster richColors position="top-right" />
         <div
-          className="w-20 h-20 bg-emerald-100 flex items-center justify-center mx-auto mb-6 shadow-md"
+          className={cn(
+            "w-20 h-20 flex items-center justify-center mx-auto mb-6 shadow-md",
+            isWalkIn ? "bg-amber-100 text-amber-600" : "bg-emerald-100 text-emerald-600"
+          )}
           style={{ clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)" }}
         >
-          <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+          {isWalkIn ? <UserCheck className="w-10 h-10" /> : <CheckCircle2 className="w-10 h-10" />}
         </div>
-        <h2 className="text-2xl font-bold text-slate-900 mb-2 font-outfit">Appointment Scheduled!</h2>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2 font-outfit">
+          {isWalkIn ? "Walk-In Registered & Checked In!" : "Appointment Scheduled!"}
+        </h2>
         <p className="text-slate-500 mb-4 text-sm">
           <strong>{selectedPatient?.fullName}</strong> has been successfully booked for{" "}
           <strong>{selectedDoctor?.name}</strong>.
         </p>
 
+        {isWalkIn && (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold mb-4 border border-amber-200">
+            <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
+            Status: Checked-In (Patient in Live Waiting Queue)
+          </div>
+        )}
+
         <div className="w-full max-w-sm mx-auto bg-slate-50 rounded-2xl p-5 text-sm space-y-2 border border-slate-200 mb-8 relative overflow-hidden text-left shadow-sm">
-          <div className="absolute top-0 right-0 bg-emerald-600 text-white px-3.5 py-1 rounded-bl-xl font-mono font-bold text-sm">
+          <div
+            className={cn(
+              "absolute top-0 right-0 text-white px-3.5 py-1 rounded-bl-xl font-mono font-bold text-sm",
+              isWalkIn ? "bg-amber-600" : "bg-emerald-600"
+            )}
+          >
             Token #{generatedTicket}
           </div>
           <p className="text-slate-600">
@@ -411,6 +451,11 @@ export default function NewAppointmentPage({ user }: { user: any }) {
           <p className="text-slate-600">
             👨‍⚕️ <span className="font-semibold text-slate-900">{selectedDoctor?.name}</span> ({selectedDoctor?.specialization})
           </p>
+          {isWalkIn && (
+            <p className="text-slate-600">
+              🏷️ <span className="font-semibold text-amber-800">Walk-In Patient • Verified Present</span>
+            </p>
+          )}
         </div>
 
         <div className="flex gap-3 justify-center">
@@ -418,6 +463,7 @@ export default function NewAppointmentPage({ user }: { user: any }) {
             onClick={() => {
               setSubmitted(false);
               setGeneratedTicket(null);
+              setIsWalkIn(false);
               setForm({
                 patientId: "",
                 doctorId: "",
@@ -459,6 +505,57 @@ export default function NewAppointmentPage({ user }: { user: any }) {
             Select a patient, a doctor, and choose an available session slot.
           </p>
         </div>
+      </div>
+
+      {/* Walk-in Mode Toggle Banner */}
+      <div
+        className={cn(
+          "mb-6 p-4 rounded-2xl border transition-all flex items-center justify-between shadow-sm",
+          isWalkIn ? "bg-amber-50/90 border-amber-300" : "bg-white border-slate-200"
+        )}
+      >
+        <div className="flex items-center gap-3.5">
+          <div
+            className={cn(
+              "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 transition-colors",
+              isWalkIn ? "bg-amber-500 text-white shadow-sm" : "bg-slate-100 text-slate-500"
+            )}
+          >
+            <UserCheck className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-slate-900">Walk-In Patient Mode</h3>
+              {isWalkIn && (
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                  Instant Check-In Active
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-slate-500">
+              {isWalkIn
+                ? "Patient is physically at the desk. System will automatically check in and enter doctor's live queue."
+                : "Advance appointment scheduling. Status will remain scheduled until receptionist checks in the patient."}
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={isWalkIn}
+          onClick={handleToggleWalkIn}
+          className={cn(
+            "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:ring-offset-2",
+            isWalkIn ? "bg-amber-600" : "bg-slate-200"
+          )}
+        >
+          <span
+            className={cn(
+              "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+              isWalkIn ? "translate-x-5" : "translate-x-0"
+            )}
+          />
+        </button>
       </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -610,6 +707,17 @@ export default function NewAppointmentPage({ user }: { user: any }) {
                     <span className="font-semibold text-slate-900">{selectedDoctor.name}</span>
                   </div>
                   <div className="flex justify-between text-slate-600">
+                    <span>Mode:</span>
+                    <span
+                      className={cn(
+                        "font-semibold",
+                        isWalkIn ? "text-amber-700" : "text-slate-900"
+                      )}
+                    >
+                      {isWalkIn ? "Walk-In (Auto Check-In)" : "Scheduled Booking"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-slate-600">
                     <span>Fee:</span>
                     <span className="font-bold text-emerald-700">
                       LKR {Number(selectedDoctor.consultationFee).toLocaleString()}
@@ -627,12 +735,22 @@ export default function NewAppointmentPage({ user }: { user: any }) {
               <Button
                 type="submit"
                 disabled={isSubmitting || !form.timeSlotId}
-                className="w-full h-11 rounded-xl bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white font-semibold text-sm shadow-sm transition-all"
+                className={cn(
+                  "w-full h-11 rounded-xl text-white font-semibold text-sm shadow-sm transition-all",
+                  isWalkIn
+                    ? "bg-amber-600 hover:bg-amber-700"
+                    : "bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)]"
+                )}
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Booking Appointment...
+                    {isWalkIn ? "Scheduling & Checking In..." : "Booking Appointment..."}
+                  </>
+                ) : isWalkIn ? (
+                  <>
+                    <Zap className="w-4 h-4 mr-2" />
+                    Book &amp; Check-In Immediately
                   </>
                 ) : (
                   <>
