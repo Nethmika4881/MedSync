@@ -9,11 +9,6 @@ import { mapAppointmentRow } from "@/lib/server/sql/doctorAppointments";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/actions/getcurrentuser";
 import db from "@/lib/db";
-import { revalidatePath } from "next/cache";
-import { updateProfileSchema } from "@/lib/server/doctorSchemas";
-import { updateDoctorProfile as updateDoctorProfileSql } from "@/lib/server/sql/doctorProfile";
-import { toActionError } from "@/lib/server/actionError";
-import type { ActionResult, UpdateProfileInput } from "@/lib/doctorTypes";
 export interface AdminDoctorProfile {
   doctorId: string;
   name: string;
@@ -294,38 +289,4 @@ export async function getAdminDoctorAppointments(
   );
 
   return rows.map(mapAppointmentRow);
-}
-
-export async function updateAdminDoctor(
-  unsafeDoctorId: unknown,
-  input: UpdateProfileInput,
-): Promise<ActionResult> {
-  try {
-    const currentUser = await getCurrentUser();
-
-    if (!currentUser || currentUser.role !== "admin") {
-      return {
-        ok: false,
-        error: "Only administrators can update doctors.",
-      };
-    }
-
-    const doctorId = doctorIdSchema.parse(unsafeDoctorId);
-    const validInput = updateProfileSchema.parse(input);
-
-    await updateDoctorProfileSql(db, doctorId, validInput);
-
-    revalidatePath("/admin/doctors");
-    revalidatePath(`/admin/doctors/${doctorId}`);
-
-    return {
-      ok: true,
-      data: undefined,
-    };
-  } catch (error) {
-    return {
-      ok: false,
-      error: toActionError(error),
-    };
-  }
 }

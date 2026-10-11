@@ -3,7 +3,6 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import type { AdminDoctorProfile } from "@/lib/actions/doctors";
 import { StatusPill } from "@/components/catms/StatusPill";
 import { getAvatarGradient } from "@/components/catms/BookingModal";
@@ -59,11 +58,6 @@ export default function DoctorProfilePage({
           <ArrowLeft className="w-4 h-4 mr-1.5" />
           Back to Doctors
         </button>
-        <div className="flex gap-2">
-          <Button variant="outline" className="rounded-xl h-9 text-xs">
-            Edit Doctor
-          </Button>
-        </div>
       </div>
 
       {/* Main Profile Header */}
