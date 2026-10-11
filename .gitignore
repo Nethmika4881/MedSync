@@ -46,6 +46,7 @@ node_modules/
 
 /.gitignore
 /context
+/docs/
 .neon
 /skills-lock.json
 
