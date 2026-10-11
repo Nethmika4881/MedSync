@@ -14,7 +14,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getDoctorNotifications } from "@/lib/actions/doctor-notifications";
+import {
+  getDoctorNotifications,
+  markAllDoctorNotificationsRead,
+  markDoctorNotificationRead,
+} from "@/lib/actions/doctor-notifications";
 import type { DoctorNotification, DoctorNotificationKind } from "@/lib/doctorTypes";
 import { formatClockTime, formatDay } from "@/lib/doctorFormat";
 import { cn } from "@/lib/utils";
@@ -43,6 +47,7 @@ export function DoctorNotificationBell() {
   const pathname = usePathname();
   const [items, setItems] = useState<DoctorNotification[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     try {
@@ -63,20 +68,31 @@ export function DoctorNotificationBell() {
     return () => clearInterval(timer);
   }, [load]);
 
-  const count = items?.length ?? 0;
+  const unreadItems = items?.filter((item) => !readIds.has(item.id)) ?? [];
+
+  async function markAsRead(id: string) {
+    await markDoctorNotificationRead(id);
+    setReadIds((current) => new Set(current).add(id));
+  }
+
+  async function markAllAsRead() {
+    const ids = (items ?? []).map((item) => item.id);
+    await markAllDoctorNotificationsRead(ids);
+    setReadIds((current) => new Set([...current, ...ids]));
+  }
 
   return (
     <DropdownMenu onOpenChange={(open) => open && load()}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          aria-label={count > 0 ? `Notifications, ${count} need attention` : "Notifications"}
+          aria-label={unreadItems.length > 0 ? `Notifications, ${unreadItems.length} need attention` : "Notifications"}
           className="relative p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]"
         >
           <Bell className="w-5 h-5" />
-          {count > 0 && (
+          {unreadItems.length > 0 && (
             <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
-              {count > 9 ? "9+" : count}
+              {unreadItems.length > 9 ? "9+" : unreadItems.length}
             </span>
           )}
         </button>
@@ -85,7 +101,14 @@ export function DoctorNotificationBell() {
       <DropdownMenuContent align="end" className="w-[360px] p-0">
         <DropdownMenuLabel className="px-4 py-3 text-sm font-semibold text-slate-900">
           Notifications
-          {count > 0 && <span className="ml-2 text-xs font-medium text-slate-500">{count} need attention</span>}
+          {unreadItems.length > 0 && (
+            <>
+              <span className="ml-2 text-xs font-medium text-slate-500">{unreadItems.length} need attention</span>
+              <button type="button" onClick={markAllAsRead} className="float-right text-xs font-medium text-teal-700 hover:underline">
+                Mark all read ✓
+              </button>
+            </>
+          )}
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="my-0" />
 
@@ -94,27 +117,30 @@ export function DoctorNotificationBell() {
           {failed && items === null && (
             <p className="px-4 py-8 text-center text-sm text-red-600">Couldn&apos;t load notifications.</p>
           )}
-          {items !== null && items.length === 0 && (
+          {items !== null && unreadItems.length === 0 && (
             <div className="px-4 py-10 text-center">
               <CheckCircle2 className="w-8 h-8 mx-auto text-green-500 mb-2" />
               <p className="text-sm font-semibold text-slate-900">You&apos;re all caught up</p>
               <p className="text-xs text-slate-500 mt-0.5">Nothing needs your attention right now.</p>
             </div>
           )}
-          {items?.map((n) => {
+          {unreadItems.map((n) => {
             const { icon: Icon, color, bg } = KIND_STYLE[n.kind];
             return (
-              <DropdownMenuItem key={n.id} asChild className="p-0 rounded-none focus:bg-slate-50 cursor-pointer">
-                <Link href={n.href} className="flex items-start gap-3 px-4 py-3 border-b border-slate-100 last:border-b-0">
+              <DropdownMenuItem key={n.id} className="p-0 rounded-none focus:bg-slate-50">
+                <div className="flex items-start gap-3 px-4 py-3 border-b border-slate-100 last:border-b-0 w-full">
                   <span className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", bg)}>
                     <Icon className={cn("w-4 h-4", color)} />
                   </span>
-                  <span className="min-w-0 flex-1">
+                  <Link href={n.href} className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold text-slate-900 truncate">{n.title}</span>
                     <span className="block text-xs text-slate-500 truncate">{n.detail}</span>
                     {n.at && <span className="block text-[11px] text-slate-400 mt-0.5">{when(n.at)}</span>}
-                  </span>
-                </Link>
+                  </Link>
+                  <button type="button" aria-label="Mark notification as read" title="Mark as read" onClick={() => markAsRead(n.id)} className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-green-100 hover:text-green-700">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </button>
+                </div>
               </DropdownMenuItem>
             );
           })}

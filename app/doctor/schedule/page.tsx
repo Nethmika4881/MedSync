@@ -12,12 +12,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ d
 
   const { date: requested } = await searchParams;
   const parsed = dateSchema.safeParse(requested);
-  const date = parsed.success ? parsed.data : clinicToday();
+  const today = clinicToday();
+  const date = parsed.success ? parsed.data : today;
 
   const [appointments, weeklyHours] = await Promise.all([
     getDoctorAppointments(date, date),
     getDoctorSchedule(),
   ]);
 
-  return <MySchedulePage date={date} today={clinicToday()} appointments={appointments} weeklyHours={weeklyHours} />;
+  return <MySchedulePage date={date} today={today} appointments={appointments} weeklyHours={weeklyHours} />;
 }
