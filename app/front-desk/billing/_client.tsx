@@ -7,6 +7,15 @@ import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/catms/StatusPill";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { toast, Toaster } from "sonner";
+import {
   Receipt,
   CreditCard,
   FileCheck,
@@ -17,10 +26,16 @@ import {
   CheckCircle2,
   AlertCircle,
   FileText,
+  Loader2,
+  Wallet,
+  Building2,
+  Globe,
+  Tag,
 } from "lucide-react";
 import type { AuthUser } from "@/lib/types";
 import {
   getBranchInvoices,
+  recordFrontDeskPayment,
   type FrontDeskInvoice,
 } from "@/lib/actions/frontdesk-billing";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
@@ -29,6 +44,15 @@ interface BillingPageProps {
   user: AuthUser;
   initialInvoices?: FrontDeskInvoice[];
 }
+
+type PaymentMethodType = "Cash" | "Card" | "BankTransfer" | "OnlinePayment";
+
+const PAYMENT_METHODS: { id: PaymentMethodType; label: string; icon: React.ElementType }[] = [
+  { id: "Cash", label: "Cash", icon: Wallet },
+  { id: "Card", label: "Credit / Debit Card", icon: CreditCard },
+  { id: "BankTransfer", label: "Bank Transfer", icon: Building2 },
+  { id: "OnlinePayment", label: "Online Gateway", icon: Globe },
+];
 
 export default function BillingPage({
   user,
@@ -43,6 +67,13 @@ export default function BillingPage({
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [isPending, startTransition] = useTransition();
 
+  // Payment Modal State
+  const [selectedInvoice, setSelectedInvoice] = useState<FrontDeskInvoice | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState<string>("");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("Cash");
+  const [referenceNumber, setReferenceNumber] = useState("");
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
+
   if (!role) return null;
 
   const handleRefresh = () => {
@@ -54,6 +85,78 @@ export default function BillingPage({
         console.error("Failed to refresh branch invoices:", err);
       }
     });
+  };
+
+  const handleOpenPaymentModal = (inv: FrontDeskInvoice) => {
+    setSelectedInvoice(inv);
+    setPaymentAmount(inv.dueAmount > 0 ? String(inv.dueAmount) : String(inv.netAmount));
+    setPaymentMethod("Cash");
+    setReferenceNumber("");
+  };
+
+  const handleClosePaymentModal = () => {
+    if (isSubmittingPayment) return;
+    setSelectedInvoice(null);
+    setPaymentAmount("");
+    setReferenceNumber("");
+  };
+
+  const handleProcessPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedInvoice) return;
+
+    const amountNum = parseFloat(paymentAmount);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      toast.error("Please enter a valid payment amount greater than zero.");
+      return;
+    }
+
+    if (amountNum > selectedInvoice.dueAmount) {
+      toast.error(
+        `Payment amount (LKR ${amountNum.toLocaleString()}) cannot exceed the remaining balance (LKR ${selectedInvoice.dueAmount.toLocaleString()}).`
+      );
+      return;
+    }
+
+    setIsSubmittingPayment(true);
+    try {
+      const res = await recordFrontDeskPayment({
+        invoiceId: selectedInvoice.invoiceId,
+        amount: amountNum,
+        paymentMethod,
+        referenceNumber: referenceNumber.trim() || undefined,
+      });
+
+      if (res.success) {
+        toast.success(res.message || "Payment collected and recorded successfully!");
+
+        // Optimistically update invoice in table
+        setInvoices((prev) =>
+          prev.map((inv) => {
+            if (inv.invoiceId === selectedInvoice.invoiceId) {
+              const updatedPaid = (inv.paidAmount || 0) + amountNum;
+              const updatedDue = Math.max(0, (inv.dueAmount || 0) - amountNum);
+              return {
+                ...inv,
+                paidAmount: updatedPaid,
+                dueAmount: updatedDue,
+                status: updatedDue <= 0 ? "Paid" : "PartiallyPaid",
+              };
+            }
+            return inv;
+          })
+        );
+
+        handleClosePaymentModal();
+      } else {
+        toast.error(res.error || "Failed to process payment.");
+      }
+    } catch (err: any) {
+      console.error("Payment submission error:", err);
+      toast.error(err?.message || "An unexpected error occurred while collecting payment.");
+    } finally {
+      setIsSubmittingPayment(false);
+    }
   };
 
   // Metrics
@@ -89,6 +192,8 @@ export default function BillingPage({
 
   return (
     <div className="space-y-6 animate-fade-in pb-12">
+      <Toaster richColors position="top-right" />
+
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -323,7 +428,8 @@ export default function BillingPage({
                           {inv.status !== "Paid" ? (
                             <Button
                               size="sm"
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-3.5 h-8 text-xs font-semibold shadow-sm"
+                              onClick={() => handleOpenPaymentModal(inv)}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-3.5 h-8 text-xs font-semibold shadow-sm transition-all"
                             >
                               <DollarSign className="w-3.5 h-3.5 mr-1" />
                               Collect Payment
@@ -460,6 +566,152 @@ export default function BillingPage({
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* ─── Collect Payment Dialog Modal ─────────────────────────────────── */}
+      <Dialog
+        open={!!selectedInvoice}
+        onOpenChange={(open) => {
+          if (!open) handleClosePaymentModal();
+        }}
+      >
+        <DialogContent className="sm:max-w-md rounded-2xl p-6 bg-white border-slate-200 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-slate-900 font-outfit flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold shadow-sm">
+                <DollarSign className="w-4 h-4" />
+              </div>
+              Collect Patient Payment
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500">
+              Record payment receipt for Invoice #{selectedInvoice?.invoiceId.substring(0, 8).toUpperCase()}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedInvoice && (
+            <form onSubmit={handleProcessPayment} className="space-y-4 pt-2">
+              {/* Patient & Invoice Summary Card */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-2">
+                <div className="flex justify-between items-center text-slate-600">
+                  <span>Patient:</span>
+                  <span className="font-semibold text-slate-900">{selectedInvoice.patientName}</span>
+                </div>
+                <div className="flex justify-between items-center text-slate-600">
+                  <span>Total Invoiced:</span>
+                  <span className="font-semibold text-slate-900">
+                    LKR {Number(selectedInvoice.netAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-slate-600">
+                  <span>Already Paid:</span>
+                  <span className="font-semibold text-emerald-600">
+                    LKR {Number(selectedInvoice.paidAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center pt-1 border-t border-slate-200 font-bold">
+                  <span className="text-slate-900">Outstanding Balance:</span>
+                  <span className="text-amber-700 font-mono text-sm">
+                    LKR {Number(selectedInvoice.dueAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+
+              {/* Amount to Collect */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+                  Amount to Collect (LKR) *
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                    LKR
+                  </span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    max={selectedInvoice.dueAmount}
+                    required
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(e.target.value)}
+                    className="w-full h-11 pl-12 pr-4 rounded-xl border border-slate-200 text-sm font-semibold text-slate-900 focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none transition-all bg-white"
+                  />
+                </div>
+              </div>
+
+              {/* Payment Method Selector */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
+                  Payment Method *
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {PAYMENT_METHODS.map((pm) => {
+                    const Icon = pm.icon;
+                    const isSelected = paymentMethod === pm.id;
+                    return (
+                      <button
+                        key={pm.id}
+                        type="button"
+                        onClick={() => setPaymentMethod(pm.id)}
+                        className={cn(
+                          "flex items-center gap-2 p-2.5 rounded-xl border text-xs font-semibold transition-all text-left",
+                          isSelected
+                            ? "border-emerald-600 bg-emerald-50 text-emerald-800 ring-1 ring-emerald-600"
+                            : "border-slate-200 hover:border-slate-300 text-slate-700 bg-white"
+                        )}
+                      >
+                        <Icon className={cn("w-4 h-4 shrink-0", isSelected ? "text-emerald-600" : "text-slate-400")} />
+                        <span>{pm.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Reference / Slip Number */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+                  Reference / Slip # (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Card Auth Code, POS Slip #, Cheque #"
+                  value={referenceNumber}
+                  onChange={(e) => setReferenceNumber(e.target.value)}
+                  className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs text-slate-900 focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none transition-all bg-white"
+                />
+              </div>
+
+              <DialogFooter className="pt-2 gap-2 sm:gap-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleClosePaymentModal}
+                  disabled={isSubmittingPayment}
+                  className="rounded-xl border-slate-200 text-slate-600"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmittingPayment || !paymentAmount}
+                  className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-5 shadow-sm"
+                >
+                  {isSubmittingPayment ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                      Recording Payment...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                      Confirm &amp; Record Payment
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
