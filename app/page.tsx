@@ -84,8 +84,11 @@ export default function LandingPage() {
         </div>
       </main>
 
-      <footer className="py-8 text-center text-slate-500 text-sm">
-        MedSync Medical System
+      <footer className="py-8 px-4 text-center text-slate-500 text-xs max-w-2xl mx-auto leading-relaxed">
+        <p className="font-medium text-slate-600 mb-1">MedSync Medical System</p>
+        <p>
+          MedSync is a student-developed clinic management demonstration project at the University of Moratuwa. It is not an official healthcare provider and must not be used for real patient care.
+        </p>
       </footer>
     </div>
   );
