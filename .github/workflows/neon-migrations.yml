@@ -1,8 +1,18 @@
+
 name: Neon Flyway Migrations
 
 on:
   workflow_dispatch:
     inputs:
+      target:
+        description: "Target Neon database branch"
+        required: true
+        type: choice
+        default: development
+        options:
+          - development
+          - production
+
       operation:
         description: "Flyway operation"
         required: true
@@ -11,6 +21,12 @@ on:
         options:
           - info
           - migrate
+
+      confirmation:
+        description: "For production migrate, type MIGRATE-PRODUCTION"
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -24,16 +40,82 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Verify target and operation
+        env:
+          TARGET: ${{ inputs.target }}
+          OPERATION: ${{ inputs.operation }}
+          CONFIRMATION: ${{ inputs.confirmation }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$TARGET" != "development" && "$TARGET" != "production" ]]; then
+            echo "::error::Invalid database target"
+            exit 1
+          fi
+
+          if [[ "$OPERATION" != "info" && "$OPERATION" != "migrate" ]]; then
+            echo "::error::Invalid Flyway operation"
+            exit 1
+          fi
+
+          if [[ "$TARGET" == "production" && "$REF_NAME" != "main" ]]; then
+            echo "::error::Production migrations must run from main"
+            exit 1
+          fi
+
+          if [[ "$TARGET" == "production" && "$OPERATION" == "migrate" ]]; then
+            if [[ "$CONFIRMATION" != "MIGRATE-PRODUCTION" ]]; then
+              echo "::error::Production migration confirmation required"
+              exit 1
+            fi
+          fi
+
+          echo "Target: $TARGET"
+          echo "Operation: $OPERATION"
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Run Flyway
         env:
-          FLYWAY_URL: ${{ secrets.NEON_JDBC_URL }}
-          FLYWAY_USER: ${{ secrets.NEON_DB_USER }}
-          FLYWAY_PASSWORD: ${{ secrets.NEON_DB_PASSWORD }}
+          TARGET: ${{ inputs.target }}
           OPERATION: ${{ inputs.operation }}
+
+          DEV_URL: ${{ secrets.NEON_DEV_JDBC_URL }}
+          DEV_USER: ${{ secrets.NEON_DEV_DB_USER }}
+          DEV_PASSWORD: ${{ secrets.NEON_DEV_DB_PASSWORD }}
+
+          PROD_URL: ${{ secrets.NEON_JDBC_URL }}
+          PROD_USER: ${{ secrets.NEON_DB_USER }}
+          PROD_PASSWORD: ${{ secrets.NEON_DB_PASSWORD }}
         run: |
+          set -euo pipefail
+
+          if [[ "$TARGET" == "development" ]]; then
+            FLYWAY_URL="$DEV_URL"
+            FLYWAY_USER="$DEV_USER"
+            FLYWAY_PASSWORD="$DEV_PASSWORD"
+          else
+            FLYWAY_URL="$PROD_URL"
+            FLYWAY_USER="$PROD_USER"
+            FLYWAY_PASSWORD="$PROD_PASSWORD"
+          fi
+
+          if [[ -z "$FLYWAY_URL" || -z "$FLYWAY_USER" || -z "$FLYWAY_PASSWORD" ]]; then
+            echo "::error::Missing database credentials for $TARGET"
+            exit 1
+          fi
+
+          if [[ "$FLYWAY_URL" != jdbc:postgresql://* ]]; then
+            echo "::error::Invalid JDBC URL format"
+            exit 1
+          fi
+
+          export FLYWAY_URL FLYWAY_USER FLYWAY_PASSWORD
+
+          echo "Running Flyway $OPERATION on $TARGET"
+
           docker run --rm \
             -e FLYWAY_URL \
             -e FLYWAY_USER \
