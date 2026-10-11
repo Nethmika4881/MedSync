@@ -1,0 +1,42 @@
+name: Neon Flyway Migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: "Flyway operation"
+        required: true
+        type: choice
+        default: info
+        options:
+          - info
+          - migrate
+
+permissions:
+  contents: read
+
+concurrency:
+  group: neon-flyway-migrations
+  cancel-in-progress: false
+
+jobs:
+  flyway:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Flyway
+        env:
+          FLYWAY_URL: ${{ secrets.NEON_JDBC_URL }}
+          FLYWAY_USER: ${{ secrets.NEON_DB_USER }}
+          FLYWAY_PASSWORD: ${{ secrets.NEON_DB_PASSWORD }}
+          OPERATION: ${{ inputs.operation }}
+        run: |
+          docker run --rm \
+            -e FLYWAY_URL \
+            -e FLYWAY_USER \
+            -e FLYWAY_PASSWORD \
+            -v "$GITHUB_WORKSPACE/Database:/flyway/sql:ro" \
+            flyway/flyway:10-alpine "$OPERATION"
