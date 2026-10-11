@@ -1,5 +1,8 @@
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone",
+
   async redirects() {
     return [
       { source: '/admin', destination: '/admin/dashboard', permanent: false },
@@ -8,9 +11,11 @@ const nextConfig = {
       { source: '/front-desk', destination: '/front-desk/dashboard', permanent: false },
     ];
   },
+
   async rewrites() {
     return [{ source: '/app/:path*', destination: '/:path*' }];
   },
+
   images: {
     remotePatterns: [
       {
