@@ -4,6 +4,7 @@ import { createStaffSchema, staffDirectorySchema } from "../schemas";
 import { getCurrentUser } from "./getcurrentuser";
 import { redirect } from "next/navigation";
 import { generateSalt, hashPassword } from "./passwordHasher";
+import { revalidatePath } from "next/cache";
 export async function getStaffDirectory(unsafeData: unknown = {}) {
   const user = await getCurrentUser();
 
@@ -141,8 +142,12 @@ export async function createStaff(dirtyData: unknown = {}) {
   if (user.role !== "admin") throw new Error("Unauthorized");
   const passed = createStaffSchema.safeParse(dirtyData);
 
-  if (!passed.success)
-    throw new Error("invalid data for create a staff member");
+  if (!passed.success) {
+    return {
+      success: false,
+      error: passed.error.issues[0]?.message ?? "Invalid staff member details.",
+    };
+  }
 
   const data = passed.data;
   const client = await db.connect();
@@ -238,9 +243,29 @@ export async function createStaff(dirtyData: unknown = {}) {
           data.qualification || null,
         ],
       );
+
+      const existingSpecialization = await client.query(
+        `select specialization_id from specialization where lower(title) = lower($1) limit 1`,
+        [data.specialization],
+      );
+      let specializationID = existingSpecialization.rows[0]?.specialization_id;
+      if (!specializationID) {
+        const specializationResult = await client.query(
+          `insert into specialization (title) values ($1) returning specialization_id`,
+          [data.specialization],
+        );
+
+        specializationID = specializationResult.rows[0].specialization_id;
+      }
+      await client.query(
+        `insert into doctor_specialization ( doctor_id, specialization_id ) values ($1, $2)`,
+        [userID, specializationID],
+      );
     }
     await client.query("commit"); //save to db permenantly
-
+    revalidatePath("/admin/staff");
+    revalidatePath("/admin/doctors");
+    revalidatePath("/patient/find-doctors");
     return {
       success: true,
       message: "staff member created successfully",

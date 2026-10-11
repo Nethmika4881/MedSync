@@ -22,10 +22,9 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
       u.full_name,
       u.email,
       u.user_type,
-      e.role,
-      e.branch_id AS employee_branch_id,
-      e.is_active AS employee_is_active,
-      p.registered_branch_id AS patient_branch_id
+      CASE WHEN u.user_type = 'Patient' THEN 'Patient'
+           ELSE e.role::text END AS login_role,
+      COALESCE(e.branch_id, p.registered_branch_id) AS branch_id
    from app_user u
    left join   employee e ON e.employee_id = u.user_id
    left join  patient p ON p.patient_id = u.user_id
