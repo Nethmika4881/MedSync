@@ -24,7 +24,7 @@ export default function LandingPage() {
             href="/register"
             className="text-sm font-medium text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/90 h-10 px-5 flex items-center rounded-lg transition-colors"
           >
-            Register
+            Patient Sign Up
           </Link>
         </div>
       </header>
@@ -54,7 +54,7 @@ export default function LandingPage() {
             href="/register"
             className="h-12 px-8 flex items-center rounded-xl border border-slate-300 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition-colors"
           >
-            Create Account
+            Create Patient Account
           </Link>
         </div>
 
