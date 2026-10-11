@@ -260,7 +260,7 @@ export async function deleteBranch(branchId: string) {
       return { success: false, error: "Unauthorized" };
     }
 
-    await db.query(`DELETE FROM branch WHERE branch_id = $1`, [branchId]);
+    await db.query(`UPDATE branch SET is_active = FALSE WHERE branch_id = $1`, [branchId]);
 
     revalidatePath("/admin/branches");
     revalidatePath("/branches");
