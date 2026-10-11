@@ -14,10 +14,8 @@ import {
   Mail,
   MapPin,
   Clock,
-  Star,
   GraduationCap,
   DollarSign,
-  AlertCircle,
   FileText,
 } from "lucide-react";
 
