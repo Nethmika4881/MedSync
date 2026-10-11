@@ -164,43 +164,94 @@ export default function DashboardPage({ user }: { user: any }) {
 
       {/* Middle Row: Trend Chart & Upcoming / Queue */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Chart */}
-        <Card className="lg:col-span-2 border-slate-200 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-slate-900">
-              {role === "admin" ? "Revenue & Appointments Trend" : "Activity Overview"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              {role === "admin" ? (
-                <LineChart data={adminData?.monthlyTrend ?? []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#64748B" }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#64748B" }} tickFormatter={(val) => `$${val / 1000}k`} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
-                    formatter={(value: number, name: string) => [
-                      name === "revenue" ? `$${value.toLocaleString()}` : value.toLocaleString(),
-                      name === "revenue" ? "Revenue" : "Appointments",
-                    ]}
-                  />
-                  <Line type="monotone" dataKey="revenue" stroke="var(--brand-primary)" strokeWidth={3} dot={{ r: 4, fill: "var(--brand-primary)", strokeWidth: 2, stroke: "#fff" }} activeDot={{ r: 6 }} />
-                  <Line type="monotone" dataKey="appointments" stroke="#8B5CF6" strokeWidth={2} dot={{ r: 3, fill: "#8B5CF6", strokeWidth: 2, stroke: "#fff" }} />
-                </LineChart>
-              ) : (
-                <BarChart data={appointmentsByMonth.slice(-6)} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#64748B" }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#64748B" }} />
-                  <Tooltip cursor={{ fill: "#F1F5F9" }} contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }} />
-                  <Bar dataKey="completed" fill="var(--brand-primary)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="cancelled" fill="#E2E8F0" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              )}
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+  {/* Main Chart */}
+  <Card className="lg:col-span-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+    <CardHeader>
+      <CardTitle className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+        Revenue & Appointments Trend
+      </CardTitle>
+    </CardHeader>
+    <CardContent className="h-[300px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart
+          data={adminData?.monthlyTrend ?? []}
+          margin={{ top: 10, right: 10, left: -15, bottom: 0 }}
+        >
+          {/* Subtle grid lines in both light and dark modes */}
+          <CartesianGrid
+            strokeDasharray="3 3"
+            vertical={false}
+            stroke="#64748b"
+            strokeOpacity={0.2}
+          />
+
+          {/* Shared X-Axis */}
+          <XAxis
+            dataKey="month"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 12, fill: "#94a3b8" }}
+          />
+
+          {/* Left Y-Axis: Revenue ($ in Thousands) */}
+          <YAxis
+            yAxisId="revenue"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 12, fill: "#0d9488" }}
+            tickFormatter={(val) => `$${val / 1000}k`}
+          />
+
+          {/* Right Y-Axis: Appointments (Count) */}
+          <YAxis
+            yAxisId="appointments"
+            orientation="right"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 12, fill: "#8b5cf6" }}
+            allowDecimals={false}
+          />
+
+          {/* Theme-Aware Tooltip */}
+          <Tooltip
+            contentStyle={{
+              borderRadius: "12px",
+              border: "1px solid var(--border-subtle, #1e293b)",
+              backgroundColor: "var(--surface, #0f172a)",
+              color: "var(--text-primary, #f8fafc)",
+              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)",
+            }}
+            formatter={(value: number, name: string) => [
+              name === "revenue" ? `$${value.toLocaleString()}` : value.toLocaleString(),
+              name === "revenue" ? "Revenue" : "Appointments",
+            ]}
+          />
+
+          {/* Revenue Line (Scaled to Left Axis) */}
+          <Line
+            yAxisId="revenue"
+            type="monotone"
+            dataKey="revenue"
+            stroke="var(--brand-primary)"
+            strokeWidth={3}
+            dot={{ r: 4, fill: "var(--brand-primary)", strokeWidth: 2, stroke: "#fff" }}
+            activeDot={{ r: 6 }}
+          />
+
+          {/* Appointments Line (Scaled to Right Axis) */}
+          <Line
+            yAxisId="appointments"
+            type="monotone"
+            dataKey="appointments"
+            stroke="#8B5CF6"
+            strokeWidth={2}
+            dot={{ r: 3, fill: "#8B5CF6", strokeWidth: 2, stroke: "#fff" }}
+            activeDot={{ r: 5 }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </CardContent>
+  </Card>
 
         {/* Doctor Queue or Recent Appointments */}
         <Card className="border-slate-200 shadow-sm">
