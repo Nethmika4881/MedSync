@@ -30,7 +30,8 @@ import {
   Wallet,
   Building2,
   Globe,
-  Tag,
+  Printer,
+  ShieldCheck,
 } from "lucide-react";
 import type { AuthUser } from "@/lib/types";
 import {
@@ -74,6 +75,9 @@ export default function BillingPage({
   const [referenceNumber, setReferenceNumber] = useState("");
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
 
+  // Printable Receipt Modal State
+  const [selectedReceiptInvoice, setSelectedReceiptInvoice] = useState<FrontDeskInvoice | null>(null);
+
   if (!role) return null;
 
   const handleRefresh = () => {
@@ -99,6 +103,10 @@ export default function BillingPage({
     setSelectedInvoice(null);
     setPaymentAmount("");
     setReferenceNumber("");
+  };
+
+  const handlePrintReceipt = () => {
+    window.print();
   };
 
   const handleProcessPayment = async (e: React.FormEvent) => {
@@ -193,6 +201,32 @@ export default function BillingPage({
   return (
     <div className="space-y-6 animate-fade-in pb-12">
       <Toaster richColors position="top-right" />
+
+      {/* Print-only CSS stylesheet */}
+      <style jsx global>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #printable-receipt,
+          #printable-receipt * {
+            visibility: visible;
+          }
+          #printable-receipt {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: auto;
+            margin: 0;
+            padding: 32px;
+            background: white !important;
+            color: black !important;
+            box-shadow: none !important;
+            border: none !important;
+          }
+        }
+      `}</style>
 
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -425,24 +459,29 @@ export default function BillingPage({
                           <StatusPill status={inv.status} />
                         </td>
                         <td className="px-6 py-4 text-right">
-                          {inv.status !== "Paid" ? (
-                            <Button
-                              size="sm"
-                              onClick={() => handleOpenPaymentModal(inv)}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-3.5 h-8 text-xs font-semibold shadow-sm transition-all"
-                            >
-                              <DollarSign className="w-3.5 h-3.5 mr-1" />
-                              Collect Payment
-                            </Button>
-                          ) : (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="rounded-xl text-slate-600 hover:text-slate-900 border-slate-200 h-8 text-xs font-semibold"
-                            >
-                              View Receipt
-                            </Button>
-                          )}
+                          <div className="flex items-center justify-end gap-1.5">
+                            {inv.status !== "Paid" && (
+                              <Button
+                                size="sm"
+                                onClick={() => handleOpenPaymentModal(inv)}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-3 h-8 text-xs font-semibold shadow-sm transition-all"
+                              >
+                                <DollarSign className="w-3.5 h-3.5 mr-1" />
+                                Collect Payment
+                              </Button>
+                            )}
+                            {(inv.paidAmount > 0 || inv.status === "Paid") && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setSelectedReceiptInvoice(inv)}
+                                className="rounded-xl text-slate-600 hover:text-slate-900 border-slate-200 h-8 text-xs font-semibold shadow-sm"
+                              >
+                                <Printer className="w-3.5 h-3.5 mr-1 text-slate-500" />
+                                View Receipt
+                              </Button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -710,6 +749,153 @@ export default function BillingPage({
               </DialogFooter>
             </form>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Printable Receipt Dialog Modal ───────────────────────────────── */}
+      <Dialog
+        open={!!selectedReceiptInvoice}
+        onOpenChange={(open) => {
+          if (!open) setSelectedReceiptInvoice(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-lg rounded-2xl p-0 bg-white border-slate-200 shadow-2xl overflow-hidden">
+          <div id="printable-receipt" className="p-8 space-y-6 bg-white text-slate-900">
+            {/* Receipt Clinic Branding */}
+            <div className="flex justify-between items-start pb-4 border-b border-slate-200">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-7 h-7 rounded-lg bg-[var(--brand-primary)] text-white flex items-center justify-center font-bold text-sm">
+                    M
+                  </div>
+                  <h3 className="text-xl font-bold font-outfit tracking-tight text-slate-900">
+                    MedSync Health
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-500">Official Clinical Payment Receipt</p>
+                <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+                  Branch ID: {user.branchId || "Central Branch"}
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  {selectedReceiptInvoice?.status === "Paid" ? "PAID IN FULL" : "PARTIAL PAYMENT"}
+                </div>
+                <p className="text-xs font-mono font-semibold text-slate-700 mt-2">
+                  Receipt #{selectedReceiptInvoice?.invoiceId.substring(0, 8).toUpperCase()}
+                </p>
+                <p className="text-[11px] text-slate-400 font-mono">
+                  {selectedReceiptInvoice?.invoiceDate || new Date().toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+
+            {/* Patient Information Section */}
+            <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-100 grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <span className="text-slate-400 uppercase text-[10px] font-bold block">Patient Name</span>
+                <span className="font-semibold text-slate-900 text-sm">
+                  {selectedReceiptInvoice?.patientName}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-400 uppercase text-[10px] font-bold block">Patient ID</span>
+                <span className="font-mono text-slate-700">
+                  {selectedReceiptInvoice?.patientId.substring(0, 8).toUpperCase()}
+                </span>
+              </div>
+            </div>
+
+            {/* Line Item Breakdown */}
+            <div className="border border-slate-200 rounded-xl overflow-hidden">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase text-[10px]">
+                  <tr>
+                    <th className="p-3">Service / Description</th>
+                    <th className="p-3 text-right">Amount (LKR)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  <tr>
+                    <td className="p-3 font-medium text-slate-900">
+                      Medical Consultation &amp; Clinical Services
+                    </td>
+                    <td className="p-3 text-right font-mono font-semibold text-slate-900">
+                      {Number(selectedReceiptInvoice?.grossAmount || selectedReceiptInvoice?.netAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </td>
+                  </tr>
+                  {Number(selectedReceiptInvoice?.discountAmount || 0) > 0 && (
+                    <tr>
+                      <td className="p-3 text-slate-500">Promotional / Insurance Discount</td>
+                      <td className="p-3 text-right font-mono text-emerald-600">
+                        - {Number(selectedReceiptInvoice?.discountAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </td>
+                    </tr>
+                  )}
+                  {Number(selectedReceiptInvoice?.taxAmount || 0) > 0 && (
+                    <tr>
+                      <td className="p-3 text-slate-500">Government Medical Tax</td>
+                      <td className="p-3 text-right font-mono text-slate-700">
+                        + {Number(selectedReceiptInvoice?.taxAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Financial Totals */}
+            <div className="space-y-1.5 text-xs border-t border-slate-200 pt-3">
+              <div className="flex justify-between text-slate-600">
+                <span>Net Total:</span>
+                <span className="font-semibold text-slate-900 font-mono">
+                  LKR {Number(selectedReceiptInvoice?.netAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>Amount Paid:</span>
+                <span className="font-bold text-emerald-600 font-mono text-sm">
+                  LKR {Number(selectedReceiptInvoice?.paidAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>Outstanding Balance:</span>
+                <span className="font-semibold text-amber-700 font-mono">
+                  LKR {Number(selectedReceiptInvoice?.dueAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+
+            {/* Receptionist Sign-Off Footer */}
+            <div className="border-t border-dashed border-slate-200 pt-4 text-center space-y-1">
+              <p className="text-[11px] text-slate-500">
+                Issued by Receptionist: <span className="font-semibold text-slate-700">{user.name || "Front Desk Staff"}</span>
+              </p>
+              <p className="text-[10px] text-slate-400">
+                Thank you for choosing MedSync. This document serves as an official electronic receipt.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter className="p-4 bg-slate-50 border-t border-slate-100 flex sm:justify-between items-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setSelectedReceiptInvoice(null)}
+              className="rounded-xl border-slate-200 text-slate-600 h-9 text-xs"
+            >
+              Close
+            </Button>
+            <Button
+              type="button"
+              onClick={handlePrintReceipt}
+              className="rounded-xl bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white font-semibold text-xs h-9 px-4 shadow-sm"
+            >
+              <Printer className="w-3.5 h-3.5 mr-1.5" />
+              Print Receipt
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
