@@ -48,18 +48,21 @@ export async function setCookie(
   role: string,
   cookie: Pick<Cookies, "set">,
 ) {
-  //this is http only secured
+  // HTTPS-only cookies are required in production. Local Next.js development
+  // runs on plain http://localhost, where a Secure cookie is not sent back.
+  const secureCookie = process.env.NODE_ENV === "production";
+
   cookie.set(COOKIE_SESSION_KEY, session_id, {
-    secure: true,
+    secure: secureCookie,
     httpOnly: true,
     sameSite: "strict",
     expires: Date.now() + SESSION_EXPIRATION_SECONDS * 1000,
   });
 
-  //role cookie - read by proxy
+  // role cookie - read by server-side middleware
   cookie.set("session_role", role, {
     secure: true,
-    httpOnly: false, //proxy needs to read this
+    httpOnly: true,
     sameSite: "strict",
     expires: Date.now() + SESSION_EXPIRATION_SECONDS * 1000,
   });

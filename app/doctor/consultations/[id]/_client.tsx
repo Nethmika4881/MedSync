@@ -16,6 +16,7 @@ import { AvatarWithName } from "@/components/catms/AvatarWithName";
 import { StatusPill } from "@/components/catms/StatusPill";
 import { formatClockTime, formatDay, formatMoney } from "@/lib/doctorFormat";
 import { saveConsultationDraft, completeConsultation } from "@/lib/actions/doctor-consultations";
+import { createCustomMedication, createCustomTreatment } from "@/lib/actions/doctor-catalogue";
 import type { ConsultationWorkspace, WorkspaceTreatment } from "@/lib/doctorTypes";
 import type { TreatmentCatalogueItem, Medication, TreatmentCategory } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -132,6 +133,26 @@ export default function ConsultationWorkspacePage({ workspace, catalogue, medica
         allergyChecked: false,
       },
     ]);
+
+  const addCustomTreatment = async () => {
+    try {
+      const item = await createCustomTreatment(catalogueSearch);
+      addTreatment(item);
+      setCatalogueSearch("");
+    } catch (error) {
+      setMessage({ type: "error", text: error instanceof Error ? error.message : "Unable to add treatment." });
+    }
+  };
+
+  const addCustomMedication = async () => {
+    try {
+      const med = await createCustomMedication(medicationSearch);
+      addMedication(med);
+      setMedicationSearch("");
+    } catch (error) {
+      setMessage({ type: "error", text: error instanceof Error ? error.message : "Unable to add medication." });
+    }
+  };
 
   const updatePrescription = (key: string, updates: Partial<DraftPrescription>) =>
     setPrescriptions((list) => list.map((p) => (p.key === key ? { ...p, ...updates } : p)));
@@ -290,7 +311,14 @@ export default function ConsultationWorkspacePage({ workspace, catalogue, medica
 
           {!isLocked && catalogueSearch && (
             <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 max-h-56 overflow-y-auto custom-scrollbar">
-              {filteredCatalogue.length === 0 && <p className="p-4 text-sm text-slate-500">No matching treatments found.</p>}
+              {filteredCatalogue.length === 0 && (
+                <div className="p-3 flex items-center justify-between gap-3">
+                  <p className="text-sm text-slate-500">No matching treatment found.</p>
+                  <Button size="sm" variant="outline" className="rounded-lg" onClick={addCustomTreatment}>
+                    <Plus className="w-4 h-4 mr-1" /> Add &quot;{catalogueSearch}&quot;
+                  </Button>
+                </div>
+              )}
               {filteredCatalogue.map((item) => (
                 <div key={item.catalogueId} className="flex items-center justify-between p-3 hover:bg-slate-50">
                   <div>
@@ -393,7 +421,14 @@ export default function ConsultationWorkspacePage({ workspace, catalogue, medica
 
           {!isLocked && medicationSearch && (
             <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 max-h-56 overflow-y-auto custom-scrollbar">
-              {filteredMedications.length === 0 && <p className="p-4 text-sm text-slate-500">No matching medications found.</p>}
+              {filteredMedications.length === 0 && (
+                <div className="p-3 flex items-center justify-between gap-3">
+                  <p className="text-sm text-slate-500">No matching medication found.</p>
+                  <Button size="sm" variant="outline" className="rounded-lg" onClick={addCustomMedication}>
+                    <Plus className="w-4 h-4 mr-1" /> Add &quot;{medicationSearch}&quot;
+                  </Button>
+                </div>
+              )}
               {filteredMedications.map((med) => (
                 <div key={med.medicationId} className="flex items-center justify-between gap-3 p-3 hover:bg-slate-50">
                   <div className="min-w-0">

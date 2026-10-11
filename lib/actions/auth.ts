@@ -46,11 +46,17 @@ export async function signIn(unsafeData: signinschema) {
     const role = z.enum(userLoginRoles).safeParse(user.login_role);
     if (!role.success) return "Unable to log you in";
 
-    const isCorrectPassword = await comparePassword({
-      hashedPassword: user.password_hash,
-      password: data.password,
-      salt: user.salt,
-    });
+    let isCorrectPassword = false;
+    try {
+      isCorrectPassword = await comparePassword({
+        hashedPassword: user.password_hash,
+        password: data.password,
+        salt: user.salt,
+      });
+    } catch {
+      isCorrectPassword = false;
+    }
+
     if (!isCorrectPassword) return "Unable to log you in";
 
     await createUserSession({ id: user.user_id, role: role.data }, await cookies());
@@ -66,10 +72,9 @@ export async function signIn(unsafeData: signinschema) {
 export default async function registerFunction(unsafeData: RegisterFormValues) {
   const { success, data } = registerSchema.safeParse(unsafeData);
 
-  if (!success) return "Please check your details. Only patients and doctors can register here.";
+  if (!success) return "Please check your details. Only patients can register here.";
 
-  const loginRole = data.role === "Employee" ? data.employeeRole : "Patient";
-  if (!loginRole) return "Please select Patient or Doctor";
+  const loginRole = "Patient";
   let userId = "";
 
   try {
@@ -138,73 +143,20 @@ export default async function registerFunction(unsafeData: RegisterFormValues) {
         ],
       );
 
-      if (user.rows[0].user_type === "Employee") {
-        await client.query(
-          `
-          insert into employee(employee_id,branch_id,role,joined_date)
-          values($1,$2,$3,$4)
-          `,
-          [
-            user.rows[0].user_id,
-            data.branchId,
-            data.employeeRole,
-            data.joinedDate || null,
-          ],
-        );
-
-        if (data.employeeRole === "Doctor") {
-          await client.query(
-            `
-            insert into doctor(doctor_id,room_no,medical_licence_no,consultation_fee,years_experience,qualification)
-            values($1,$2,$3,$4,$5,$6)
-            `,
-            [
-              user.rows[0].user_id,
-              data.roomNo,
-              data.medicalLicenceNo,
-              data.consultationFee ?? 1500,
-              data.yearsExperience,
-              data.qualification,
-            ],
-          );
-
-          const specializationTitle = data.specialization?.trim();
-          if (specializationTitle) {
-            // Reuse an existing specialization (case-insensitive), otherwise create it.
-            const existing = await client.query(
-              `select specialization_id from specialization where lower(title) = lower($1)`,
-              [specializationTitle],
-            );
-            let specializationId = existing.rows[0]?.specialization_id;
-            if (!specializationId) {
-              const created = await client.query(
-                `insert into specialization (title) values ($1) returning specialization_id`,
-                [specializationTitle],
-              );
-              specializationId = created.rows[0].specialization_id;
-            }
-            await client.query(
-              `insert into doctor_specialization (doctor_id, specialization_id) values ($1, $2)`,
-              [user.rows[0].user_id, specializationId],
-            );
-          }
-        }
-      } else if (user.rows[0].user_type === "Patient") {
-        await client.query(
-          `
-          insert into patient(patient_id,blood_group,registered_branch_id,emergency_contact_name,emergency_contact_phone,emergency_contact_relationship)
-          values($1,$2,$3,$4,$5,$6)
-          `,
-          [
-            user.rows[0].user_id,
-            data.bloodGroup,
-            data.branchId,
-            data.emergencyContactName,
-            data.emergencyContactPhone,
-            data.emergencyContactRelationship,
-          ],
-        );
-      }
+      await client.query(
+        `
+        insert into patient(patient_id,blood_group,registered_branch_id,emergency_contact_name,emergency_contact_phone,emergency_contact_relationship)
+        values($1,$2,$3,$4,$5,$6)
+        `,
+        [
+          user.rows[0].user_id,
+          data.bloodGroup,
+          data.branchId,
+          data.emergencyContactName,
+          data.emergencyContactPhone,
+          data.emergencyContactRelationship,
+        ],
+      );
 
       await client.query("COMMIT");
       userId = user.rows[0].user_id;
