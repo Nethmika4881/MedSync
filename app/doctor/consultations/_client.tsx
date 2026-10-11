@@ -16,6 +16,8 @@ import { StartConsultationButton } from "@/components/doctor/StartConsultationBu
 interface ConsultationsProps {
   queue: Appointment[];            // today's appointments
   records: ConsultationHistoryItem[];
+  initialTab?: string;
+  recordDate?: string;
 }
 
 const RECORD_PILL: Record<ConsultationHistoryItem["status"], string> = {
@@ -24,8 +26,9 @@ const RECORD_PILL: Record<ConsultationHistoryItem["status"], string> = {
   Completed: "Completed",
 };
 
-export default function ConsultationsPage({ queue, records }: ConsultationsProps) {
-  const [activeTab, setActiveTab] = useState("queue");
+export default function ConsultationsPage({ queue, records, initialTab = "queue", recordDate }: ConsultationsProps) {
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const visibleRecords = recordDate ? records.filter((record) => record.date === recordDate) : records;
   const todaysQueue = queue.filter((a) => a.status !== "Completed");
 
   return (
@@ -41,7 +44,7 @@ export default function ConsultationsPage({ queue, records }: ConsultationsProps
             <Calendar className="w-4 h-4 mr-2" /> Today&apos;s Queue ({todaysQueue.length})
           </TabsTrigger>
           <TabsTrigger value="records" className="rounded-lg px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-            <FileText className="w-4 h-4 mr-2" /> Past Records ({records.length})
+            <FileText className="w-4 h-4 mr-2" /> Past Records ({visibleRecords.length})
           </TabsTrigger>
         </TabsList>
 
@@ -90,7 +93,7 @@ export default function ConsultationsPage({ queue, records }: ConsultationsProps
 
         <TabsContent value="records" className="mt-6">
           <Card className="border-slate-200 shadow-sm overflow-hidden">
-            {records.length === 0 ? (
+            {visibleRecords.length === 0 ? (
               <EmptyState icon={FileText} title="No records yet" description="Saved and completed consultations appear here." />
             ) : (
               <div className="overflow-x-auto">
@@ -106,7 +109,7 @@ export default function ConsultationsPage({ queue, records }: ConsultationsProps
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 bg-white">
-                    {records.map((record) => (
+                    {visibleRecords.map((record) => (
                       <tr key={record.consultationId} className="hover:bg-slate-50/50">
                         <td className="px-6 py-4 font-semibold text-slate-900">{formatDay(record.date)}</td>
                         <td className="px-6 py-4 font-medium text-[var(--brand-primary)]">{record.patientName}</td>

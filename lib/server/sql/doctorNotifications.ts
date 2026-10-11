@@ -1,7 +1,8 @@
 import type { DoctorNotification, DoctorNotificationKind } from "@/lib/doctorTypes";
 import type { Queryable } from "./queryable";
 
-// Everything here is derived from existing tables, so there is no read/unread state.
+// Notification records are derived from clinical tables; read state is stored separately
+// per doctor so dismissing one doctor's notification does not affect anyone else.
 //   checked_in      patient is waiting today
 //   in_progress     a consultation was started and is not completed
 //   follow_up       a follow-up is due today
@@ -62,6 +63,10 @@ FROM (
   WHERE status IN ('Cancelled', 'Rescheduled', 'NoShow') AND available_date >= $2::date
     AND updated_at > NOW() - INTERVAL '24 hours'
 ) n
+LEFT JOIN doctor_notification_read r
+  ON r.doctor_id = $1::uuid
+ AND r.notification_id = n.kind || ':' || n.appointment_id::text
+WHERE r.notification_id IS NULL
 ORDER BY priority, n.at DESC NULLS LAST
 LIMIT 30
 `;
@@ -105,4 +110,34 @@ export async function fetchDoctorNotifications(
       href: `/doctor/consultations/${String(r.appointment_id)}`,
     };
   });
+}
+
+export async function markDoctorNotificationRead(
+  db: Queryable,
+  doctorId: string,
+  notificationId: string,
+): Promise<void> {
+  await db.query(
+    `INSERT INTO doctor_notification_read (doctor_id, notification_id)
+     VALUES ($1::uuid, $2)
+     ON CONFLICT (doctor_id, notification_id)
+     DO UPDATE SET read_at = NOW()`,
+    [doctorId, notificationId],
+  );
+}
+
+export async function markDoctorNotificationsRead(
+  db: Queryable,
+  doctorId: string,
+  notificationIds: string[],
+): Promise<void> {
+  if (notificationIds.length === 0) return;
+  await db.query(
+    `INSERT INTO doctor_notification_read (doctor_id, notification_id)
+     SELECT $1::uuid, notification_id
+     FROM UNNEST($2::text[]) AS ids(notification_id)
+     ON CONFLICT (doctor_id, notification_id)
+     DO UPDATE SET read_at = NOW()`,
+    [doctorId, notificationIds],
+  );
 }
