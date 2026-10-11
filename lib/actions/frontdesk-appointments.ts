@@ -26,7 +26,14 @@ export async function getBranchAppointments(
 ): Promise<FrontDeskAppointment[]> {
     try {
         const user = await getCurrentUser();
-        const effectiveBranchId = branchId || user?.branchId;
+        if (!user || (user.role !== "receptionist" && user.role !== "admin" && user.role !== "doctor")) {
+            return [];
+        }
+
+        const effectiveBranchId = user.role === "admin" ? (branchId || user.branchId) : user.branchId;
+        if (!effectiveBranchId && user.role !== "admin") {
+            return [];
+        }
 
         const query = `
       SELECT
@@ -68,6 +75,11 @@ export async function getBranchAppointments(
 
 export async function checkInPatientAppointment(appointmentId: string) {
     try {
+        const user = await getCurrentUser();
+        if (!user || (user.role !== "receptionist" && user.role !== "admin")) {
+            return { success: false, error: "Unauthorized" };
+        }
+
         const res = await db.query(
             `UPDATE appointment
        SET status = 'CheckedIn',
@@ -101,6 +113,11 @@ export async function cancelAppointmentByReception(
     reason: string
 ) {
     try {
+        const user = await getCurrentUser();
+        if (!user || (user.role !== "receptionist" && user.role !== "admin")) {
+            return { success: false, error: "Unauthorized" };
+        }
+
         const res = await db.query(
             `UPDATE appointment
        SET status = 'Cancelled',

@@ -24,7 +24,16 @@ export interface WaitingPatient {
 export async function getFrontDeskStats(branchId?: string): Promise<FrontDeskStats> {
     try {
         const user = await getCurrentUser();
-        const effectiveBranchId = branchId || user?.branchId;
+        if (!user || (user.role !== "receptionist" && user.role !== "admin")) {
+            return {
+                todayAppointments: 0,
+                waitingQueue: 0,
+                completedToday: 0,
+                unpaidInvoices: 0,
+            };
+        }
+
+        const effectiveBranchId = user.role === "admin" ? (branchId || user.branchId) : user.branchId;
 
         const queryAppts = `
       SELECT
@@ -70,7 +79,11 @@ export async function getFrontDeskStats(branchId?: string): Promise<FrontDeskSta
 export async function getFrontDeskWaitingQueue(branchId?: string): Promise<WaitingPatient[]> {
     try {
         const user = await getCurrentUser();
-        const effectiveBranchId = branchId || user?.branchId;
+        if (!user || (user.role !== "receptionist" && user.role !== "admin" && user.role !== "doctor")) {
+            return [];
+        }
+
+        const effectiveBranchId = user.role === "admin" ? (branchId || user.branchId) : user.branchId;
 
         const query = `
       SELECT
