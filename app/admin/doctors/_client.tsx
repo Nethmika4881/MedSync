@@ -2,20 +2,12 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { AuthUser, Doctor } from "@/lib/types";
-import {} from "@/lib/constants";
+import type { AuthUser } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Search,
-  MapPin,
-  Calendar,
-  Clock,
-  Plus,
-  DollarSign,
-} from "lucide-react";
+import { Search, MapPin, Calendar, Plus, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getAvatarGradient } from "@/components/catms/BookingModal";
-import { DoctorDirectoryItem } from "@/lib/actions/doctors";
+import type { DoctorDirectoryItem } from "@/lib/actions/doctors";
 
 export default function DoctorsPage({
   user,
@@ -60,7 +52,7 @@ export default function DoctorsPage({
             Doctor Directory
           </h2>
           <p className="text-slate-500">
-            Find and schedule appointments with our specialists.
+            View and manage doctors across clinic branches.
           </p>
         </div>
         {isAdmin && (
@@ -90,6 +82,7 @@ export default function DoctorsPage({
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
+            aria-label="Search doctors"
             placeholder="Search doctors by name or specialty..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -117,7 +110,7 @@ export default function DoctorsPage({
       {/* Doctor Grid */}
       {filteredDoctors.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredDoctors.map((doctor: Doctor) => {
+          {filteredDoctors.map((doctor) => {
             const gradient = getAvatarGradient(doctor.avatar);
 
             return (
@@ -165,10 +158,6 @@ export default function DoctorsPage({
                       <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
                       {doctor.experience} Years Experience
                     </div>
-                    <div className="flex items-center gap-2.5 text-sm text-slate-600">
-                      <Clock className="w-4 h-4 text-slate-400 shrink-0" />
-                      Avg. Wait Time: 15 mins
-                    </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
@@ -176,7 +165,7 @@ export default function DoctorsPage({
                       <span className="text-slate-500">Consultation Fee</span>
                       <br />
                       <span className="font-bold text-slate-900">
-                        ${doctor.consultationFee}
+                        Rs. {doctor.consultationFee.toLocaleString()}
                       </span>
                     </div>
                     <Button
@@ -192,7 +181,6 @@ export default function DoctorsPage({
               </Card>
             );
           })}
-          s
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-16 text-center">

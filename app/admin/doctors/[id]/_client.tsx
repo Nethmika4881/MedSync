@@ -2,12 +2,11 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { useAppointmentStore } from "@/lib/stores/appointmentStore";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import type { AdminDoctorProfile } from "@/lib/actions/doctors";
 import { StatusPill } from "@/components/catms/StatusPill";
 import { getAvatarGradient } from "@/components/catms/BookingModal";
+import type { Appointment } from "@/lib/types";
 import {
   ArrowLeft,
   Calendar,
@@ -15,35 +14,35 @@ import {
   Mail,
   MapPin,
   Clock,
-  Star,
   GraduationCap,
   DollarSign,
-  AlertCircle,
   FileText,
 } from "lucide-react";
 
 interface DoctorProfilePageProps {
   doctor: AdminDoctorProfile;
+  appointments: Appointment[];
 }
-export default function DoctorProfilePage({ doctor }: DoctorProfilePageProps) {
+
+export default function DoctorProfilePage({
+  doctor,
+  appointments,
+}: DoctorProfilePageProps) {
   const router = useRouter();
-  const { appointments } = useAppointmentStore();
 
-  const id = doctor.doctorId;
-
-  const doctorAppointments = appointments
-    .filter((a) => a.doctorId === id)
-    .sort(
-      (a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime(),
-    );
-
-  const upcomingAppts = doctorAppointments.filter((a) =>
-    ["Confirmed", "Pending", "Rescheduled"].includes(a.status),
-  );
-  const pastAppts = doctorAppointments.filter((a) =>
-    ["Completed", "Cancelled", "Checked-out"].includes(a.status),
+  const doctorAppointments = [...appointments].sort(
+    (a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime(),
   );
 
+  const activeStatuses = ["Confirmed", "Checked-in", "In-Progress"];
+
+  const upcomingAppts = doctorAppointments.filter((appointment) =>
+    activeStatuses.includes(appointment.status),
+  );
+
+  const pastAppts = doctorAppointments.filter(
+    (appointment) => !activeStatuses.includes(appointment.status),
+  );
   const gradient = getAvatarGradient(doctor.avatar);
 
   return (
@@ -57,11 +56,6 @@ export default function DoctorProfilePage({ doctor }: DoctorProfilePageProps) {
           <ArrowLeft className="w-4 h-4 mr-1.5" />
           Back to Doctors
         </button>
-        <div className="flex gap-2">
-          <Button variant="outline" className="rounded-xl h-9 text-xs">
-            Edit Doctor
-          </Button>
-        </div>
       </div>
 
       {/* Main Profile Header */}

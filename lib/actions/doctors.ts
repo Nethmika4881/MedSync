@@ -4,6 +4,8 @@
 // Uses only the actual migration-defined schema (V3, V4, V5).
 // No schema was modified to support this file.
 import { redirect } from "next/navigation";
+import type { Appointment } from "@/lib/types";
+import { mapAppointmentRow } from "@/lib/server/sql/doctorAppointments";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/actions/getcurrentuser";
 import db from "@/lib/db";
@@ -237,4 +239,54 @@ export async function getAdminDoctorById(
     postalCode: doctor.postalCode,
     avatar: doctor.avatar,
   };
+}
+
+export async function getAdminDoctorAppointments(
+  unsafeDoctorId: unknown,
+): Promise<Appointment[]> {
+  const currentUser = await getCurrentUser();
+
+  if (!currentUser) {
+    redirect("/login?clear=1");
+  }
+
+  if (currentUser.role !== "admin") {
+    throw new Error("Unauthorized");
+  }
+
+  const parsedDoctorId = doctorIdSchema.safeParse(unsafeDoctorId);
+
+  if (!parsedDoctorId.success) {
+    return [];
+  }
+
+  const { rows } = await db.query(
+    `
+      select
+        appointment_id as "appointmentId",
+        patient_id as "patientId",
+        patient_name as "patientName",
+        doctor_id as "doctorId",
+        doctor_name as "doctorName",
+        branch_id as "branchId",
+        branch_name as "branchName",
+        to_char(
+          estimated_time,
+          'YYYY-MM-DD"T"HH24:MI:SS'
+        ) as "dateTime",
+        ticket_minutes as "duration",
+        status::text as "status",
+        source::text as "source",
+        queue_number as "ticketNumber",
+        reason as "notes",
+        consultation_fee::float8 as "fee"
+      from v_doctor_queue
+      where doctor_id = $1
+      order by estimated_time desc
+      limit 100
+    `,
+    [parsedDoctorId.data],
+  );
+
+  return rows.map(mapAppointmentRow);
 }
