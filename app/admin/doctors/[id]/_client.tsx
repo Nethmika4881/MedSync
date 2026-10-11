@@ -2,12 +2,12 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { useAppointmentStore } from "@/lib/stores/appointmentStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { AdminDoctorProfile } from "@/lib/actions/doctors";
 import { StatusPill } from "@/components/catms/StatusPill";
 import { getAvatarGradient } from "@/components/catms/BookingModal";
+import type { Appointment } from "@/lib/types";
 import {
   ArrowLeft,
   Calendar,
@@ -24,26 +24,28 @@ import {
 
 interface DoctorProfilePageProps {
   doctor: AdminDoctorProfile;
+  appointments: Appointment[];
 }
-export default function DoctorProfilePage({ doctor }: DoctorProfilePageProps) {
+
+export default function DoctorProfilePage({
+  doctor,
+  appointments,
+}: DoctorProfilePageProps) {
   const router = useRouter();
-  const { appointments } = useAppointmentStore();
 
-  const id = doctor.doctorId;
-
-  const doctorAppointments = appointments
-    .filter((a) => a.doctorId === id)
-    .sort(
-      (a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime(),
-    );
-
-  const upcomingAppts = doctorAppointments.filter((a) =>
-    ["Confirmed", "Pending", "Rescheduled"].includes(a.status),
-  );
-  const pastAppts = doctorAppointments.filter((a) =>
-    ["Completed", "Cancelled", "Checked-out"].includes(a.status),
+  const doctorAppointments = [...appointments].sort(
+    (a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime(),
   );
 
+  const activeStatuses = ["Confirmed", "Checked-in", "In-Progress"];
+
+  const upcomingAppts = doctorAppointments.filter((appointment) =>
+    activeStatuses.includes(appointment.status),
+  );
+
+  const pastAppts = doctorAppointments.filter(
+    (appointment) => !activeStatuses.includes(appointment.status),
+  );
   const gradient = getAvatarGradient(doctor.avatar);
 
   return (
