@@ -29,6 +29,20 @@ export interface FrontDeskPaymentRecord {
     patientName: string;
 }
 
+export interface FrontDeskClaimSummary {
+    claimId: string;
+    invoiceId: string;
+    patientName: string;
+    providerName: string;
+    packageName: string;
+    policyNumber: string;
+    claimedAmount: number;
+    approvedAmount: number;
+    status: string;
+    claimDate: string;
+    remarks: string | null;
+}
+
 export async function getBranchInvoices(
     branchId?: string,
     statusFilter?: string
@@ -129,5 +143,45 @@ export async function recordFrontDeskPayment(data: {
         return { success: false, error: error.message || "Failed to record payment." };
     } finally {
         client.release();
+    }
+}
+
+export async function getBranchInsuranceClaims(
+    branchId?: string
+): Promise<FrontDeskClaimSummary[]> {
+    try {
+        const user = await getCurrentUser();
+        const effectiveBranchId = branchId || user?.branchId;
+
+        const query = `
+      SELECT
+        ic.claim_id AS "claimId",
+        ic.invoice_id AS "invoiceId",
+        u.full_name AS "patientName",
+        ip.provider_name AS "providerName",
+        ip.package_name AS "packageName",
+        ins.policy_number AS "policyNumber",
+        ic.claimed_amount::float AS "claimedAmount",
+        ic.approved_amount::float AS "approvedAmount",
+        ic.status::text AS "status",
+        TO_CHAR(ic.claim_date, 'YYYY-MM-DD') AS "claimDate",
+        ic.remarks AS "remarks"
+      FROM insurance_claim ic
+      JOIN invoice inv ON inv.invoice_id = ic.invoice_id
+      JOIN patient p ON p.patient_id = inv.patient_id
+      JOIN app_user u ON u.user_id = p.patient_id
+      JOIN insurance ins ON ins.insurance_id = ic.insurance_id
+      JOIN insurance_package ip ON ip.insurance_package_id = ins.insurance_package_id
+      LEFT JOIN appointment a ON a.appointment_id = inv.appointment_id
+      LEFT JOIN time_slot ts ON ts.time_slot_id = a.time_slot_id
+      WHERE ($1::uuid IS NULL OR ts.branch_id = $1::uuid OR ts.branch_id IS NULL)
+      ORDER BY ic.claim_date DESC
+    `;
+
+        const { rows } = await db.query(query, [effectiveBranchId || null]);
+        return rows as FrontDeskClaimSummary[];
+    } catch (error) {
+        console.error("[getBranchInsuranceClaims] Failed to load claims:", error);
+        return [];
     }
 }

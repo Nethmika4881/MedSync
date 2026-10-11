@@ -36,14 +36,17 @@ import {
 import type { AuthUser } from "@/lib/types";
 import {
   getBranchInvoices,
+  getBranchInsuranceClaims,
   recordFrontDeskPayment,
   type FrontDeskInvoice,
+  type FrontDeskClaimSummary,
 } from "@/lib/actions/frontdesk-billing";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
 
 interface BillingPageProps {
   user: AuthUser;
   initialInvoices?: FrontDeskInvoice[];
+  initialClaims?: FrontDeskClaimSummary[];
 }
 
 type PaymentMethodType = "Cash" | "Card" | "BankTransfer" | "OnlinePayment";
@@ -58,11 +61,13 @@ const PAYMENT_METHODS: { id: PaymentMethodType; label: string; icon: React.Eleme
 export default function BillingPage({
   user,
   initialInvoices = [],
+  initialClaims = [],
 }: BillingPageProps) {
   const role = user?.role;
-  const { payments, claims, updateClaimStatus } = useBillingStore();
+  const { payments } = useBillingStore();
 
   const [invoices, setInvoices] = useState<FrontDeskInvoice[]>(initialInvoices);
+  const [liveClaimsData, setLiveClaimsData] = useState<FrontDeskClaimSummary[]>(initialClaims);
   const [activeTab, setActiveTab] = useState("invoices");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
@@ -83,10 +88,14 @@ export default function BillingPage({
   const handleRefresh = () => {
     startTransition(async () => {
       try {
-        const fresh = await getBranchInvoices(user.branchId);
-        setInvoices(fresh);
+        const [freshInvoices, freshClaims] = await Promise.all([
+          getBranchInvoices(user.branchId),
+          getBranchInsuranceClaims(user.branchId),
+        ]);
+        setInvoices(freshInvoices);
+        setLiveClaimsData(freshClaims);
       } catch (err) {
-        console.error("Failed to refresh branch invoices:", err);
+        console.error("Failed to refresh billing data:", err);
       }
     });
   };
@@ -192,10 +201,12 @@ export default function BillingPage({
       p.reference.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredClaims = claims.filter(
+  const filteredClaims = liveClaimsData.filter(
     (c) =>
       c.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.claimId.toLowerCase().includes(searchTerm.toLowerCase())
+      c.claimId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.providerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.policyNumber.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -539,66 +550,112 @@ export default function BillingPage({
         </TabsContent>
 
         {/* ─── Claims Tab Content ─────────────────────────────────────────── */}
-        <TabsContent value="claims" className="mt-6">
+        <TabsContent value="claims" className="mt-6 space-y-4">
+          {/* Live Claim Status Metrics */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              {
+                label: "Total Claims",
+                value: liveClaimsData.length,
+                color: "text-slate-900",
+                bg: "bg-slate-50",
+              },
+              {
+                label: "Under Review",
+                value: liveClaimsData.filter((c) => c.status === "UnderReview").length,
+                color: "text-amber-700",
+                bg: "bg-amber-50",
+              },
+              {
+                label: "Approved",
+                value: liveClaimsData.filter((c) => c.status === "Approved" || c.status === "PartiallyApproved").length,
+                color: "text-emerald-700",
+                bg: "bg-emerald-50",
+              },
+              {
+                label: "Rejected",
+                value: liveClaimsData.filter((c) => c.status === "Rejected").length,
+                color: "text-rose-700",
+                bg: "bg-rose-50",
+              },
+            ].map((stat) => (
+              <div key={stat.label} className={`${stat.bg} rounded-xl p-3 border border-slate-100 text-center`}>
+                <div className={`text-2xl font-bold font-mono ${stat.color}`}>{stat.value}</div>
+                <div className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider mt-0.5">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
           <Card className="border-slate-200 shadow-sm overflow-hidden rounded-2xl">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left text-slate-600">
                 <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th className="px-6 py-4">Claim ID</th>
-                    <th className="px-6 py-4">Patient</th>
-                    <th className="px-6 py-4">Provider</th>
-                    <th className="px-6 py-4">Claimed</th>
-                    <th className="px-6 py-4">Approved</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-right">Action</th>
+                    <th className="px-5 py-4">Claim #</th>
+                    <th className="px-5 py-4">Patient</th>
+                    <th className="px-5 py-4">Insurance Provider</th>
+                    <th className="px-5 py-4">Policy #</th>
+                    <th className="px-5 py-4">Claim Date</th>
+                    <th className="px-5 py-4">Claimed</th>
+                    <th className="px-5 py-4">Approved</th>
+                    <th className="px-5 py-4">Status</th>
+                    <th className="px-5 py-4">Remarks</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
-                  {filteredClaims.map((claim) => (
-                    <tr key={claim.claimId} className="hover:bg-slate-50/50">
-                      <td className="px-6 py-4 font-semibold text-slate-900 font-mono text-xs">
-                        {claim.claimId}
-                      </td>
-                      <td className="px-6 py-4 font-medium text-[var(--brand-primary)]">
-                        {claim.patientName}
-                      </td>
-                      <td className="px-6 py-4 text-slate-500">{claim.providerName}</td>
-                      <td className="px-6 py-4 font-semibold">
-                        LKR {claim.claimedAmount.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 font-semibold text-emerald-600">
-                        LKR {claim.approvedAmount.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <StatusPill status={claim.status} />
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        {claim.status === "UnderReview" && role === "admin" ? (
-                          <div className="flex gap-2 justify-end">
-                            <Button
-                              size="sm"
-                              onClick={() => updateClaimStatus(claim.claimId, "Approved")}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg h-8"
-                            >
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => updateClaimStatus(claim.claimId, "Rejected")}
-                              className="bg-rose-600 hover:bg-rose-700 text-white rounded-lg h-8"
-                            >
-                              Reject
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button size="sm" variant="outline" className="rounded-lg h-8">
-                            Details
-                          </Button>
-                        )}
+                  {filteredClaims.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="text-center py-12 text-slate-400">
+                        <FileCheck className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                        No insurance claims found for this branch.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    filteredClaims.map((claim) => (
+                      <tr key={claim.claimId} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-5 py-4 font-mono font-semibold text-xs text-slate-900">
+                          #{claim.claimId.substring(0, 8).toUpperCase()}
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={cn(
+                                "w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0",
+                                getAvatarColor(claim.patientName)
+                              )}
+                            >
+                              {getInitials(claim.patientName)}
+                            </div>
+                            <span className="font-semibold text-slate-900">{claim.patientName}</span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="text-xs">
+                            <div className="font-semibold text-slate-800">{claim.providerName}</div>
+                            <div className="text-slate-400">{claim.packageName}</div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4 font-mono text-xs text-slate-600">
+                          {claim.policyNumber}
+                        </td>
+                        <td className="px-5 py-4 text-xs font-mono text-slate-500">
+                          {claim.claimDate || "—"}
+                        </td>
+                        <td className="px-5 py-4 font-semibold text-slate-900">
+                          LKR {Number(claim.claimedAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="px-5 py-4 font-semibold text-emerald-600">
+                          LKR {Number(claim.approvedAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="px-5 py-4">
+                          <StatusPill status={claim.status} />
+                        </td>
+                        <td className="px-5 py-4 text-xs text-slate-500 max-w-[120px] truncate">
+                          {claim.remarks || <span className="text-slate-300 italic">—</span>}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
