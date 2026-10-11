@@ -255,20 +255,12 @@ export async function getBranchById(branchId: string) {
 
 export async function deleteBranch(branchId: string) {
   try {
-<<<<<<< HEAD
-    const result = await db.query(`UPDATE branch SET is_active = FALSE WHERE branch_id = $1`, [branchId]);
-
-    if (result.rowCount === 0) {
-      return { success: false, error: "Branch not found or already inactive." };
-    } 
-=======
     const user = await getCurrentUser();
     if (!user || user.role !== "admin") {
       return { success: false, error: "Unauthorized" };
     }
 
-    await db.query(`DELETE FROM branch WHERE branch_id = $1`, [branchId]);
->>>>>>> 32d296af0c04e3025ebadf1e0dd702c9ae62d9e7
+    await db.query(`UPDATE branch SET is_active = FALSE WHERE branch_id = $1`, [branchId]);
 
     revalidatePath("/admin/branches");
     revalidatePath("/branches");
