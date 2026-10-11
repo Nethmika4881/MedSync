@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   User,
-  Bell,
   Lock,
   Monitor,
   CheckCircle2,
@@ -151,7 +150,7 @@ export default function SettingsPage({
   const [confirmPass, setConfirmPass] = useState("");
 
   // ─── 3. Notifications State (Default Setup) ──────────────────────────────
-  const [notifications, setNotifications] = useState<Record<string, boolean>>(() => {
+  const [, setNotifications] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     ADMIN_NOTIFICATION_SECTIONS.forEach((sec) => {
       sec.items.forEach((item) => {
@@ -163,7 +162,7 @@ export default function SettingsPage({
 
   // ─── 4. Appearance State ─────────────────────────────────────────────────
   const [theme, setTheme] = useState<"light" | "dark" | "system">("light");
-  const [density, setDensity] = useState<"compact" | "comfortable">(
+  const [, setDensity] = useState<"compact" | "comfortable">(
     "comfortable",
   );
 
@@ -279,11 +278,6 @@ export default function SettingsPage({
         showFeedback(err.message || "Failed to change password.");
       }
     });
-  };
-
-  const handleSaveNotifications = () => {
-    localStorage.setItem("medsync_admin_notifications", JSON.stringify(notifications));
-    showFeedback("Notification preferences saved successfully!");
   };
 
   // Doctor Schedules List
