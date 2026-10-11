@@ -8,15 +8,29 @@ import Link from "next/link";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
 import { getBranches } from "@/lib/actions/branches";
 import { createStaff } from "@/lib/actions/staff";
+import { useSearchParams } from "next/navigation";
 
 const ROLES = ["Admin", "Doctor", "FrontDesk"];
-
+const SPECIALIZATIONS = [
+  "Cardiology",
+  "Dermatology",
+  "General Practice",
+  "Gynecology",
+  "Neurology",
+  "Orthopedics",
+  "Pediatrics",
+  "Psychology",
+];
 type BranchOption = {
   branch_id: string;
   branch_name: string;
 };
 
 export default function NewStaffPage() {
+  const searchParams = useSearchParams();
+  const doctorMode = searchParams.get("role") === "Doctor";
+
+  const returnPath = doctorMode ? "/admin/doctors" : "/admin/staff";
   const [submitted, setSubmitted] = useState(false);
   const [newStaffName, setNewStaffName] = useState("");
   const [error, setError] = useState("");
@@ -39,13 +53,13 @@ export default function NewStaffPage() {
     postalCode: "",
     country: "Sri Lanka",
 
-    role: "FrontDesk",
+    role: doctorMode ? "Doctor" : "FrontDesk",
     branchID: "",
     joinedDate: "",
 
     password: "",
     confirmPassword: "",
-
+    specialization: doctorMode ? "General Practice" : "",
     medicalLicenceNo: "",
     roomNo: "",
     consultationFee: "1500",
@@ -140,7 +154,7 @@ export default function NewStaffPage() {
                 province: "",
                 postalCode: "",
                 country: "Sri Lanka",
-                role: "FrontDesk",
+                role: doctorMode ? "Doctor" : "FrontDesk",
                 branchID: branches[0]?.branch_id || "",
                 joinedDate: "",
                 password: "",
@@ -150,6 +164,7 @@ export default function NewStaffPage() {
                 consultationFee: "1500",
                 yearsExperience: "",
                 qualification: "",
+                specialization: doctorMode ? "General Practice" : "",
               });
             }}
             variant="outline"
@@ -157,7 +172,7 @@ export default function NewStaffPage() {
           >
             Add Another
           </Button>
-          <Link href="/admin/staff">
+          <Link href={returnPath}>
             <Button className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl px-6 h-11">
               View Directory
             </Button>
@@ -170,7 +185,7 @@ export default function NewStaffPage() {
   return (
     <div className="max-w-3xl mx-auto animate-fade-in pb-10">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/admin/staff">
+        <Link href={returnPath}>
           <Button
             variant="ghost"
             size="icon"
@@ -181,10 +196,13 @@ export default function NewStaffPage() {
         </Link>
         <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-            Provision New Staff
+            {doctorMode ? "Register New Doctor" : "Provision New Staff"}
           </h2>
+
           <p className="text-slate-500 text-sm">
-            Add a new employee and configure their role.
+            {doctorMode
+              ? "Create the doctor account and professional profile."
+              : "Add a new employee and configure their role."}
           </p>
         </div>
       </div>
@@ -460,6 +478,24 @@ export default function NewStaffPage() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
+                  <label className="block mb-1">Specialization *</label>
+
+                  <select
+                    value={form.specialization}
+                    onChange={(event) =>
+                      set("specialization", event.target.value)
+                    }
+                    required
+                    className="w-full border rounded-md p-2"
+                  >
+                    {SPECIALIZATIONS.map((specialization) => (
+                      <option key={specialization} value={specialization}>
+                        {specialization}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
                   <label className="block mb-1">Medical Licence Number *</label>
                   <input
                     type="text"
@@ -530,15 +566,21 @@ export default function NewStaffPage() {
             className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-11 px-8 font-semibold"
           >
             <UserPlus className="w-4 h-4 mr-2" />
-            {isSubmitting ? "Creating Staff..." : "Add Member"}
+            {isSubmitting
+              ? doctorMode
+                ? "Creating Doctor..."
+                : "Creating Staff..."
+              : doctorMode
+                ? "Register Doctor"
+                : "Add Member"}
           </Button>
-          <Link href="/admin/staff">
+          <Link href={returnPath}>
             <Button
               type="button"
               variant="outline"
               className="rounded-xl h-11 px-6 text-slate-600"
             >
-              Cancel
+              {doctorMode ? "View Doctors" : "View Staff"}
             </Button>
           </Link>
         </div>

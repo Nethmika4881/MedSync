@@ -3,27 +3,39 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { AuthUser, Doctor } from "@/lib/types";
-import { } from "@/lib/constants";;
+import {} from "@/lib/constants";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, MapPin, Calendar, Clock, Star, Plus, DollarSign } from "lucide-react";
+import {
+  Search,
+  MapPin,
+  Calendar,
+  Clock,
+  Plus,
+  DollarSign,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getAvatarGradient } from "@/components/catms/BookingModal";
 import { DoctorDirectoryItem } from "@/lib/actions/doctors";
 
-export default function DoctorsPage({ user, doctor }: { user: AuthUser, doctor: DoctorDirectoryItem[] }) {
+export default function DoctorsPage({
+  user,
+  doctor,
+}: {
+  user: AuthUser;
+  doctor: DoctorDirectoryItem[];
+}) {
   const role = user?.role;
   const router = useRouter();
-
-
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>("All");
 
-
-
   const isAdmin = role === "admin";
 
-  const specialties: string[] = ["All", ...Array.from(new Set(doctor.map((doctor) => doctor.specialization)))];
+  const specialties: string[] = [
+    "All",
+    ...Array.from(new Set(doctor.map((doctor) => doctor.specialization))),
+  ];
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
 
@@ -44,16 +56,27 @@ export default function DoctorsPage({ user, doctor }: { user: AuthUser, doctor: 
     <div className="space-y-6 animate-fade-in relative pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Doctor Directory</h2>
-          <p className="text-slate-500">Find and schedule appointments with our specialists.</p>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+            Doctor Directory
+          </h2>
+          <p className="text-slate-500">
+            Find and schedule appointments with our specialists.
+          </p>
         </div>
         {isAdmin && (
           <div className="flex items-center gap-3">
-            <Button onClick={() => router.push("/admin/doctors/fees")} variant="outline" className="rounded-xl h-10 px-4 flex items-center gap-2 text-slate-600">
+            <Button
+              onClick={() => router.push("/admin/doctors/fees")}
+              variant="outline"
+              className="rounded-xl h-10 px-4 flex items-center gap-2 text-slate-600"
+            >
               <DollarSign className="w-4 h-4" />
               Manage Fees
             </Button>
-            <Button onClick={() => router.push("/admin/doctors/new")} className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-10 px-4 flex items-center gap-2">
+            <Button
+              onClick={() => router.push("/admin/doctors/new")}
+              className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white rounded-xl h-10 px-4 flex items-center gap-2"
+            >
               <Plus className="w-4 h-4" />
               New Doctor
             </Button>
@@ -74,12 +97,15 @@ export default function DoctorsPage({ user, doctor }: { user: AuthUser, doctor: 
           />
         </div>
         <div className="flex-1 min-w-0 overflow-hidden">
-          <div className="flex overflow-x-auto custom-scrollbar gap-2 pb-3" style={{ height: "52px" }}>
+          <div
+            className="flex overflow-x-auto custom-scrollbar gap-2 pb-3"
+            style={{ height: "52px" }}
+          >
             {specialties.map((spec: string) => (
               <button
                 key={spec}
                 onClick={() => setSelectedSpecialty(spec)}
-                className={`shrink-0 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${selectedSpecialty === spec ? 'bg-[var(--brand-primary)] text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                className={`shrink-0 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${selectedSpecialty === spec ? "bg-[var(--brand-primary)] text-white shadow-md" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"}`}
               >
                 {spec}
               </button>
@@ -95,7 +121,10 @@ export default function DoctorsPage({ user, doctor }: { user: AuthUser, doctor: 
             const gradient = getAvatarGradient(doctor.avatar);
 
             return (
-              <Card key={doctor.doctorId} className="border-slate-200 shadow-sm hover:shadow-md transition-all group overflow-hidden flex flex-col relative">
+              <Card
+                key={doctor.doctorId}
+                className="border-slate-200 shadow-sm hover:shadow-md transition-all group overflow-hidden flex flex-col relative"
+              >
                 <div className={`h-24 bg-gradient-to-r ${gradient} relative`}>
                   <div className="absolute -bottom-8 left-6">
                     <div className="p-1.5 bg-white rounded-2xl shadow-sm">
@@ -110,12 +139,15 @@ export default function DoctorsPage({ user, doctor }: { user: AuthUser, doctor: 
                     <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                       Dr. {doctor.name}
                     </h3>
-                    <p className="text-[var(--brand-primary)] font-semibold text-sm">{doctor.specialization}</p>
+                    <p className="text-[var(--brand-primary)] font-semibold text-sm">
+                      {doctor.specialization}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2 mt-2">
                     <span
-                      className={`w-2 h-2 rounded-full ${doctor.isAvailable ? "bg-emerald-500" : "bg-slate-300"
-                        }`}
+                      className={`w-2 h-2 rounded-full ${
+                        doctor.isAvailable ? "bg-emerald-500" : "bg-slate-300"
+                      }`}
                     />
 
                     <span className="text-xs text-slate-500">
@@ -127,9 +159,7 @@ export default function DoctorsPage({ user, doctor }: { user: AuthUser, doctor: 
                   <div className="space-y-2.5 mb-6 flex-1">
                     <div className="flex items-start gap-2.5 text-sm text-slate-600">
                       <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                      <span className="leading-tight">
-                        {doctor.branchName}
-                      </span>
+                      <span className="leading-tight">{doctor.branchName}</span>
                     </div>
                     <div className="flex items-center gap-2.5 text-sm text-slate-600">
                       <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
@@ -143,11 +173,16 @@ export default function DoctorsPage({ user, doctor }: { user: AuthUser, doctor: 
 
                   <div className="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
                     <div className="text-sm">
-                      <span className="text-slate-500">Consultation Fee</span><br />
-                      <span className="font-bold text-slate-900">${doctor.consultationFee}</span>
+                      <span className="text-slate-500">Consultation Fee</span>
+                      <br />
+                      <span className="font-bold text-slate-900">
+                        ${doctor.consultationFee}
+                      </span>
                     </div>
                     <Button
-                      onClick={() => router.push(`admin/doctors/${doctor.doctorId}`)}
+                      onClick={() =>
+                        router.push(`/admin/doctors/${doctor.doctorId}`)
+                      }
                       className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-all"
                     >
                       View Profile
@@ -157,6 +192,7 @@ export default function DoctorsPage({ user, doctor }: { user: AuthUser, doctor: 
               </Card>
             );
           })}
+          s
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -164,11 +200,21 @@ export default function DoctorsPage({ user, doctor }: { user: AuthUser, doctor: 
             <Search className="w-6 h-6 text-slate-400" />
           </div>
           <h3 className="text-lg font-bold text-slate-900">No doctors found</h3>
-          <p className="text-slate-500 text-sm max-w-sm mt-1">Try adjusting your filters or search terms, or add a new doctor.</p>
-          <Button variant="outline" onClick={() => { setSearchTerm(""); setSelectedSpecialty("All"); }} className="mt-6 rounded-xl">Clear Filters</Button>
+          <p className="text-slate-500 text-sm max-w-sm mt-1">
+            Try adjusting your filters or search terms, or add a new doctor.
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSearchTerm("");
+              setSelectedSpecialty("All");
+            }}
+            className="mt-6 rounded-xl"
+          >
+            Clear Filters
+          </Button>
         </div>
       )}
-
     </div>
   );
 }
