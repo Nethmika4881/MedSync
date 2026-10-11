@@ -1,14 +1,56 @@
 "use client";
 
 import React, { useState } from "react";
+import { z } from "zod";
+import { toast, Toaster } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UserPlus, ArrowLeft, CheckCircle2, Loader2, KeyRound } from "lucide-react";
+import { UserPlus, ArrowLeft, CheckCircle2, Loader2, KeyRound, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { cn, getInitials, getAvatarColor } from "@/lib/utils";
 import { registerBranchPatient } from "@/lib/actions/frontdesk-registration";
 
-const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] as const;
+
+// Zod validation schema for patient registration
+const patientRegistrationSchema = z.object({
+  firstName: z.string().trim().min(2, "First name must be at least 2 characters."),
+  lastName: z.string().trim().min(2, "Last name must be at least 2 characters."),
+  nic: z
+    .string()
+    .trim()
+    .min(9, "National ID must be at least 9 characters.")
+    .regex(/^[0-9]{9}[vVxX]?$|^[0-9]{12}$/, "Enter a valid Sri Lankan NIC (e.g. 951234567V or 199512345678)."),
+  dob: z.string().refine((val) => {
+    if (!val) return false;
+    const date = new Date(val);
+    return !isNaN(date.getTime()) && date <= new Date();
+  }, "Date of birth cannot be empty or in the future."),
+  gender: z.enum(["Male", "Female", "Other"]),
+  bloodGroup: z.enum(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]),
+  phone: z
+    .string()
+    .trim()
+    .min(9, "Phone number must be at least 9 digits.")
+    .regex(/^[+0-9\s-]{9,15}$/, "Enter a valid phone number (e.g. +94 77 123 4567)."),
+  email: z
+    .string()
+    .trim()
+    .refine((val) => val === "" || z.string().email().safeParse(val).success, {
+      message: "Please enter a valid email address.",
+    }),
+  address: z.string().trim().optional(),
+  city: z.string().trim().optional(),
+  emergencyContactName: z.string().trim().optional(),
+  emergencyContactRelation: z.string().trim().optional(),
+  emergencyContactPhone: z
+    .string()
+    .trim()
+    .refine((val) => val === "" || /^[+0-9\s-]{9,15}$/.test(val), {
+      message: "Please enter a valid emergency contact phone.",
+    })
+    .optional(),
+});
 
 interface RegisteredResult {
   patientId: string;
@@ -24,6 +66,7 @@ export default function NewPatientPage() {
   const [isPending, setIsPending] = useState(false);
   const [registeredResult, setRegisteredResult] = useState<RegisteredResult | null>(null);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [form, setForm] = useState({
     firstName: "",
@@ -41,19 +84,41 @@ export default function NewPatientPage() {
     emergencyContactPhone: "",
   });
 
-  const set = (field: string, value: string) => setForm((f) => ({ ...f, [field]: value }));
+  const set = (field: string, value: string) => {
+    setForm((f) => ({ ...f, [field]: value }));
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.firstName.trim() || !form.lastName.trim() || !form.nic.trim() || !form.dob || !form.phone.trim()) {
-      setError("Please fill in all required fields (First Name, Last Name, NIC, DOB, and Phone).");
+    setError("");
+    setFieldErrors({});
+
+    // 1. Zod Validation
+    const validation = patientRegistrationSchema.safeParse(form);
+    if (!validation.success) {
+      const errors: Record<string, string> = {};
+      validation.error.issues.forEach((issue) => {
+        const path = issue.path[0] as string;
+        if (!errors[path]) {
+          errors[path] = issue.message;
+        }
+      });
+      setFieldErrors(errors);
+      toast.error("Please correct the form fields highlighted in red.");
       return;
     }
 
-    setError("");
     setIsPending(true);
 
     try {
+      // 2. Server Action Mutation
       const res = await registerBranchPatient({
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
@@ -71,6 +136,7 @@ export default function NewPatientPage() {
       });
 
       if (res.success && res.patientId) {
+        toast.success(`Patient ${form.firstName} ${form.lastName} registered successfully!`);
         setRegisteredResult({
           patientId: res.patientId,
           name: `${form.firstName} ${form.lastName}`.trim(),
@@ -81,10 +147,14 @@ export default function NewPatientPage() {
         });
         setSubmitted(true);
       } else {
-        setError(res.error || "Failed to register patient in database.");
+        const errMsg = res.error || "Failed to register patient in database.";
+        setError(errMsg);
+        toast.error(errMsg);
       }
     } catch (err: any) {
-      setError(err?.message || "An unexpected error occurred while registering patient.");
+      const errMsg = err?.message || "An unexpected error occurred while registering patient.";
+      setError(errMsg);
+      toast.error(errMsg);
     } finally {
       setIsPending(false);
     }
@@ -94,6 +164,7 @@ export default function NewPatientPage() {
     setSubmitted(false);
     setRegisteredResult(null);
     setError("");
+    setFieldErrors({});
     setForm({
       firstName: "",
       lastName: "",
@@ -115,6 +186,7 @@ export default function NewPatientPage() {
     const colorClass = getAvatarColor(registeredResult.name);
     return (
       <div className="max-w-xl mx-auto text-center py-16 animate-fade-in">
+        <Toaster richColors position="top-right" />
         <div
           className={cn("w-20 h-20 flex items-center justify-center mx-auto mb-6 text-2xl font-black shadow-md", colorClass)}
           style={{ clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)" }}
@@ -163,6 +235,7 @@ export default function NewPatientPage() {
 
   return (
     <div className="max-w-3xl mx-auto animate-fade-in pb-12">
+      <Toaster richColors position="top-right" />
       <div className="flex items-center gap-3 mb-6">
         <Link href="/front-desk/patients">
           <Button variant="ghost" size="icon" className="text-slate-500 hover:bg-slate-100 rounded-xl">
@@ -200,9 +273,18 @@ export default function NewPatientPage() {
                   value={form.firstName}
                   onChange={(e) => set("firstName", e.target.value)}
                   placeholder="e.g. Maria"
-                  className="w-full h-11 px-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none"
-                  required
+                  className={cn(
+                    "w-full h-11 px-4 rounded-xl border text-sm bg-white outline-none transition-all",
+                    fieldErrors.firstName
+                      ? "border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+                      : "border-slate-200 focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)]"
+                  )}
                 />
+                {fieldErrors.firstName && (
+                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" /> {fieldErrors.firstName}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
@@ -213,9 +295,18 @@ export default function NewPatientPage() {
                   value={form.lastName}
                   onChange={(e) => set("lastName", e.target.value)}
                   placeholder="e.g. Santos"
-                  className="w-full h-11 px-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none"
-                  required
+                  className={cn(
+                    "w-full h-11 px-4 rounded-xl border text-sm bg-white outline-none transition-all",
+                    fieldErrors.lastName
+                      ? "border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+                      : "border-slate-200 focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)]"
+                  )}
                 />
+                {fieldErrors.lastName && (
+                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" /> {fieldErrors.lastName}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
@@ -226,9 +317,18 @@ export default function NewPatientPage() {
                   value={form.nic}
                   onChange={(e) => set("nic", e.target.value)}
                   placeholder="e.g. 199512345678 or 951234567V"
-                  className="w-full h-11 px-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none"
-                  required
+                  className={cn(
+                    "w-full h-11 px-4 rounded-xl border text-sm bg-white outline-none transition-all",
+                    fieldErrors.nic
+                      ? "border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+                      : "border-slate-200 focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)]"
+                  )}
                 />
+                {fieldErrors.nic && (
+                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" /> {fieldErrors.nic}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
@@ -238,9 +338,18 @@ export default function NewPatientPage() {
                   type="date"
                   value={form.dob}
                   onChange={(e) => set("dob", e.target.value)}
-                  className="w-full h-11 px-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none"
-                  required
+                  className={cn(
+                    "w-full h-11 px-4 rounded-xl border text-sm bg-white outline-none transition-all",
+                    fieldErrors.dob
+                      ? "border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+                      : "border-slate-200 focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)]"
+                  )}
                 />
+                {fieldErrors.dob && (
+                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" /> {fieldErrors.dob}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
@@ -298,9 +407,18 @@ export default function NewPatientPage() {
                   value={form.phone}
                   onChange={(e) => set("phone", e.target.value)}
                   placeholder="e.g. +94 77 123 4567"
-                  className="w-full h-11 px-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none"
-                  required
+                  className={cn(
+                    "w-full h-11 px-4 rounded-xl border text-sm bg-white outline-none transition-all",
+                    fieldErrors.phone
+                      ? "border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+                      : "border-slate-200 focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)]"
+                  )}
                 />
+                {fieldErrors.phone && (
+                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" /> {fieldErrors.phone}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
@@ -311,8 +429,18 @@ export default function NewPatientPage() {
                   value={form.email}
                   onChange={(e) => set("email", e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full h-11 px-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none"
+                  className={cn(
+                    "w-full h-11 px-4 rounded-xl border text-sm bg-white outline-none transition-all",
+                    fieldErrors.email
+                      ? "border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+                      : "border-slate-200 focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)]"
+                  )}
                 />
+                {fieldErrors.email && (
+                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" /> {fieldErrors.email}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
@@ -390,15 +518,26 @@ export default function NewPatientPage() {
                   value={form.emergencyContactPhone}
                   onChange={(e) => set("emergencyContactPhone", e.target.value)}
                   placeholder="+94 77 ..."
-                  className="w-full h-11 px-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] outline-none"
+                  className={cn(
+                    "w-full h-11 px-4 rounded-xl border text-sm bg-white outline-none transition-all",
+                    fieldErrors.emergencyContactPhone
+                      ? "border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+                      : "border-slate-200 focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)]"
+                  )}
                 />
+                {fieldErrors.emergencyContactPhone && (
+                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" /> {fieldErrors.emergencyContactPhone}
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
         </Card>
 
         {error && (
-          <p className="text-rose-600 text-sm font-medium bg-rose-50 border border-rose-200 px-4 py-3 rounded-xl">
+          <p className="text-rose-600 text-sm font-medium bg-rose-50 border border-rose-200 px-4 py-3 rounded-xl flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
             {error}
           </p>
         )}

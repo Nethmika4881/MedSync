@@ -1,9 +1,25 @@
 import { getCurrentUser } from "@/lib/actions/getcurrentuser";
 import { redirect } from "next/navigation";
+import {
+  getBranchInvoices,
+  getBranchInsuranceClaims,
+} from "@/lib/actions/frontdesk-billing";
 import BillingPage from "./_client";
 
 export default async function Page() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?clear=1");
-  return <BillingPage user={user} />;
+
+  const [initialInvoices, initialClaims] = await Promise.all([
+    getBranchInvoices(user.branchId),
+    getBranchInsuranceClaims(user.branchId),
+  ]);
+
+  return (
+    <BillingPage
+      user={user}
+      initialInvoices={initialInvoices}
+      initialClaims={initialClaims}
+    />
+  );
 }
