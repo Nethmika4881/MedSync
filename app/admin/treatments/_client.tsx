@@ -22,12 +22,12 @@ const CATEGORY_CONFIG: Record<
   string,
   { label: string; color: string; bg: string; Icon: React.ElementType }
 > = {
-  Consultation: { label: "Consultation", color: "text-blue-700", bg: "bg-blue-50 border-blue-200", Icon: Stethoscope },
-  Radiology: { label: "Radiology", color: "text-purple-700", bg: "bg-purple-50 border-purple-200", Icon: Radiation },
-  Laboratory: { label: "Laboratory", color: "text-amber-700", bg: "bg-amber-50 border-amber-200", Icon: FlaskConical },
-  Injection: { label: "Injection", color: "text-green-700", bg: "bg-green-50 border-green-200", Icon: Syringe },
-  Surgery: { label: "Surgery", color: "text-red-700", bg: "bg-red-50 border-red-200", Icon: Scissors },
-  Other: { label: "Other", color: "text-slate-700", bg: "bg-slate-50 border-slate-200", Icon: Activity },
+  Consultation: { label: "Consultation", color: "text-blue-700 dark:text-blue-300", bg: "bg-blue-50 border-blue-200 dark:bg-blue-950/60 dark:border-blue-800/50", Icon: Stethoscope },
+  Radiology: { label: "Radiology", color: "text-purple-700 dark:text-purple-200", bg: "bg-purple-50 border-purple-200 dark:bg-purple-950/60 dark:border-purple-800/50", Icon: Radiation },
+  Laboratory: { label: "Laboratory", color: "text-amber-700 dark:text-amber-200", bg: "bg-amber-50 border-amber-200 dark:bg-amber-950/60 dark:border-amber-800/50", Icon: FlaskConical },
+  Injection: { label: "Injection", color: "text-green-700 dark:text-emerald-300", bg: "bg-green-50 border-green-200 dark:bg-emerald-950/60 dark:border-emerald-800/50", Icon: Syringe },
+  Surgery: { label: "Surgery", color: "text-red-700 dark:text-rose-300", bg: "bg-red-50 border-red-20 dark:bg-rose-950/60 dark:border-rose-800/50", Icon: Scissors },
+  Other: { label: "Other", color: "text-slate-700 dark:text-slate-300", bg: "bg-slate-50 border-slate-200 dark:bg-slate-800/60 dark:border-slate-700/60", Icon: Activity },
 };
 
 const CATEGORIES = ["All", "Consultation", "Radiology", "Laboratory", "Injection", "Surgery", "Other"];
@@ -186,7 +186,7 @@ function AdminCatalogueView() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Treatment Catalogue</h2>
-          <p className="text-slate-500">Manage all treatment types, categories, and base prices.</p>
+          <p className="text-slate-500">Manage all treatment types, categories, and prices.</p>
         </div>
         <Button onClick={openAddModal} className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-xl h-10 px-5 shrink-0">
           <Plus className="w-4 h-4 mr-2" /> Add Treatment
