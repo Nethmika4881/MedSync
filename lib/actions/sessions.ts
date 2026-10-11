@@ -56,10 +56,10 @@ export async function setCookie(
     expires: Date.now() + SESSION_EXPIRATION_SECONDS * 1000,
   });
 
-  //role cookie - read by proxy
+  // role cookie - read by server-side middleware
   cookie.set("session_role", role, {
     secure: true,
-    httpOnly: false, //proxy needs to read this
+    httpOnly: true,
     sameSite: "strict",
     expires: Date.now() + SESSION_EXPIRATION_SECONDS * 1000,
   });
