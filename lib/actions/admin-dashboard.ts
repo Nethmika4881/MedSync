@@ -80,7 +80,7 @@ export async function getDashboardData(): Promise<DashboardData | null> {
         FROM invoice
       `),
 
-      //Today's Appointments
+      //Today Appointments
       db.query(`
         SELECT 
           COUNT(a.appointment_id) AS "todayAppointments",

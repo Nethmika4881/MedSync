@@ -178,13 +178,13 @@ The points below show each member's main area of ownership. The team also review
 * Set up Flyway, PostgreSQL, Docker, Redis, shared database access, and security improvements across the application
 * Created the three CI/CD workflows, managed Azure delivery, integrated team branches, and resolved build and migration conflicts
 
-### [Pinnapolam P. A. H. D. (240515A) (@Hiruna4587)](https://github.com/Hiruna4587)
+### [Pinnapola P. A. H. D. (240515A) (@Hiruna4587)](https://github.com/Hiruna4587)
 
 * Created the initial healthcare schema and added constraints and triggers that protect important data
 * Built treatment catalogue management and treatment query features
 * Developed branch management, branch analytics, the admin dashboard, and settings
 * Implemented complaints and insurance package management
-* Built admin reports, performance measures, insurance and treatment reports, and PDF export
+* Built admin reports, performance measures, insurance and treatment reports
 
 ### [Perara B. N. D. (240496M) (@nadildinulaka145-blip)](https://github.com/nadildinulaka145-blip)
 

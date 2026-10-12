@@ -13,6 +13,7 @@ import {
   Clock,
   Plus,
   Trash2,
+  Bell,
 } from "lucide-react";
 import { getInitials, cn } from "@/lib/utils";
 import type { AuthUser } from "@/lib/types";
@@ -150,7 +151,7 @@ export default function SettingsPage({
   const [confirmPass, setConfirmPass] = useState("");
 
   // ─── 3. Notifications State (Default Setup) ──────────────────────────────
-  const [, setNotifications] = useState<Record<string, boolean>>(() => {
+  const [notifications, setNotifications] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     ADMIN_NOTIFICATION_SECTIONS.forEach((sec) => {
       sec.items.forEach((item) => {
@@ -217,6 +218,14 @@ export default function SettingsPage({
     } else {
       root.classList.remove("dark");
     }
+  };
+
+  const handleSaveNotifications = () => {
+    localStorage.setItem(
+      "medsync_admin_notifications",
+      JSON.stringify(notifications),
+    );
+    showFeedback("Notification preferences saved.");
   };
 
   const handleThemeChange = (newTheme: "light" | "dark" | "system") => {
@@ -332,12 +341,12 @@ export default function SettingsPage({
             <User className="w-3.5 h-3.5 mr-2 mx-auto" /> Profile
           </TabsTrigger>
 
-          {/* <TabsTrigger
+          <TabsTrigger
             value="notifications"
             className="rounded-lg px-5 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs font-semibold"
           >
-            <Bell className="w-3.5 h-3.5 mr-2" /> Notifications
-          </TabsTrigger> */}
+            <Bell className="w-3.5 h-3.5 mr-2 mx-auto" /> Notifications
+          </TabsTrigger>
 
           <TabsTrigger
             value="security"
@@ -577,7 +586,7 @@ export default function SettingsPage({
           </form>
         </TabsContent>
 
-        {/* ─── 2. NOTIFICATIONS TAB ─────────────────────────────────────────
+        {/* ─── 2. NOTIFICATIONS TAB ───────────────────────────────────────── */}
         <TabsContent value="notifications" className="mt-6 space-y-6">
           {ADMIN_NOTIFICATION_SECTIONS.map((section) => (
             <Card
@@ -602,9 +611,9 @@ export default function SettingsPage({
                       <p className="text-xs text-slate-500 mt-0.5">
                         {setting.desc}
                       </p>
-                    </div> */}
+                    </div>
                     {/* Toggle Switch */}
-                    {/* <button
+                    <button
                       type="button"
                       onClick={() =>
                         setNotifications((prev) => ({
@@ -643,7 +652,7 @@ export default function SettingsPage({
               Save Preferences
             </Button>
           </div>
-        </TabsContent> */}
+        </TabsContent>
 
         {/* ─── 3. SECURITY TAB ────────────────────────────────────────────── */}
         <TabsContent value="security" className="mt-6 space-y-6">
