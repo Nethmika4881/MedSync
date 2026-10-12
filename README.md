@@ -408,22 +408,20 @@ Required deployment configuration includes:
 
 ## Team and Contributions
 
-### [Jayawardhana S.A.W.G. (240299L) (@Nethmika4881)](https://github.com/Nethmika4881)
+### [Kumarasiri I.D.N. (240370X)) (@Nethmika4881)](https://github.com/Nethmika4881)
 
-**Project lead, full-stack integration, admin platform, security, and DevOps**
-
-- Designed and implemented authentication, patient registration, password hashing, Redis sessions, logout, middleware, and role-based routing
-- Established PostgreSQL/Flyway migrations, local Docker services, Redis integration, and shared database connectivity
-- Built major admin capabilities: staff directory and onboarding, doctor creation and profiles, doctor fees and schedules, reports, doctor revenue, and branch summaries
-- Connected admin features to live database actions and repaired cross-module schema/build incompatibilities
-- Performed security hardening: secure cookies, password handling, security headers, role checks, branch scoping, public-data sanitisation, and dependency updates
-- Created and maintained the three CI/CD pipelines for database validation, controlled database migration, and Azure application deployment
-- Managed Azure application delivery and the production database/Redis connectivity required by the deployed system
-- Maintained deployable builds across the project
+- Created the repository and established the initial application structure, routes, mock data, shared UI components, and responsive layouts
+- Built early appointment-booking, patient-detail, doctor-profile, doctor-registration, billing, pharmacy, and administrative interfaces
+- Designed and implemented authentication, patient registration, React Hook Form/Zod validation, password hashing, Redis sessions, logout, middleware, and role-based routing
+- Established PostgreSQL/Flyway migration infrastructure, local Docker services, Redis integration, and shared database connectivity
+- Built major admin capabilities including staff onboarding and directory management, doctor creation and profiles, doctor fees and schedules, reports, doctor revenue, and branch summaries
+- Connected administrative interfaces to live database actions and resolved cross-module schema, routing, migration, and production-build incompatibilities
+- Performed security hardening through secure cookies, improved password handling, security headers, server-side role checks, branch scoping, public-data sanitisation, and dependency updates
+- Created and maintained three CI/CD pipelines covering database validation, controlled production migrations, and Azure application deployment
+- Managed Azure application delivery and production PostgreSQL/Redis connectivity
+- Integrated teammates’ pull requests, resolved merge conflicts, corrected migration ordering, and maintained deployable project builds
 
 ### [PinnapolamP.A.H.D. (240515A) (@Hiruna4587)](https://github.com/Hiruna4587)
-
-**Admin portal, database design, reporting, and integrity rules**
 
 - Created the initial healthcare database schema and later schema constraints
 - Built treatment catalogue CRUD and treatment query logic
@@ -438,8 +436,6 @@ Required deployment configuration includes:
 
 ### [Perara B.N.D (240496M) (@nadildinulaka145-blip)](https://github.com/nadildinulaka145-blip)
 
-**Front-desk portal and branch operations**
-
 - Built the front-desk layout, routing, loading skeletons, and recoverable error screens
 - Implemented dashboard metrics, live patient queue, appointment-distribution charts, and quick actions
 - Connected the patient directory to PostgreSQL and added live search and detailed patient records
@@ -452,8 +448,6 @@ Required deployment configuration includes:
 
 ### [Rakumar K (240540U) (@Koshi2004)](https://github.com/Koshi2004)
 
-**Doctor portal and clinical workflow**
-
 - Designed doctor-related schema elements, triggers, functions, views, and stored procedures
 - Built the active consultation workspace and treatment catalogue line-item attachment
 - Implemented doctor appointment, consultation, patient, catalogue, profile, and schedule data layers
@@ -465,8 +459,6 @@ Required deployment configuration includes:
 - Connected outstanding-balance reporting to live data
 
 ### [Gunawardena N.N.De.A (240205) (@NethmiNadeeshani2005)](https://github.com/NethmiNadeeshani2005)
-
-**Patient portal and patient self-service workflows**
 
 - Built the patient navigation and branch-scoped application layout/state
 - Developed the searchable doctor directory and multi-parameter filtering controls
