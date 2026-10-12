@@ -24,6 +24,15 @@ export type AdminProfileData = {
   postalCode: string;
 };
 
+export type AdminNotification = {
+  notificationId: string;
+  title: string;
+  message: string;
+  type: string;
+  isRead: boolean;
+  createdAt: string;
+};
+
 export async function getProfile(): Promise<AdminProfileData | null> {
   const user = await getCurrentUser();
   if (!user || user.role !== "admin") return null;
@@ -59,20 +68,28 @@ export async function getProfile(): Promise<AdminProfileData | null> {
   return result.rows[0] ?? null;
 }
 
-export async function updateProfile(data: {
-  fullName: string;
-  email: string;
-  gender: string;
-  phoneNumber: string;
-  addressLine1: string;
-  addressLine2: string;
-  city: string;
-  province: string;
-  postalCode: string;
-}) {
+const profileUpdateSchema = z.object({
+  fullName: z.string().trim().min(1, "Full name is required").max(100),
+  email: z.string().trim().email("Enter a valid email address").max(255),
+  gender: z.enum(["Male", "Female", "Other"]),
+  phoneNumber: z.string().trim().max(20),
+  addressLine1: z.string().trim().max(255),
+  addressLine2: z.string().trim().max(255),
+  city: z.string().trim().max(100),
+  province: z.string().trim().max(100),
+  postalCode: z.string().trim().max(20),
+});
+
+export async function updateProfile(data: unknown) {
   const user = await getCurrentUser();
   if (!user || user.role !== "admin") throw new Error("Unauthorized");
 
+  const validated = profileUpdateSchema.safeParse(data);
+  if (!validated.success) {
+    throw new Error(validated.error.issues[0]?.message ?? "Invalid profile details.");
+  }
+
+  const profile = validated.data;
   const userRecord = await db.query(
     `SELECT user_id, address_id, contact_id FROM app_user WHERE user_id = $1 LIMIT 1;`,
     [user.userId]
@@ -90,7 +107,7 @@ export async function updateProfile(data: {
     SET full_name = $1, email = $2, gender = $3::gender_enum, updated_at = NOW()
     WHERE user_id = $4
     `,
-    [data.fullName, data.email, data.gender, user_id]
+    [profile.fullName, profile.email, profile.gender, user_id]
   );
 
   if (address_id) {
@@ -100,11 +117,11 @@ export async function updateProfile(data: {
       SET address_line1 = $1, address_line2 = $2, city = $3, province = $4, postal_code = $5, updated_at = NOW()
       WHERE address_id = $6
       `,
-      [data.addressLine1, data.addressLine2, data.city, data.province, data.postalCode, address_id]
+      [profile.addressLine1, profile.addressLine2, profile.city, profile.province, profile.postalCode, address_id]
     );
   }
 
-  if (contact_id && data.phoneNumber.trim()) {
+  if (contact_id && profile.phoneNumber) {
     const existingPhone = await db.query(
       `
       SELECT contact_number_id FROM contact_number 
@@ -117,7 +134,7 @@ export async function updateProfile(data: {
     if (existingPhone.rows.length > 0) {
       await db.query(
         `UPDATE contact_number SET number = $1 WHERE contact_number_id = $2`,
-        [data.phoneNumber.trim(), existingPhone.rows[0].contact_number_id]
+        [profile.phoneNumber, existingPhone.rows[0].contact_number_id]
       );
     } else {
       await db.query(
@@ -125,7 +142,7 @@ export async function updateProfile(data: {
         INSERT INTO contact_number (contact_id, number_type, number, is_primary)
         VALUES ($1, 'Mobile', $2, TRUE)
         `,
-        [contact_id, data.phoneNumber.trim()]
+        [contact_id, profile.phoneNumber]
       );
     }
   }
@@ -141,8 +158,10 @@ const updatePasswordSchema = z.object({
     .min(8, "Password must be at least 8 characters long")
     .max(128, "Password is too long"),
 });
+const notificationIdSchema = z.string().uuid("Invalid notification ID");
+const notificationLimitSchema = z.number().int().min(1).max(100);
 
-export async function updatePassword(data: { currentPass: string; newPass: string }) {
+export async function updatePassword(data: unknown) {
   const user = await getCurrentUser();
   if (!user || user.role !== "admin") throw new Error("Unauthorized");
 
@@ -151,7 +170,8 @@ export async function updatePassword(data: { currentPass: string; newPass: strin
     throw new Error(validated.error.errors[0]?.message || "Invalid password format.");
   }
 
-  if (data.currentPass === data.newPass) {
+  const { currentPass, newPass } = validated.data;
+  if (currentPass === newPass) {
     throw new Error("New password must be different from your current password.");
   }
 
@@ -171,14 +191,13 @@ export async function updatePassword(data: { currentPass: string; newPass: strin
     try {
       matches = await comparePassword({
         hashedPassword: password_hash,
-        password: data.currentPass,
+        password: currentPass,
         salt: salt,
       });
     } catch {
       matches = false;
     }
-  } else if (password_hash && password_hash === data.currentPass) {
-    // Migration fallback for accounts with legacy plaintext passwords
+  } else if (password_hash && password_hash === currentPass) {
     matches = true;
   }
 
@@ -187,7 +206,7 @@ export async function updatePassword(data: { currentPass: string; newPass: strin
   }
 
   const newSalt = generateSalt();
-  const newHash = await hashPassword(data.newPass, newSalt);
+  const newHash = await hashPassword(newPass, newSalt);
 
   await db.query(
     `UPDATE app_user SET password_hash = $1, salt = $2, updated_at = NOW() WHERE user_id = $3`,
@@ -195,4 +214,77 @@ export async function updatePassword(data: { currentPass: string; newPass: strin
   );
 
   return { success: true, message: "Password updated successfully." };
+}
+
+export async function getNotifications(limit: number = 10): Promise<{
+  notifications: AdminNotification[];
+  unreadCount: number;
+}> {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "admin") {
+    return { notifications: [], unreadCount: 0 };
+  }
+
+  const parsedLimit = notificationLimitSchema.safeParse(limit);
+  if (!parsedLimit.success) {
+    throw new Error("Invalid notification limit.");
+  }
+
+  const unreadRes = await db.query(
+    `SELECT count(*)::int as count
+     FROM notification
+     WHERE user_id = $1 AND is_read = FALSE;`,
+    [user.userId]
+  );
+  const unreadCount: number = unreadRes.rows[0]?.count ?? 0;
+
+  const Result = await db.query(
+    `
+    SELECT notification_id as "notificationId", title, message, type, is_read as "isRead", to_char(created_at, 'DD Mon YYYY, HH:MI AM') as "createdAt"
+    FROM notification
+    WHERE user_id = $1
+    ORDER BY created_at DESC LIMIT $2;
+    `,
+    [user.userId, parsedLimit.data]
+  );
+
+  return {
+    notifications: Result.rows,
+    unreadCount,
+  };
+}
+
+export async function markNotificationAsRead(notificationId: string) {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "admin") throw new Error("Unauthorized");
+
+  const parsedId = notificationIdSchema.safeParse(notificationId);
+  if (!parsedId.success) throw new Error("Invalid notification ID.");
+
+  await db.query(
+    `UPDATE notification
+     SET is_read = TRUE
+     WHERE notification_id = $1 AND user_id = $2;`,
+    [parsedId.data, user.userId]
+  );
+
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin", "layout");
+  return { success: true };
+}
+
+export async function markAllNotificationsAsRead() {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "admin") throw new Error("Unauthorized");
+
+  await db.query(
+    `UPDATE notification
+     SET is_read = TRUE
+     WHERE user_id = $1 AND is_read = FALSE;`,
+    [user.userId]
+  );
+
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin", "layout");
+  return { success: true };
 }

@@ -3,6 +3,7 @@
 import db from "@/lib/db";
 import { getCurrentUser } from "@/lib/actions/getcurrentuser";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 export interface Providers {
   providerName: string;
@@ -31,6 +32,15 @@ export interface Stats {
   totalProvidersCount: number;
   totalPackagesCount: number;
 }
+
+const packageIdSchema = z.string().uuid("Invalid package ID");
+const providerNameSchema = z.string().trim().min(1, "Provider name is required").max(100);
+const insurerPackageSchema = z.object({
+  packageName: z.string().trim().min(1).max(100),
+  annualLimit: z.number().finite().nonnegative(),
+  copaymentPercentage: z.number().finite().min(0).max(100),
+  description: z.string().max(255),
+});
 
 // 1. Executive Dashboard KPIs
 export async function getStats(): Promise<Stats> {
@@ -143,10 +153,15 @@ export async function togglePackageStatus(packageId: string, currentStatus: bool
     return { success: false, error: "Unauthorized access." };
   }
 
+  const parsedId = packageIdSchema.safeParse(packageId);
+  if (!parsedId.success || typeof currentStatus !== "boolean") {
+    return { success: false, error: "Invalid package details." };
+  }
+
   try {
     await db.query(
       `UPDATE insurance_package SET is_active = $1, updated_at = NOW() WHERE insurance_package_id = $2`,
-      [!currentStatus, packageId]
+      [!currentStatus, parsedId.data]
     );
 
     revalidatePath("/admin/insurance");
@@ -165,10 +180,15 @@ export async function syncPackages(providerName: string) {
     return { success: false, error: "Unauthorized access." };
   }
 
+  const parsedProvider = providerNameSchema.safeParse(providerName);
+  if (!parsedProvider.success) {
+    return { success: false, error: parsedProvider.error.issues[0]?.message ?? "Invalid provider name." };
+  }
+
   try {
     //package catalog endpoint
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const res = await fetch(`${baseUrl}/api/mock/insurer/${encodeURIComponent(providerName)}`, {
+    const res = await fetch(`${baseUrl}/api/mock/insurer/${encodeURIComponent(parsedProvider.data)}`, {
       cache: "no-store",
     });
 
@@ -176,13 +196,12 @@ export async function syncPackages(providerName: string) {
       throw new Error(`External provider API responded with status ${res.status}`);
     }
 
-    const data = await res.json();
-    const packages: Array<{
-      packageName: string;
-      annualLimit: number;
-      copaymentPercentage: number;
-      description: string;
-    }> = data.packages || [];
+    const responseSchema = z.object({ packages: z.array(insurerPackageSchema) });
+    const parsedResponse = responseSchema.safeParse(await res.json());
+    if (!parsedResponse.success) {
+      return { success: false, error: "Invalid package data returned by provider API." };
+    }
+    const packages = parsedResponse.data.packages;
 
     if (packages.length === 0) {
       return { success: false, error: "No packages returned from provider API." };
@@ -207,7 +226,7 @@ export async function syncPackages(providerName: string) {
 
     for (const pkg of packages) {
       await db.query(upsertQuery, [
-        providerName,
+        parsedProvider.data,
         pkg.packageName,
         pkg.annualLimit,
         pkg.copaymentPercentage,
@@ -218,7 +237,7 @@ export async function syncPackages(providerName: string) {
     await db.query("COMMIT");
 
     revalidatePath("/admin/insurance");
-    return {success: true, message: `Successfully synced ${packages.length} package(s) from ${providerName}.`,};
+    return {success: true, message: `Successfully synced ${packages.length} package(s) from ${parsedProvider.data}.`,};
   } 
   catch (error: any) {
     await db.query("ROLLBACK").catch(() => {});
@@ -233,17 +252,22 @@ export async function deletePackages(packageId: string) {
     return { success: false, error: "Unauthorized access." };
   }
 
+  const parsedId = packageIdSchema.safeParse(packageId);
+  if (!parsedId.success) {
+    return { success: false, error: "Invalid package ID." };
+  }
+
   try {
     const check = await db.query(
       `SELECT COUNT(*) AS enrolled_count FROM insurance WHERE insurance_package_id = $1`,
-      [packageId]
+      [parsedId.data]
     );
     const enrolledCount = parseInt(check.rows[0]?.enrolled_count, 10) || 0;
 
     if (enrolledCount > 0) {
       await db.query(
         `UPDATE insurance_package SET is_active = FALSE, updated_at = NOW() WHERE insurance_package_id = $1`,
-        [packageId]
+        [parsedId.data]
       );
 
       revalidatePath("/admin/insurance");
@@ -251,7 +275,7 @@ export async function deletePackages(packageId: string) {
       return {success: true, action: "deactivated", message: `Package has ${enrolledCount} patient policies linked. It was safely deactivated instead of deleted to protect patient history.`,};
     }
 
-    await db.query(`DELETE FROM insurance_package WHERE insurance_package_id = $1`, [packageId]);
+    await db.query(`DELETE FROM insurance_package WHERE insurance_package_id = $1`, [parsedId.data]);
 
     revalidatePath("/admin/insurance");
     revalidatePath("/admin/insurance/packages");

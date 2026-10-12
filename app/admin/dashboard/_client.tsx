@@ -280,7 +280,7 @@ export default function DashboardPage({ user }: { user: any }) {
                           </div>
                         </div>
                       </div>
-                      <Link href={`/consultations/${appt.appointmentId}`} className="shrink-0">
+                      <Link href={`/doctor/consultations/${appt.appointmentId}`} className="shrink-0">
                         <Button size="sm" className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-lg h-8">
                           <ClipboardPlus className="w-3.5 h-3.5 mr-1.5" /> Start
                         </Button>
