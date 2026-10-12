@@ -9,6 +9,8 @@
 
 # testing
 /coverage
+/playwright-report/
+/test-results/
 
 # next.js
 /.next/
@@ -46,6 +48,7 @@ node_modules/
 
 /.gitignore
 /context
+/docs/
 .neon
 /skills-lock.json
 

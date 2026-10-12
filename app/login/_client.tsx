@@ -99,7 +99,7 @@ export default function LoginPageClient() {
           </div>
 
           <p className="text-center text-sm text-muted-foreground">
-            Patient or doctor?{" "}
+            New patient?{" "}
             <Link
               href="/register"
               className="text-primary font-medium hover:underline"

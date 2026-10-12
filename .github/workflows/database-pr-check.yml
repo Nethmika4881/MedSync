@@ -1,0 +1,86 @@
+name: Database PR Check
+
+on:
+  pull_request:
+    paths:
+      - 'Database/**'
+      - '.github/workflows/database-pr-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-migrations:
+    name: Validate Flyway migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: medsync_test
+          POSTGRES_USER: medsync_test
+          POSTGRES_PASSWORD: test_only_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U medsync_test -d medsync_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+
+      - name: Check migration filenames and prepare Flyway directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/flyway-sql"
+          count=0
+          while IFS= read -r -d '' file; do
+            name="$(basename "$file")"
+            if [[ "$name" == 'mock_data_seed.sql' ]]; then
+              echo "Skipping manual seed file: $name"
+              continue
+            fi
+            if [[ "$name" =~ ^V[0-9]+(\.[0-9]+)*__[A-Za-z0-9_]+\.sql$ || "$name" =~ ^R__[A-Za-z0-9_]+\.sql$ ]]; then
+              cp "$file" "$RUNNER_TEMP/flyway-sql/$name"
+              count=$((count + 1))
+            else
+              echo "::error file=$file::Invalid Flyway migration filename: $name"
+              exit 1
+            fi
+          done < <(find Database -maxdepth 1 -type f -name '*.sql' -print0)
+          if (( count == 0 )); then
+            echo '::error::No Flyway migration files found'
+            exit 1
+          fi
+          echo "Prepared $count Flyway migration files"
+
+      - name: Run all migrations on temporary PostgreSQL
+        run: |
+          docker run --rm --network host \
+            -v "$RUNNER_TEMP/flyway-sql:/flyway/sql:ro" \
+            flyway/flyway:10-alpine \
+            -url=jdbc:postgresql://127.0.0.1:5432/medsync_test \
+            -user=medsync_test \
+            -password=test_only_password \
+            -validateMigrationNaming=true \
+            migrate
+
+      - name: Verify migration history
+        env:
+          PGPASSWORD: test_only_password
+        run: |
+          set -euo pipefail
+          docker run --rm --network host \
+            -e PGPASSWORD \
+            postgres:17-alpine \
+            psql -h 127.0.0.1 -U medsync_test -d medsync_test \
+            -v ON_ERROR_STOP=1 \
+            -c "SELECT installed_rank, version, description, success FROM flyway_schema_history ORDER BY installed_rank DESC LIMIT 10;" \
+            -c "DO \$\$ BEGIN IF EXISTS (SELECT 1 FROM flyway_schema_history WHERE NOT success) THEN RAISE EXCEPTION 'Failed Flyway migration found'; END IF; END \$\$;"

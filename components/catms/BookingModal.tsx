@@ -25,7 +25,7 @@ import {
   MapPin,
   ShieldCheck,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getSpecialtyGradient } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
 export function getAvatarGradient(initials: string) {
@@ -224,7 +224,7 @@ export function BookingModal(props: BookingModalProps) {
     }
   }
 
-  const gradient = getAvatarGradient(doctor.avatar || doctor.name);
+  const gradient = getSpecialtyGradient(doctor.specialization);
   const STEPS: BookingStep[] = ["datetime", "details", "confirm"];
   const stepIndex = STEPS.indexOf(step);
 

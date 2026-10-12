@@ -16,17 +16,20 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
   try {
     const session = await getUserfromSession(await cookies());
     if (!session) return null;
-
     const result = await db.query(
-      `SELECT u.user_id, u.full_name, u.email,
-              COALESCE(e.branch_id, p.registered_branch_id) AS branch_id,
-              CASE WHEN u.user_type = 'Patient' THEN 'Patient'
-                   ELSE e.role::text END AS login_role
-       FROM app_user u
-       LEFT JOIN employee e ON e.employee_id = u.user_id
-       LEFT JOIN patient p ON p.patient_id = u.user_id
-       WHERE u.user_id = $1 AND u.is_active = true
-         AND (u.user_type = 'Patient' OR e.is_active = true)`,
+      `select
+      u.user_id,
+      u.full_name,
+      u.email,
+      u.user_type,
+      CASE WHEN u.user_type = 'Patient' THEN 'Patient'
+           ELSE e.role::text END AS login_role,
+      COALESCE(e.branch_id, p.registered_branch_id) AS branch_id
+   from app_user u
+   left join   employee e ON e.employee_id = u.user_id
+   left join  patient p ON p.patient_id = u.user_id
+   where u.user_id = $1
+     and u.is_active = true`,
       [session.id],
     );
     const user = result.rows[0];
@@ -43,6 +46,14 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
       blurb: "",
     };
   } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     console.error("[auth/getCurrentUser] Could not load user:", error);
     return null;
   }

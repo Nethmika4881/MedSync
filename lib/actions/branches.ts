@@ -192,12 +192,12 @@ export async function createBranch(data: CreateBranchInput) {
     revalidatePath("/admin/branches");
     revalidatePath("/branches");
 
-    return {success: true, message: "Branch created successfully", branch: branchResult.rows[0],};
+    return { success: true, message: "Branch created successfully", branch: branchResult.rows[0], };
 
   } catch (error: any) {
     await client.query("ROLLBACK");
     console.error("Failed to create branch:", error);
-    return {success: false, error: error.message || "Failed to create branch.",};
+    return { success: false, error: error.message || "Failed to create branch.", };
 
   } finally {
     client.release();
@@ -266,7 +266,7 @@ export async function deleteBranch(branchId: string) {
     revalidatePath("/branches");
 
     return { success: true, message: "Branch deleted successfully" };
-  } 
+  }
   catch (error: any) {
     console.error("Failed to delete branch:", error);
     return { success: false, error: error.message || "Failed to delete branch" };
@@ -394,7 +394,7 @@ export async function branchOverview(timeRange: "today" | "7d" | "30d" = "30d") 
       operationalWarnings,
       complaints: complaintsResults.rows as PatientComplaint[],
     };
-  } 
+  }
   catch (error: any) {
     console.error("Failed to load branch overview analytics:", error);
     return { success: false, error: error.message };
@@ -421,7 +421,7 @@ export async function complaints(complaintId: string) {
 
     revalidatePath("/admin/branches");
     return { success: true };
-  } 
+  }
   catch (error: any) {
     console.error("Failed to resolve complaint:", error);
     return { success: false, error: error.message };
@@ -476,12 +476,12 @@ export async function updateBranchDetails(
     revalidatePath("/branches");
 
     return { success: true, message: "Branch updated successfully" };
-  } 
+  }
   catch (error: any) {
     await client.query("ROLLBACK");
     console.error("Failed to update branch:", error);
     return { success: false, error: error.message || "Failed to update branch" };
-  } 
+  }
   finally {
     client.release();
   }
@@ -503,7 +503,7 @@ export async function assignManager(branchId: string, managerId: string) {
     revalidatePath("/admin/branches");
 
     return { success: true, message: "Manager assigned successfully" };
-  } 
+  }
   catch (error: any) {
     console.error("Failed to assign manager:", error);
     return { success: false, error: error.message || "Failed to assign manager" };
@@ -526,7 +526,7 @@ export async function removeManager(branchId: string) {
     revalidatePath("/admin/branches");
 
     return { success: true, message: "Manager removed successfully" };
-  } 
+  }
   catch (error: any) {
     console.error("Failed to remove manager:", error);
     return { success: false, error: error.message || "Failed to remove manager" };
@@ -549,7 +549,7 @@ export async function assignStaff(branchId: string, employeeId: string) {
     revalidatePath("/admin/branches");
 
     return { success: true, message: "Staff assigned successfully" };
-  } 
+  }
   catch (error: any) {
     console.error("Failed to assign staff:", error);
     return { success: false, error: error.message || "Failed to assign staff" };
@@ -575,7 +575,7 @@ export async function removeStaff(employeeId: string, branchId?: string) {
     revalidatePath("/branches");
 
     return { success: true, message: "Staff removed successfully" };
-  } 
+  }
   catch (error: any) {
     console.error("Failed to remove staff:", error);
     return { success: false, error: error.message || "Failed to remove staff" };

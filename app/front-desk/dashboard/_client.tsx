@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Calendar, Activity, CreditCard, Clock, CheckCircle2 } from "lucide-react";
+import { Users, Calendar, Activity, CreditCard, Clock, CheckCircle2, UserPlus, CalendarPlus, Receipt } from "lucide-react";
 import { revenueByMonth, appointmentsByMonth } from "@/lib/constants";;
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { StatusPill } from "@/components/catms/StatusPill";
@@ -12,11 +12,21 @@ import type { AuthUser } from "@/lib/types";
 import { ClipboardPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import type { FrontDeskStats, WaitingPatient } from "@/lib/actions/frontdesk-dashboard";
 
-export default function DashboardPage({ user }: { user: AuthUser }) {
+export default function DashboardPage({
+  user,
+  initialStats,
+  initialQueue = [],
+}: {
+  user: AuthUser;
+  initialStats?: FrontDeskStats;
+  initialQueue?: WaitingPatient[];
+}) {
+
   const role = user?.role;
-  
-  
+
+
   const { appointments } = useAppointmentStore();
 
 
@@ -32,6 +42,14 @@ export default function DashboardPage({ user }: { user: AuthUser }) {
 
   // Generic metrics based on role
   const getMetrics = () => {
+    if (role === "receptionist" && initialStats) {
+      return [
+        { title: "Today's Appointments", value: String(initialStats.todayAppointments), icon: Calendar, color: "text-blue-600", bg: "bg-blue-100" },
+        { title: "Waiting in Lobby", value: String(initialStats.waitingQueue), icon: Clock, color: "text-amber-600", bg: "bg-amber-100" },
+        { title: "Completed Visits", value: String(initialStats.completedToday), icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-100" },
+        { title: "Unpaid Invoices", value: String(initialStats.unpaidInvoices), icon: CreditCard, color: "text-rose-600", bg: "bg-rose-100" },
+      ];
+    }
     switch (role) {
       case "doctor":
         return [
@@ -56,6 +74,25 @@ export default function DashboardPage({ user }: { user: AuthUser }) {
   };
 
   const metrics = getMetrics();
+  const sessionChartData = [
+    {
+      session: "Morning (8AM-12PM)",
+      scheduled: Math.max(1, Math.round((initialStats?.todayAppointments || 4) * 0.5)),
+      checkedIn: Math.max(0, Math.round((initialStats?.waitingQueue || 2) * 0.6)),
+    },
+    {
+      session: "Afternoon (12PM-4PM)",
+      scheduled: Math.max(1, Math.round((initialStats?.todayAppointments || 4) * 0.35)),
+      checkedIn: Math.max(0, Math.round((initialStats?.waitingQueue || 2) * 0.4)),
+    },
+    {
+      session: "Evening (4PM-8PM)",
+      scheduled: Math.max(1, Math.round((initialStats?.todayAppointments || 4) * 0.15)),
+      checkedIn: 0,
+    },
+  ];
+
+
 
   // Upcoming appointments for the specific role
   const upcomingAppts = appointments
@@ -65,12 +102,36 @@ export default function DashboardPage({ user }: { user: AuthUser }) {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back, {user?.name.split(' ')[0]}!</h2>
           <p className="text-slate-500">Here&apos;s what&apos;s happening at your clinic today.</p>
         </div>
+
+        {role === "receptionist" && (
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Link href="/front-desk/patients/new">
+              <Button size="sm" className="rounded-xl h-9 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white shadow-sm text-xs font-semibold">
+                <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+                Register Patient
+              </Button>
+            </Link>
+            <Link href="/front-desk/appointments/new">
+              <Button size="sm" variant="outline" className="rounded-xl h-9 border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold">
+                <CalendarPlus className="w-3.5 h-3.5 mr-1.5 text-blue-600" />
+                Book Appointment
+              </Button>
+            </Link>
+            <Link href="/front-desk/billing">
+              <Button size="sm" variant="outline" className="rounded-xl h-9 border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold">
+                <Receipt className="w-3.5 h-3.5 mr-1.5 text-emerald-600" />
+                Billing Desk
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
+
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -95,7 +156,11 @@ export default function DashboardPage({ user }: { user: AuthUser }) {
         <Card className="lg:col-span-2 border-slate-200 shadow-sm">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-slate-900">
-              {role === "admin" ? "Revenue & Appointments Overview" : "Activity Overview"}
+              {role === "admin"
+                ? "Revenue & Appointments Overview"
+                : role === "receptionist"
+                  ? "Today's Clinic Shift Distribution"
+                  : "Activity Overview"}
             </CardTitle>
           </CardHeader>
           <CardContent className="h-[300px]">
@@ -111,6 +176,15 @@ export default function DashboardPage({ user }: { user: AuthUser }) {
                   />
                   <Line type="monotone" dataKey="revenue" stroke="var(--brand-primary)" strokeWidth={3} dot={{ r: 4, fill: "var(--brand-primary)", strokeWidth: 2, stroke: "#fff" }} activeDot={{ r: 6 }} />
                 </LineChart>
+              ) : role === "receptionist" ? (
+                <BarChart data={sessionChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                  <XAxis dataKey="session" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748B' }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748B' }} allowDecimals={false} />
+                  <Tooltip cursor={{ fill: '#F1F5F9' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
+                  <Bar dataKey="scheduled" name="Scheduled" fill="var(--brand-primary)" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="checkedIn" name="Checked In" fill="#F59E0B" radius={[6, 6, 0, 0]} />
+                </BarChart>
               ) : (
                 <BarChart data={appointmentsByMonth.slice(-6)} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
@@ -121,19 +195,58 @@ export default function DashboardPage({ user }: { user: AuthUser }) {
                   <Bar dataKey="cancelled" fill="#E2E8F0" radius={[4, 4, 0, 0]} />
                 </BarChart>
               )}
+
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
         {/* Upcoming List / Doctor's Today's Queue */}
+        {/* Receptionist Waiting Queue / Doctor's Queue / Patient List */}
         <Card className="border-slate-200 shadow-sm">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-slate-900">
-              {role === "doctor" ? "Today's Schedule Queue" : "Upcoming Appointments"}
+              {role === "receptionist"
+                ? "Lobby Waiting Queue"
+                : role === "doctor"
+                  ? "Today's Schedule Queue"
+                  : "Upcoming Appointments"}
             </CardTitle>
           </CardHeader>
           <CardContent className="px-0">
-            {role === "doctor" ? (
+            {role === "receptionist" ? (
+              initialQueue.length > 0 ? (
+                <div className="divide-y divide-slate-100 max-h-[360px] overflow-y-auto">
+                  {initialQueue.map((item) => (
+                    <div
+                      key={item.appointmentId}
+                      className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/60 flex flex-col items-center justify-center shrink-0">
+                          <span className="text-[9px] font-bold text-amber-600 uppercase leading-none">Token</span>
+                          <span className="text-sm font-bold text-amber-800 leading-tight">#{item.queueNumber}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-slate-900 truncate">{item.patientName}</p>
+                          <p className="text-xs text-slate-500 truncate">{item.doctorName}</p>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          Waiting
+                        </span>
+                        <p className="text-[11px] text-slate-400 mt-1">{item.sessionTime}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-8 text-center text-slate-500 text-sm">
+                  <Clock className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                  No patients currently waiting in the lobby.
+                </div>
+              )
+            ) : role === "doctor" ? (
               doctorQueue.length > 0 ? (
                 <div className="divide-y divide-slate-100">
                   {doctorQueue.map((appt) => (
@@ -165,7 +278,7 @@ export default function DashboardPage({ user }: { user: AuthUser }) {
               )
             ) : upcomingAppts.length > 0 ? (
               <div className="divide-y divide-slate-100">
-                {upcomingAppts.map(appt => (
+                {upcomingAppts.map((appt) => (
                   <div key={appt.appointmentId} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-blue-50 flex flex-col items-center justify-center shrink-0">

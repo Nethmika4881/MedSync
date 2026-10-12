@@ -55,6 +55,113 @@
     --radius: 0.75rem;
   }
 
+  .dark {
+    /* === CATMS Brand Tokens (Dark Mode) === */
+    --brand-primary: #14b8a6;
+    --brand-primary-dark: #0d9488;
+    --brand-secondary: #0f766e;
+    --brand-dark: #042f2e;
+    --bg-app: #090d16;          /* Dark app background (slate-950) */
+    --surface: #0f172a;         /* Dark card & container surface (slate-900) */
+    --border-subtle: #1e293b;   /* Dark border (slate-800) */
+
+    /* Status colors (toned down for dark backgrounds) */
+    --success: #22c55e;
+    --success-bg: rgba(34, 197, 94, 0.15);
+    --danger: #ef4444;
+    --danger-bg: rgba(239, 68, 68, 0.15);
+    --warning: #f59e0b;
+    --warning-bg: rgba(245, 158, 11, 0.15);
+    --info: #3b82f6;
+    --info-bg: rgba(59, 130, 246, 0.15);
+    --purple: #a855f7;
+    --purple-bg: rgba(168, 85, 247, 0.15);
+
+    /* Text hierarchy (Dark Mode) */
+    --text-primary: #f8fafc;    /* Crisp light text for headings & labels */
+    --text-secondary: #94a3b8;  /* Muted slate text for descriptions */
+    --text-muted: #64748b;      /* Subtle placeholder text */
+
+    /* Shadcn / Radix Variables (Dark Mode) */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 47% 11%;      /* Inverts Shadcn <Card> components */
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 171 77% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 171 77% 40%;
+
+    /* 1. Backgrounds */
+    .bg-white {
+      background-color: var(--surface) !important;
+    }
+    .bg-slate-50,
+    .bg-slate-50\/50,
+    .bg-slate-50\/70,
+    .bg-slate-100,
+    .bg-slate-100\/70 {
+      background-color: #1e293b80 !important; /* Translucent slate-800 */
+    }
+
+    /* 2. Text & Typography */
+    .text-slate-950,
+    .text-slate-900,
+    .text-slate-800,
+    .text-slate-700 {
+      color: var(--text-primary) !important; /* Crisp light text (#f8fafc) */
+    }
+    .text-slate-600,
+    .text-slate-500 {
+      color: var(--text-secondary) !important; /* Readable muted text (#94a3b8) */
+    }
+    .text-slate-400 {
+      color: var(--text-muted) !important; /* Subtle placeholder/meta text (#64748b) */
+    }
+
+    /* 3. Borders & Dividers */
+    .border-slate-100,
+    .border-slate-200,
+    .border-slate-300,
+    .divide-slate-100 > * + *,
+    .divide-slate-200 > * + * {
+      border-color: var(--border-subtle) !important; /* Dark border (#1e293b) */
+    }
+
+    /* 4. Form Controls (Inputs, Selects, Native Options) */
+    input,
+    textarea,
+    select {
+      background-color: #0b1120 !important;
+      color: var(--text-primary) !important;
+      border-color: var(--border-subtle) !important;
+    }
+
+    select option {
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+
+    /* 5. Hover & Interactive States */
+    .hover\:bg-slate-50:hover,
+    .hover\:bg-slate-50\/50:hover,
+    .hover\:bg-slate-100:hover {
+      background-color: #1e293b !important;
+    }
+
+  }
+
   * {
     @apply border-border;
     box-sizing: border-box;
@@ -84,7 +191,7 @@
 
   /* === Cards === */
   .card-base {
-    @apply bg-white rounded-2xl shadow-card border border-[var(--border-subtle)] p-6;
+    @apply bg-[var(--surface)] rounded-2xl shadow-card border border-[var(--border-subtle)] p-6;
     transition: box-shadow 0.2s ease;
   }
   .card-hover:hover {
@@ -130,7 +237,7 @@
            shadow-sm hover:shadow-md active:scale-[0.98];
   }
   .btn-secondary {
-    @apply bg-white border border-[var(--border-subtle)] text-[var(--text-primary)]
+    @apply bg-[var(--surface)] border border-[var(--border-subtle)] text-[var(--text-primary)]
            font-semibold text-sm px-5 py-2 rounded-full transition-all duration-150
            hover:bg-slate-800 hover:text-white hover:border-slate-800
            hover:shadow-sm active:scale-[0.98];

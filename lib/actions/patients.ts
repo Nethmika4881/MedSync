@@ -1,14 +1,26 @@
-"use server";
 // lib/actions/patients.ts
+// Internal helper functions for patient operations (not exposed as public server actions)
 
 import pool from "@/lib/db";
 import type { Patient, PatientAllergy, PatientCondition } from "@/lib/types";
+import { getCurrentUser } from "@/lib/actions/getcurrentuser";
 import { revalidatePath } from "next/cache";
+
+async function requireStaffUser() {
+  const user = await getCurrentUser();
+  if (!user || (user.role !== "admin" && user.role !== "doctor" && user.role !== "receptionist")) {
+    throw new Error("Unauthorized: Staff access required");
+  }
+  return user;
+}
 
 // ─── Queries ──────────────────────────────────────────────────────────────────
 
 export async function getPatients(branchId?: string): Promise<Patient[]> {
-  const query = branchId
+  const user = await requireStaffUser();
+  const effectiveBranchId = user.role === "admin" ? branchId : user.branchId;
+
+  const query = effectiveBranchId
     ? {
         text: `
           SELECT
@@ -28,7 +40,7 @@ export async function getPatients(branchId?: string): Promise<Patient[]> {
           WHERE branch_id = $1
           ORDER BY full_name ASC
         `,
-        values: [branchId],
+        values: [effectiveBranchId],
       }
     : {
         text: `
@@ -56,6 +68,8 @@ export async function getPatients(branchId?: string): Promise<Patient[]> {
 }
 
 export async function getPatientById(patientId: string): Promise<Patient | null> {
+  await requireStaffUser();
+
   const { rows } = await pool.query(
     `SELECT
        patient_id          AS "patientId",
@@ -78,6 +92,8 @@ export async function getPatientById(patientId: string): Promise<Patient | null>
 }
 
 export async function getPatientAllergies(patientId: string): Promise<PatientAllergy[]> {
+  await requireStaffUser();
+
   const { rows } = await pool.query(
     `SELECT
        allergy_id    AS "allergyId",
@@ -93,6 +109,8 @@ export async function getPatientAllergies(patientId: string): Promise<PatientAll
 }
 
 export async function getPatientConditions(patientId: string): Promise<PatientCondition[]> {
+  await requireStaffUser();
+
   const { rows } = await pool.query(
     `SELECT
        condition_id    AS "conditionId",
@@ -121,6 +139,8 @@ export async function createPatient(data: {
   address: string;
   branchId: string;
 }): Promise<{ patientId: string }> {
+  await requireStaffUser();
+
   const { rows } = await pool.query(
     `INSERT INTO patient
        (full_name, date_of_birth, gender, blood_group, phone, email, address, branch_id)
@@ -151,6 +171,8 @@ export async function updatePatient(
     address: string;
   }>
 ): Promise<void> {
+  await requireStaffUser();
+
   await pool.query(
     `UPDATE patient
      SET
@@ -166,6 +188,8 @@ export async function updatePatient(
 }
 
 export async function addPatientAllergy(data: Omit<PatientAllergy, "allergyId">): Promise<void> {
+  await requireStaffUser();
+
   await pool.query(
     `INSERT INTO patient_allergy (patient_id, allergen_name, reaction, severity)
      VALUES ($1, $2, $3, $4)`,
@@ -174,5 +198,7 @@ export async function addPatientAllergy(data: Omit<PatientAllergy, "allergyId">)
 }
 
 export async function removePatientAllergy(allergyId: string): Promise<void> {
+  await requireStaffUser();
+
   await pool.query(`DELETE FROM patient_allergy WHERE allergy_id = $1`, [allergyId]);
 }

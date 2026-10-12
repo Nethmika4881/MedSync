@@ -30,8 +30,7 @@ import {
   ArrowRight,
   Lock,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { getAvatarGradient } from "@/components/catms/BookingModal";
+import { cn, getSpecialtyGradient } from "@/lib/utils";
 
 type TabFilter = "upcoming" | "completed" | "cancelled" | "all";
 
@@ -221,7 +220,7 @@ function RescheduleModal({ appointment, onClose, onSuccess }: RescheduleModalPro
     }
   }
 
-  const gradient = getAvatarGradient(appointment.doctorName);
+  const gradient = getSpecialtyGradient(appointment.doctorSpecialization);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -713,7 +712,7 @@ export default function PatientAppointmentsClient({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredAppointments.map((appt) => {
-            const gradient = getAvatarGradient(appt.doctorName);
+            const gradient = getSpecialtyGradient(appt.doctorSpecialization);
 
             return (
               <div
