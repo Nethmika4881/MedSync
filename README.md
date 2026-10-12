@@ -10,12 +10,12 @@ MedSync is a clinic management system for Sri Lankan clinics with separate porta
 
 ## Main Features
 
-| Portal | Main features |
-|---|---|
-| Patient | Registration, doctor search, appointment booking and rescheduling, medical records, prescriptions, billing, insurance, and complaints |
-| Doctor | Daily queue, consultations, treatments, prescriptions, patient history, schedules, profile settings, and notifications |
-| Front desk | Patient registration, branch appointments, check in, live queue, billing, payments, receipts, and claim tracking |
-| Admin | Branches, staff, doctors, schedules, fees, treatments, insurance packages, complaints, reports, and settings |
+| Portal     | Main features                                                                                                                         |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Patient    | Registration, doctor search, appointment booking and rescheduling, medical records, prescriptions, billing, insurance, and complaints |
+| Doctor     | Daily queue, consultations, treatments, prescriptions, patient history, schedules, profile settings, and notifications                |
+| Front desk | Patient registration, branch appointments, check in, live queue, billing, payments, receipts, and claim tracking                      |
+| Admin      | Branches, staff, doctors, schedules, fees, treatments, insurance packages, complaints, reports, and settings                          |
 
 ## Architecture
 
@@ -36,15 +36,15 @@ Important clinic rules are enforced with database constraints, transactions, fun
 
 ## Technology
 
-| Area | Technology |
-|---|---|
-| Application | Next.js 15, React 19, TypeScript 5 |
-| Interface | Tailwind CSS, shadcn/ui, Radix UI |
-| Forms | React Hook Form, Zod |
-| Database | PostgreSQL, `pg`, Flyway |
-| Sessions | Redis |
-| Reports | Recharts, jsPDF |
-| Testing | Playwright |
+| Area           | Technology                                        |
+| -------------- | ------------------------------------------------- |
+| Application    | Next.js 15, React 19, TypeScript 5                |
+| Interface      | Tailwind CSS, shadcn/ui, Radix UI                 |
+| Forms          | React Hook Form, Zod                              |
+| Database       | PostgreSQL, `pg`, Flyway                          |
+| Sessions       | Redis                                             |
+| Reports        | Recharts, jsPDF                                   |
+| Testing        | Playwright                                        |
 | Infrastructure | Docker Compose, GitHub Actions, Azure App Service |
 
 ## Getting Started
@@ -94,14 +94,14 @@ Use the demonstration data only in local or demonstration environments.
 
 ## Environment Variables
 
-| Variable | Required | Purpose |
-|---|---:|---|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `REDIS_URL` | Yes | Redis connection string |
-| `NEXT_PUBLIC_APP_URL` | No | Public application URL |
-| `DB_PASSWORD` | No | Local Docker database password |
-| `PLAYWRIGHT_BASE_URL` | No | Address of an existing application used by Playwright |
-| `PLAYWRIGHT_PORT` | No | Port for the Playwright local server |
+| Variable              | Required | Purpose                                               |
+| --------------------- | -------: | ----------------------------------------------------- |
+| `DATABASE_URL`        |      Yes | PostgreSQL connection string                          |
+| `REDIS_URL`           |      Yes | Redis connection string                               |
+| `NEXT_PUBLIC_APP_URL` |       No | Public application URL                                |
+| `DB_PASSWORD`         |       No | Local Docker database password                        |
+| `PLAYWRIGHT_BASE_URL` |       No | Address of an existing application used by Playwright |
+| `PLAYWRIGHT_PORT`     |       No | Port for the Playwright local server                  |
 
 Never commit local environment files, production credentials, or cloud secrets.
 
@@ -133,15 +133,15 @@ MedSync/
 
 ## Commands
 
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Start the development server |
-| `npm run build` | Create a production build |
-| `npm start` | Start the production server |
-| `npm run lint` | Run lint checks |
-| `npm test` | Run Playwright tests |
-| `npm run test:e2e` | Run the end to end test suite |
-| `npm run migrate` | Run the configured migration command |
+| Command            | Purpose                              |
+| ------------------ | ------------------------------------ |
+| `npm run dev`      | Start the development server         |
+| `npm run build`    | Create a production build            |
+| `npm start`        | Start the production server          |
+| `npm run lint`     | Run lint checks                      |
+| `npm test`         | Run Playwright tests                 |
+| `npm run test:e2e` | Run the end to end test suite        |
+| `npm run migrate`  | Run the configured migration command |
 
 ## Security and Testing
 
@@ -158,11 +158,11 @@ The tests require working `DATABASE_URL` and `REDIS_URL` values.
 
 ## Deployment and CI/CD
 
-| Workflow | Purpose |
-|---|---|
+| Workflow                | Purpose                                                       |
+| ----------------------- | ------------------------------------------------------------- |
 | `database-pr-check.yml` | Validate migration names and test migrations on pull requests |
-| `neon-migrations.yml` | Run controlled development or production database migrations |
-| `main_medsync-uom.yml` | Build and deploy the application to Azure App Service |
+| `neon-migrations.yml`   | Run controlled development or production database migrations  |
+| `main_medsync-uom.yml`  | Build and deploy the application to Azure App Service         |
 
 Deployment credentials and database connection values are stored as GitHub Actions secrets.
 
@@ -170,43 +170,42 @@ Deployment credentials and database connection values are stored as GitHub Actio
 
 The points below show each member's main area of ownership. The team also reviewed, fixed, and integrated work across the whole system.
 
-### [Kumarasiri I. D. N. (240370X) (@Nethmika4881)](https://github.com/Nethmika4881) 
+### [Kumarasiri I. D. N. (240370X) (@Nethmika4881)](https://github.com/Nethmika4881)
 
-* Created the repository foundation, application structure, routes, shared interface components, and early responsive screens
-* Built authentication, patient registration, validation, password security, Redis sessions, middleware, and role based routing
-* Developed admin features for staff, doctors, schedules, fees, reports, revenue, and branch summaries
-* Set up Flyway, PostgreSQL, Docker, Redis, shared database access, and security improvements across the application
-* Created the three CI/CD workflows, managed Azure delivery, integrated team branches, and resolved build and migration conflicts
+- Created the repository foundation, application structure, routes, shared interface components, and early responsive screens
+- Built authentication, patient registration, validation, password security, Redis sessions, middleware, and role based routing
+- Developed admin features for staff, doctors, schedules, fees, reports, revenue, and branch summaries
+- Set up Flyway, PostgreSQL, Docker, Redis, shared database access, and security improvements across the application
+- Created the three CI/CD workflows, managed Azure delivery, integrated team branches, and resolved build and migration conflicts
 
 ### [Pinnapola P. A. H. D. (240515A) (@Hiruna4587)](https://github.com/Hiruna4587)
 
-* Created the initial healthcare schema and added constraints and triggers that protect important data
-* Built treatment catalogue management and treatment query features
-* Developed branch management, branch analytics, the admin dashboard, and settings
-* Implemented complaints and insurance package management
-* Built admin reports, performance measures, insurance and treatment reports
+- Created the initial healthcare schema and added constraints and triggers that protect important data
+- Built treatment catalogue management and treatment query features
+- Developed branch management, branch analytics, the admin dashboard, and settings
+- Implemented complaints and insurance package management
+- Built admin reports, performance measures, insurance and treatment reports
 
 ### [Perara B. N. D. (240496M) (@nadildinulaka145-blip)](https://github.com/nadildinulaka145-blip)
 
-* Built the front desk layout, navigation, loading states, and recoverable error screens
-* Developed dashboard measures, charts, quick actions, and the live patient queue
-* Connected patient search and patient details to PostgreSQL and built transactional registration
-* Implemented scheduled, walk in, and emergency appointments with check in actions
-* Built invoice, payment, receipt, and insurance claim workflows and corrected front desk routing issues
+- Built the front desk layout, navigation, loading states, and recoverable error screens
+- Developed dashboard measures, charts, quick actions, and the live patient queue
+- Connected patient search and patient details to PostgreSQL and built transactional registration
+- Implemented scheduled, walk in, and emergency appointments with check in actions
+- Built invoice, payment, receipt, and insurance claim workflows and corrected front desk routing issues
 
 ### [Rakumar K. (240540U) (@Koshi2004)](https://github.com/Koshi2004)
 
-* Designed doctor related tables, triggers, functions, views, and stored procedures
-* Built the doctor data layer and connected doctor screens to live PostgreSQL data
-* Developed the dashboard, patient queue, schedules, working hours, profiles, and settings
-* Built the consultation workspace with treatment selection, notes, follow ups, and completion rules
-* Implemented prescriptions, medication and allergy safety information, clinical protections, and workflow fixes
+- Designed doctor related tables, triggers, functions, views, and stored procedures
+- Built the doctor data layer and connected doctor screens to live PostgreSQL data
+- Developed the dashboard, patient queue, schedules, working hours, profiles, and settings
+- Built the consultation workspace with treatment selection, notes, follow ups, and completion rules
+- Implemented prescriptions, medication and allergy safety information, clinical protections, and workflow fixes
 
 ### [Gunawardena N. N. De. A. (240205) (@NethmiNadeeshani2005)](https://github.com/NethmiNadeeshani2005)
 
-* Built patient navigation, branch aware state, and the patient application layout
-* Developed the searchable doctor directory with multiple filters
-* Implemented safe appointment booking with slot locking, ticket limits, and collision prevention
-* Built appointment history, rescheduling, dashboard data, prescriptions, and medical records
-* Developed billing, invoice, insurance, claim, payment, refund, and credit request experiences
-
+- Built patient navigation, branch aware state, and the patient application layout
+- Developed the searchable doctor directory with multiple filters
+- Implemented safe appointment booking with slot locking, ticket limits, and collision prevention
+- Built appointment history, rescheduling, dashboard data, prescriptions, and medical records
+- Developed billing, invoice, insurance, claim, payment, refund, and credit request experiences
