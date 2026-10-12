@@ -24,7 +24,7 @@ $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS trg_branch_delete ON branch;
 
 CREATE TRIGGER trg_branch_delete
-BEFORE UPDATE OF status ON branch
+BEFORE UPDATE OF is_active ON branch
 FOR EACH ROW
 EXECUTE FUNCTION trg_branch_delete();
 
@@ -100,7 +100,7 @@ BEGIN
           AND ic.status = 'Submitted';
 
         IF pending > 0 THEN
-            RAISE EXCEPTION 'Cannot deactivate insurance package: % unsettled claim(s) are currently pending review under this package.', v_pending_claims;
+            RAISE EXCEPTION 'Cannot deactivate insurance package: % unsettled claim(s) are currently pending review under this package.', pending;
         END IF;
     END IF;
 
