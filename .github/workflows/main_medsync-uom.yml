@@ -71,9 +71,50 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F54F1A7FE8A8493990295FB56FFD4E72 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_6CFDDD2E67294666B9DB8281F7D5B73A }}
 
-      - name: Deploy to Azure
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: medsync-uom
-          slot-name: Production
-          package: .
+      - name: Verify deployment artifact
+        run: |
+          test -f server.js
+          test -f .next/BUILD_ID
+          test -f .next/server/app/register.html
+
+          echo "Deploying Next.js build:"
+          cat .next/BUILD_ID
+          echo
+
+          grep -Fq "Patient accounts create" \
+            .next/server/app/register.html
+
+      - name: Create deployment ZIP
+        run: |
+          zip -qr "$RUNNER_TEMP/medsync.zip" .
+
+          unzip -l "$RUNNER_TEMP/medsync.zip" \
+            | grep -E 'server.js|BUILD_ID' | head -10
+
+      - name: Deploy clean build to Azure
+        run: |
+          az webapp deploy \
+            --resource-group medsync-rg \
+            --name medsync-uom \
+            --src-path "$RUNNER_TEMP/medsync.zip" \
+            --type zip \
+            --clean true \
+            --restart true \
+            --timeout 600000
+
+      - name: Verify live deployment
+        run: |
+          URL="https://medsync-uom-ewephsdhgzcedhax.indiasouthcentral-01.azurewebsites.net/register"
+
+          for attempt in $(seq 1 15); do
+            if curl -fsS "$URL" | grep -Fq "Patient accounts create"; then
+              echo "SUCCESS: New registration page is live!"
+              exit 0
+            fi
+
+            echo "Waiting for new version ($attempt/15)..."
+            sleep 10
+          done
+
+          echo "FAILED: Azure is still serving an unexpected version."
+          exit 1
