@@ -78,6 +78,8 @@ export default function RegisterPage() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -111,7 +113,6 @@ export default function RegisterPage() {
       bloodGroup: "O+",
       emergencyContactName: "Jane Doe",
       emergencyContactPhone: "+94777654321",
-      emergencyContactRelationship: "Spouse",
       emergencyContactRelationship: "Spouse",
     },
   });
@@ -471,7 +472,9 @@ export default function RegisterPage() {
             </div>
 
             {/* ── PATIENT FIELDS ── */}
-            {sectionLabel("Patient Details")}
+            {role === "Patient" && (
+              <>
+                {sectionLabel("Patient Details")}
 
             <div className="flex flex-col gap-1.5">
               <label
@@ -795,6 +798,6 @@ export default function RegisterPage() {
         </p>
       </div>
     </div>
-    </main >
+    </main>
   );
 }
