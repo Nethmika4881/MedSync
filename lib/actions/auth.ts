@@ -74,10 +74,16 @@ export default async function registerFunction(unsafeData: RegisterFormValues) {
 
   try {
     const existingUser = await db.query(
-      `SELECT user_id FROM app_user WHERE email = $1`,
-      [data.email],
+      `SELECT user_id, email, nic FROM app_user WHERE email = $1 OR nic = $2`,
+      [data.email, data.nic],
     );
-    if (existingUser.rows.length > 0) return "An account with this email already exists";
+    if (existingUser.rows.length > 0) {
+      const match = existingUser.rows[0];
+      if (match.email === data.email) {
+        return "An account with this email already exists";
+      }
+      return "An account with this NIC number already exists";
+    }
 
     const salt = generateSalt();
     const hashedPassword = await hashPassword(data.password, salt);
@@ -113,8 +119,8 @@ export default async function registerFunction(unsafeData: RegisterFormValues) {
       const contactID = contactResult.rows[0].contact_id;
       await client.query(
         `
-          insert into contact_number(contact_id,number)
-          values ($1,$2)
+          insert into contact_number(contact_id,number_type,number)
+          values ($1,'Mobile',$2)
           returning contact_id
           `,
         [contactID, data.phoneNumber],
@@ -201,11 +207,15 @@ export default async function registerFunction(unsafeData: RegisterFormValues) {
       },
       await cookies(),
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("[auth/register] Registration failed:", error);
+    if (error?.code === "23505") {
+      if (error?.detail?.includes("email")) return "An account with this email already exists";
+      if (error?.detail?.includes("nic")) return "An account with this NIC number already exists";
+    }
     return userId
       ? "Your account was created, but automatic sign in failed. Please sign in."
-      : "Unable to register. Please check your details and try again.";
+      : error?.message || "Unable to register. Please check your details and try again.";
   }
 
   redirect(getDashboard(loginRole));

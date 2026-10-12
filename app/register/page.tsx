@@ -1,15 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RegisterFormValues, registerSchema } from "@/lib/schemas";
 import registerFunction from "@/lib/actions/auth";
 import { getBranches } from "@/lib/actions/branches";
+import { ChevronDown, Check } from "lucide-react";
 
 const inputClass =
   "bg-card border border-border text-foreground text-sm rounded-md px-3 py-2 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring w-full";
+
+const DEFAULT_BRANCHES = [
+  {
+    branch_id: "f9efc119-e5e6-4987-8818-7b6baf25708d",
+    branch_name: "MedSync Central Colombo",
+  },
+  {
+    branch_id: "f8ff5e58-df12-4ed4-99d2-3f04fb8a143f",
+    branch_name: "MedSync Kandy Branch",
+  },
+  {
+    branch_id: "3bf92f1b-19cd-426f-aa60-39b938826f2d",
+    branch_name: "MedSync Southern Galle",
+  },
+  {
+    branch_id: "2faa1d36-1b89-4999-925f-aec7cb787c42",
+    branch_name: "Main Branch",
+  },
+];
 
 const sectionLabel = (text: string) => (
   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pt-2">
@@ -18,15 +38,41 @@ const sectionLabel = (text: string) => (
 );
 
 export default function RegisterPage() {
-  const [branches, setBranches] = useState<{ branch_id: string; branch_name: string }[]>([]);
+  const [branches, setBranches] = useState<
+    { branch_id: string; branch_name: string }[]
+  >(DEFAULT_BRANCHES);
+  const [branchSearch, setBranchSearch] = useState("");
+  const [isBranchDropdownOpen, setIsBranchDropdownOpen] = useState(false);
+  const branchDropdownRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     async function fetchBranches() {
-      const data = await getBranches();
-      setBranches(data);
+      try {
+        const data = await getBranches();
+        if (data && data.length > 0) {
+          setBranches(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch branches:", err);
+      }
     }
     fetchBranches();
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        branchDropdownRef.current &&
+        !branchDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsBranchDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   const {
@@ -37,7 +83,7 @@ export default function RegisterPage() {
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { 
+    defaultValues: {
       role: "Employee",
       employeeRole: "Doctor",
       fullName: "Dr. Sample Name",
@@ -62,16 +108,41 @@ export default function RegisterPage() {
       yearsExperience: 10,
       qualification: "MBBS, MD",
       roomNo: "101A",
-      branchId: "123e4567-e89b-12d3-a456-426614174000",
+      branchId: "",
       // Patient fields
       bloodGroup: "O+",
       emergencyContactName: "Jane Doe",
       emergencyContactPhone: "+94777654321",
-      emergencyContactRelationship: "Spouse"
+      emergencyContactRelationship: "Spouse",
     },
   });
 
   const role = watch("role");
+  const selectedBranchId = watch("branchId");
+
+  const handleBranchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setBranchSearch(value);
+    setIsBranchDropdownOpen(true);
+
+    const match = branches.find(
+      (b) => b.branch_name.toLowerCase() === value.trim().toLowerCase()
+    );
+    if (match) {
+      setValue("branchId", match.branch_id, { shouldValidate: true });
+    } else {
+      setValue("branchId", "", { shouldValidate: true });
+    }
+  };
+
+  const handleSelectBranch = (branch: {
+    branch_id: string;
+    branch_name: string;
+  }) => {
+    setValue("branchId", branch.branch_id, { shouldValidate: true });
+    setBranchSearch(branch.branch_name);
+    setIsBranchDropdownOpen(false);
+  };
 
   async function onSubmit(data: RegisterFormValues) {
     setError("");
@@ -99,14 +170,13 @@ export default function RegisterPage() {
               type="button"
               id="role-patient"
               onClick={() => {
-                setValue("role", "Patient");
-                setValue("employeeRole", undefined);
+                setValue("role", "Patient", { shouldValidate: true });
+                setValue("employeeRole", undefined, { shouldValidate: true });
               }}
-              className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                role === "Patient"
+              className={`flex-1 py-2 text-sm font-medium transition-colors ${role === "Patient"
                   ? "bg-primary text-primary-foreground"
                   : "bg-card text-muted-foreground hover:bg-muted"
-              }`}
+                }`}
             >
               Patient
             </button>
@@ -114,20 +184,21 @@ export default function RegisterPage() {
               type="button"
               id="role-employee"
               onClick={() => {
-                setValue("role", "Employee");
-                setValue("employeeRole", "Doctor");
+                setValue("role", "Employee", { shouldValidate: true });
+                setValue("employeeRole", "Doctor", { shouldValidate: true });
               }}
-              className={`flex-1 py-2 text-sm font-medium transition-colors border-l border-border ${
-                role === "Employee"
+              className={`flex-1 py-2 text-sm font-medium transition-colors border-l border-border ${role === "Employee"
                   ? "bg-primary text-primary-foreground"
                   : "bg-card text-muted-foreground hover:bg-muted"
-              }`}
+                }`}
             >
               Doctor
             </button>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
+            <input type="hidden" {...register("role")} />
+            <input type="hidden" {...register("employeeRole")} />
 
             {/* ── PERSONAL INFO ── */}
             {sectionLabel("Personal Information")}
@@ -366,7 +437,7 @@ export default function RegisterPage() {
                     )}
                   </div>
                 </div>
-                
+
                 <div className="flex gap-3">
                   <div className="flex flex-col gap-1.5 flex-1">
                     <label htmlFor="room-no" className="text-sm font-medium text-foreground">Room No</label>
@@ -385,15 +456,80 @@ export default function RegisterPage() {
 
             {/* ── CLINIC BRANCH ── */}
             {sectionLabel("Clinic Branch")}
-            
-            <div className="flex flex-col gap-1.5 mb-2">
-              <label htmlFor="branch-id" className="text-sm font-medium text-foreground">Select Branch</label>
-              <select id="branch-id" {...register("branchId")} className={inputClass} aria-invalid={errors.branchId ? "true" : undefined}>
-                <option value="">-- Select a Branch --</option>
-                {branches.map(b => (
-                  <option key={b.branch_id} value={b.branch_id}>{b.branch_name}</option>
-                ))}
-              </select>
+
+            <div className="flex flex-col gap-1.5 mb-2 relative" ref={branchDropdownRef}>
+              <label
+                htmlFor="branch-search"
+                className="text-sm font-medium text-foreground"
+              >
+                Select Branch
+              </label>
+
+              <input type="hidden" {...register("branchId")} />
+
+              <div className="relative">
+                <input
+                  id="branch-search"
+                  type="text"
+                  placeholder="Type to search or select a branch..."
+                  value={branchSearch}
+                  onChange={handleBranchInputChange}
+                  onFocus={() => setIsBranchDropdownOpen(true)}
+                  className={`${inputClass} pr-10`}
+                  autoComplete="off"
+                  aria-invalid={errors.branchId ? "true" : undefined}
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsBranchDropdownOpen((prev) => !prev)}
+                  className="absolute right-0 top-0 bottom-0 px-3 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
+                  aria-label="Toggle branch dropdown"
+                >
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${isBranchDropdownOpen ? "rotate-180" : ""
+                      }`}
+                  />
+                </button>
+              </div>
+
+              {isBranchDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-card border border-border rounded-md shadow-lg max-h-60 overflow-y-auto py-1">
+                  {branches.filter((b) =>
+                    b.branch_name
+                      .toLowerCase()
+                      .includes(branchSearch.toLowerCase())
+                  ).length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                      No matching branches found
+                    </div>
+                  ) : (
+                    branches
+                      .filter((b) =>
+                        b.branch_name
+                          .toLowerCase()
+                          .includes(branchSearch.toLowerCase())
+                      )
+                      .map((b) => (
+                        <button
+                          key={b.branch_id}
+                          type="button"
+                          className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between hover:bg-accent hover:text-accent-foreground transition-colors ${selectedBranchId === b.branch_id
+                              ? "bg-accent/50 font-medium text-primary"
+                              : "text-foreground"
+                            }`}
+                          onClick={() => handleSelectBranch(b)}
+                        >
+                          <span>{b.branch_name}</span>
+                          {selectedBranchId === b.branch_id && (
+                            <Check className="h-4 w-4 text-primary" />
+                          )}
+                        </button>
+                      ))
+                  )}
+                </div>
+              )}
+
               {errors.branchId && (
                 <p className="text-xs text-destructive">{errors.branchId.message}</p>
               )}
