@@ -61,14 +61,14 @@ export default function DashboardPage({
         return [
           { title: "Upcoming Appointments", value: "2", icon: Calendar, color: "text-blue-600", bg: "bg-blue-100" },
           { title: "Active Prescriptions", value: "1", icon: Activity, color: "text-purple-600", bg: "bg-purple-100" },
-          { title: "Outstanding Bills", value: "$0", icon: CreditCard, color: "text-green-600", bg: "bg-green-100" },
+          { title: "Outstanding Bills", value: "LKR 0", icon: CreditCard, color: "text-green-600", bg: "bg-green-100" },
         ];
       default: // admin, manager, etc
         return [
           { title: "Total Patients", value: "2,845", icon: Users, color: "text-blue-600", bg: "bg-blue-100" },
           { title: "Today's Appointments", value: "48", icon: Calendar, color: "text-purple-600", bg: "bg-purple-100" },
           { title: "Active Doctors", value: "18", icon: Activity, color: "text-amber-600", bg: "bg-amber-100" },
-          { title: "Monthly Revenue", value: "$75.8k", icon: CreditCard, color: "text-green-600", bg: "bg-green-100" },
+          { title: "Monthly Revenue", value: "LKR 75.8k", icon: CreditCard, color: "text-green-600", bg: "bg-green-100" },
         ];
     }
   };
@@ -169,10 +169,10 @@ export default function DashboardPage({
                 <LineChart data={revenueByMonth} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                   <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748B' }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748B' }} tickFormatter={(val) => `$${val / 1000}k`} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748B' }} tickFormatter={(val) => `LKR ${val / 1000}k`} />
                   <Tooltip
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
-                    formatter={(value: number) => [`$${value.toLocaleString()}`, 'Revenue']}
+                    formatter={(value: number) => [`LKR ${value.toLocaleString()}`, 'Revenue']}
                   />
                   <Line type="monotone" dataKey="revenue" stroke="var(--brand-primary)" strokeWidth={3} dot={{ r: 4, fill: "var(--brand-primary)", strokeWidth: 2, stroke: "#fff" }} activeDot={{ r: 6 }} />
                 </LineChart>

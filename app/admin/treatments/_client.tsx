@@ -118,7 +118,7 @@ function AdminCatalogueView() {
       return false;
     }
     if (Number(formData.base_price) <= 0) {
-      toast.error("Base price must be greater than $0.");
+      toast.error("Base price must be greater than LKR 0.");
       return false;
     }
     return true;
@@ -205,7 +205,7 @@ function AdminCatalogueView() {
             </div>
             <p className={cn("text-xs font-semibold mb-1", selectedCategory === cat ? "text-white/80" : "text-slate-500")}>{cat}</p>
             <p className={cn("text-xl font-black", selectedCategory === cat ? "text-white" : "text-slate-900")}>{count}</p>
-            <p className={cn("text-xs mt-0.5", selectedCategory === cat ? "text-white/70" : "text-slate-400")}>avg ${avgPrice.toFixed(0)}</p>
+            <p className={cn("text-xs mt-0.5", selectedCategory === cat ? "text-white/70" : "text-slate-400")}>avg LKR {avgPrice.toFixed(0)}</p>
           </button>
         ))}
       </div>
@@ -302,7 +302,7 @@ function AdminCatalogueView() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-slate-500 max-w-xs truncate">{item.description || "—"}</td>
-                      <td className="px-6 py-4"><span className="font-bold text-slate-900 text-base">${Number(item.base_price).toFixed(2)}</span></td>
+                      <td className="px-6 py-4"><span className="font-bold text-slate-900 text-base">LKR {Number(item.base_price).toFixed(2)}</span></td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button size="sm" variant="outline" onClick={() => openEditModal(item)} disabled={isDeletingThis} className="rounded-lg h-8 gap-1.5 text-slate-600">
