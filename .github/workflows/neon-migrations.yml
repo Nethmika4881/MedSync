@@ -24,7 +24,7 @@ on:
           - repair
 
       confirmation:
-        description: "For production migrate, type MIGRATE-PRODUCTION"
+        description: "Production: MIGRATE-PRODUCTION or REPAIR-PRODUCTION"
         required: false
         type: string
         default: ""
@@ -55,21 +55,28 @@ jobs:
             exit 1
           fi
 
-          if [[ "$OPERATION" != "info" && "$OPERATION" != "migrate" ]]; then
+          if [[ "$OPERATION" != "info" && "$OPERATION" != "migrate" && "$OPERATION" != "repair" ]]; then
             echo "::error::Invalid Flyway operation"
             exit 1
           fi
 
           if [[ "$TARGET" == "production" && "$REF_NAME" != "main" ]]; then
-            echo "::error::Production migrations must run from main"
+            echo "::error::Production operations must run from main"
             exit 1
           fi
 
-          if [[ "$TARGET" == "production" && "$OPERATION" == "migrate" ]]; then
-            if [[ "$CONFIRMATION" != "MIGRATE-PRODUCTION" ]]; then
-              echo "::error::Production migration confirmation required"
+          if [[ "$TARGET" == "production" ]]; then
+
+            if [[ "$OPERATION" == "migrate" && "$CONFIRMATION" != "MIGRATE-PRODUCTION" ]]; then
+              echo "::error::Type MIGRATE-PRODUCTION to migrate production"
               exit 1
             fi
+
+            if [[ "$OPERATION" == "repair" && "$CONFIRMATION" != "REPAIR-PRODUCTION" ]]; then
+              echo "::error::Type REPAIR-PRODUCTION to repair production"
+              exit 1
+            fi
+
           fi
 
           echo "Target: $TARGET"
