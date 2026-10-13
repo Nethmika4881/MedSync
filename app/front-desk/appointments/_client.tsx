@@ -33,10 +33,8 @@ import {
 } from "@/lib/actions/frontdesk-appointments";
 
 export default function AppointmentsPage({
-  user,
   initialAppointments = [],
 }: {
-  user: any;
   initialAppointments: FrontDeskAppointment[];
 }) {
   const router = useRouter();
