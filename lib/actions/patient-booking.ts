@@ -1,5 +1,4 @@
 "use server";
-// lib/actions/patient-booking.ts
 // Patient appointment booking server action using the PostgreSQL schema contract.
 // Strictly transactional with row-level locking to prevent concurrent overbooking.
 
@@ -7,7 +6,8 @@ import db from "@/lib/db";
 import { getCurrentUser } from "@/lib/actions/getcurrentuser";
 import { revalidatePath } from "next/cache";
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 import { ALLOWED_VISIT_TYPES, type VisitType } from "@/lib/types";
@@ -85,7 +85,7 @@ export interface BookableSlot {
  */
 export async function getDoctorBookableSlots(
   doctorId: string,
-  date?: string
+  date?: string,
 ): Promise<BookableSlot[]> {
   try {
     if (!UUID_REGEX.test(doctorId)) return [];
@@ -93,7 +93,10 @@ export async function getDoctorBookableSlots(
 
     // Dated sessions are generated from the doctor's weekly working hours. This is idempotent,
     // so it only creates what is missing for the next two weeks.
-    await db.query("SELECT fn_sync_time_slots($1::uuid, CURRENT_DATE, CURRENT_DATE + $2::int)", [doctorId, 14]);
+    await db.query(
+      "SELECT fn_sync_time_slots($1::uuid, CURRENT_DATE, CURRENT_DATE + $2::int)",
+      [doctorId, 14],
+    );
 
     const values: unknown[] = [doctorId];
     // A same-day session is bookable only before its start time. Use the
@@ -126,7 +129,7 @@ export async function getDoctorBookableSlots(
          ${dateFilter}
        GROUP BY s.time_slot_id, b.branch_name
        ORDER BY s.available_date ASC, s.start_time ASC`,
-      values
+      values,
     );
 
     return rows as BookableSlot[];
@@ -146,7 +149,7 @@ export async function getDoctorBookableSlots(
  * - Rolls back transaction on any validation or concurrency failure.
  */
 export async function bookPatientAppointment(
-  input: BookPatientAppointmentInput
+  input: BookPatientAppointmentInput,
 ): Promise<BookAppointmentResult> {
   // ── 1. Authentication & Authorization ────────────────────────────────────────
   const user = await getCurrentUser();
@@ -238,7 +241,7 @@ export async function bookPatientAppointment(
     // Verify patient record exists in database
     const patientRes = await client.query(
       `SELECT patient_id FROM patient WHERE patient_id = $1`,
-      [patientId]
+      [patientId],
     );
     if ((patientRes.rowCount ?? 0) === 0) {
       await client.query("ROLLBACK");
@@ -266,7 +269,7 @@ export async function bookPatientAppointment(
               OR (s.available_date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Colombo')::date
                   AND s.start_time > (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Colombo')::time))
        FOR UPDATE`,
-      [input.timeSlotId]
+      [input.timeSlotId],
     );
 
     if ((slotRes.rowCount ?? 0) === 0) {
@@ -290,7 +293,8 @@ export async function bookPatientAppointment(
       return {
         success: false,
         code: "SLOT_MISMATCH",
-        error: "Selected slot does not match the chosen doctor, branch, or date.",
+        error:
+          "Selected slot does not match the chosen doctor, branch, or date.",
       };
     }
 
@@ -304,7 +308,7 @@ export async function bookPatientAppointment(
        FROM doctor d
        JOIN employee e ON e.employee_id = d.doctor_id
        WHERE d.doctor_id = $1`,
-      [input.doctorId]
+      [input.doctorId],
     );
 
     if ((doctorRes.rowCount ?? 0) === 0) {
@@ -329,7 +333,7 @@ export async function bookPatientAppointment(
     // Verify branch exists and is active
     const branchRes = await client.query(
       `SELECT branch_id, is_active FROM branch WHERE branch_id = $1`,
-      [input.branchId]
+      [input.branchId],
     );
 
     if ((branchRes.rowCount ?? 0) === 0 || !branchRes.rows[0].is_active) {
@@ -345,7 +349,7 @@ export async function bookPatientAppointment(
     if (doctor.employee_branch_id !== input.branchId) {
       const scheduleRes = await client.query(
         `SELECT 1 FROM doctor_schedule WHERE doctor_id = $1 AND branch_id = $2 LIMIT 1`,
-        [input.doctorId, input.branchId]
+        [input.doctorId, input.branchId],
       );
       if ((scheduleRes.rowCount ?? 0) === 0) {
         await client.query("ROLLBACK");
@@ -364,7 +368,7 @@ export async function bookPatientAppointment(
        WHERE time_slot_id = $1
          AND patient_id = $2
          AND status NOT IN ('Cancelled')`,
-      [input.timeSlotId, patientId]
+      [input.timeSlotId, patientId],
     );
 
     if ((existingApptRes.rowCount ?? 0) > 0) {
@@ -382,7 +386,7 @@ export async function bookPatientAppointment(
        FROM appointment
        WHERE time_slot_id = $1
          AND status NOT IN ('Cancelled')`,
-      [input.timeSlotId]
+      [input.timeSlotId],
     );
 
     const activeCount = countRes.rows[0].active_count;
@@ -405,7 +409,7 @@ export async function bookPatientAppointment(
        )
        ORDER BY q ASC
        LIMIT 1`,
-      [input.timeSlotId, slot.max_tickets]
+      [input.timeSlotId, slot.max_tickets],
     );
 
     if ((ticketRes.rowCount ?? 0) === 0) {
@@ -454,7 +458,7 @@ export async function bookPatientAppointment(
         assignedTicket,
         reasonText,
         input.notes ?? null,
-      ]
+      ],
     );
 
     await client.query("COMMIT");
@@ -492,7 +496,7 @@ export async function bookPatientAppointment(
     if (
       pgError.code === "40001" || // serialization_failure
       pgError.code === "40P01" || // deadlock_detected
-      pgError.code === "23505"    // unique_violation (e.g. ticket collision)
+      pgError.code === "23505" // unique_violation (e.g. ticket collision)
     ) {
       return {
         success: false,
@@ -505,7 +509,8 @@ export async function bookPatientAppointment(
     return {
       success: false,
       code: "DATABASE_ERROR",
-      error: "Unable to process booking due to a database error. Please try again.",
+      error:
+        "Unable to process booking due to a database error. Please try again.",
     };
   } finally {
     client.release();
