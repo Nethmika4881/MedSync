@@ -94,7 +94,7 @@ export async function getBranches(): Promise<BranchOverview[]> {
       const branchResult = await db.query(
         `SELECT b.branch_id, b.branch_name, b.is_active, a.address_line1, a.city, a.province 
          FROM branch b JOIN address a ON b.address_id = a.address_id 
-         WHERE b.is_active = TRUE ORDER BY b.branch_name ASC;`
+         WHERE b.is_active = TRUE ORDER BY b.branch_name ASC;`,
       );
       return branchResult.rows.map((branch) => ({
         branch_id: branch.branch_id,
@@ -129,8 +129,12 @@ export async function getBranches(): Promise<BranchOverview[]> {
     const patients = patientResult.rows;
 
     const mergeBranches: BranchOverview[] = branches.map((branch) => {
-      const branchStaff = employees.filter((staff) => staff.branch_id === branch.branch_id);
-      const branchPatients = patients.find((p) => p.registered_branch_id === branch.branch_id);
+      const branchStaff = employees.filter(
+        (staff) => staff.branch_id === branch.branch_id,
+      );
+      const branchPatients = patients.find(
+        (p) => p.registered_branch_id === branch.branch_id,
+      );
 
       return {
         branch_id: branch.branch_id,
@@ -139,14 +143,19 @@ export async function getBranches(): Promise<BranchOverview[]> {
         address_line1: branch.address_line1,
         city: branch.city,
         province: branch.province,
-        patient_count: branchPatients ? parseInt(branchPatients.patient_count, 10) : 0,
-        doctor_count: branchStaff.filter((staff) => staff.role === "Doctor").length,
+        patient_count: branchPatients
+          ? parseInt(branchPatients.patient_count, 10)
+          : 0,
+        doctor_count: branchStaff.filter((staff) => staff.role === "Doctor")
+          .length,
         staff: branchStaff.map((s) => ({
           employeeId: s.employee_id,
           name: s.full_name,
           role: s.role,
         })),
-        manager_name: branchStaff.find((staff) => staff.employee_id === branch.manager_id)?.full_name || "Unassigned",
+        manager_name:
+          branchStaff.find((staff) => staff.employee_id === branch.manager_id)
+            ?.full_name || "Unassigned",
       };
     });
 
@@ -174,31 +183,41 @@ export async function createBranch(data: CreateBranchInput) {
   try {
     await client.query("BEGIN");
 
-    const addressResult = await client.query(`INSERT INTO address (address_line1, city, province) 
+    const addressResult = await client.query(
+      `INSERT INTO address (address_line1, city, province) 
        VALUES ($1, $2, $3) RETURNING address_id;`,
-      [address_line1, city, province]
+      [address_line1, city, province],
     );
     const newAddress = addressResult.rows[0].address_id;
 
-    const contactResult = await client.query(`INSERT INTO contact DEFAULT VALUES RETURNING contact_id;`);
+    const contactResult = await client.query(
+      `INSERT INTO contact DEFAULT VALUES RETURNING contact_id;`,
+    );
     const newContact = contactResult.rows[0].contact_id;
 
-    const branchResult = await client.query(`INSERT INTO branch (branch_name, address_id, contact_id, is_active) 
-       VALUES ($1, $2, $3, TRUE) RETURNING *;`,
-      [branch_name, newAddress, newContact]);
+    const branchResult = await client.query(
+      `INSERT INTO branch (branch_name, address_id, contact_id, is_active) 
+       VALUES ($1, $2, $3, False) RETURNING *;`,
+      [branch_name, newAddress, newContact],
+    );
 
     await client.query("COMMIT");
 
     revalidatePath("/admin/branches");
     revalidatePath("/branches");
 
-    return { success: true, message: "Branch created successfully", branch: branchResult.rows[0], };
-
+    return {
+      success: true,
+      message: "Branch created successfully",
+      branch: branchResult.rows[0],
+    };
   } catch (error: any) {
     await client.query("ROLLBACK");
     console.error("Failed to create branch:", error);
-    return { success: false, error: error.message || "Failed to create branch.", };
-
+    return {
+      success: false,
+      error: error.message || "Failed to create branch.",
+    };
   } finally {
     client.release();
   }
@@ -260,20 +279,26 @@ export async function deleteBranch(branchId: string) {
       return { success: false, error: "Unauthorized" };
     }
 
-    await db.query(`UPDATE branch SET is_active = FALSE WHERE branch_id = $1`, [branchId]);
+    await db.query(`UPDATE branch SET is_active = FALSE WHERE branch_id = $1`, [
+      branchId,
+    ]);
 
     revalidatePath("/admin/branches");
     revalidatePath("/branches");
 
     return { success: true, message: "Branch deleted successfully" };
-  }
-  catch (error: any) {
+  } catch (error: any) {
     console.error("Failed to delete branch:", error);
-    return { success: false, error: error.message || "Failed to delete branch" };
+    return {
+      success: false,
+      error: error.message || "Failed to delete branch",
+    };
   }
 }
 
-export async function branchOverview(timeRange: "today" | "7d" | "30d" = "30d") {
+export async function branchOverview(
+  timeRange: "today" | "7d" | "30d" = "30d",
+) {
   try {
     const user = await getCurrentUser();
     if (!user || user.role !== "admin") {
@@ -292,8 +317,9 @@ export async function branchOverview(timeRange: "today" | "7d" | "30d" = "30d") 
 
     const dateCondition = DATE_CONDITIONS[safeRange];
 
-    const [trafficResults, warningsResults, complaintsResults] = await Promise.all([
-      db.query(`
+    const [trafficResults, warningsResults, complaintsResults] =
+      await Promise.all([
+        db.query(`
         SELECT b.branch_id AS "branchId", b.branch_name AS "branchName", COUNT(a.appointment_id) AS "patientCount"
         FROM branch b
         LEFT JOIN time_slot ts ON ts.branch_id = b.branch_id
@@ -304,7 +330,7 @@ export async function branchOverview(timeRange: "today" | "7d" | "30d" = "30d") 
         ORDER BY "patientCount" DESC
       `),
 
-      db.query(`
+        db.query(`
         SELECT b.branch_id, b.branch_name, b.manager_id,
           (
             SELECT COUNT(*) 
@@ -322,7 +348,7 @@ export async function branchOverview(timeRange: "today" | "7d" | "30d" = "30d") 
         WHERE b.is_active = true
       `),
 
-      db.query(`
+        db.query(`
         SELECT 
           c.complaint_id AS "complaintId",
           c.branch_id AS "branchId",
@@ -340,7 +366,7 @@ export async function branchOverview(timeRange: "today" | "7d" | "30d" = "30d") 
         ORDER BY c.created_at DESC
         LIMIT 10
       `),
-    ]);
+      ]);
 
     const rawTraffic = trafficResults.rows.map((row) => ({
       branchId: row.branchId,
@@ -394,8 +420,7 @@ export async function branchOverview(timeRange: "today" | "7d" | "30d" = "30d") 
       operationalWarnings,
       complaints: complaintsResults.rows as PatientComplaint[],
     };
-  }
-  catch (error: any) {
+  } catch (error: any) {
     console.error("Failed to load branch overview analytics:", error);
     return { success: false, error: error.message };
   }
@@ -412,7 +437,7 @@ export async function complaints(complaintId: string) {
       `UPDATE branch_complaint 
        SET status = 'Resolved', resolved_at = CURRENT_TIMESTAMP 
        WHERE complaint_id = $1`,
-      [complaintId]
+      [complaintId],
     );
 
     if (result.rowCount === 0) {
@@ -421,8 +446,7 @@ export async function complaints(complaintId: string) {
 
     revalidatePath("/admin/branches");
     return { success: true };
-  }
-  catch (error: any) {
+  } catch (error: any) {
     console.error("Failed to resolve complaint:", error);
     return { success: false, error: error.message };
   }
@@ -430,7 +454,7 @@ export async function complaints(complaintId: string) {
 
 export async function updateBranchDetails(
   branchId: string,
-  data: UpdateBranchDetailsInput
+  data: UpdateBranchDetailsInput,
 ) {
   const user = await getCurrentUser();
   if (!user || user.role !== "admin") {
@@ -448,8 +472,9 @@ export async function updateBranchDetails(
   try {
     await client.query("BEGIN");
 
-    const branchResult = await client.query(`SELECT address_id FROM branch WHERE branch_id = $1 FOR UPDATE`,
-      [branchId]
+    const branchResult = await client.query(
+      `SELECT address_id FROM branch WHERE branch_id = $1 FOR UPDATE`,
+      [branchId],
     );
 
     if (branchResult.rows.length === 0) {
@@ -461,12 +486,12 @@ export async function updateBranchDetails(
 
     await client.query(
       `UPDATE branch SET branch_name = $1 WHERE branch_id = $2`,
-      [branch_name, branchId]
+      [branch_name, branchId],
     );
 
     await client.query(
       `UPDATE address SET address_line1 = $1, city = $2, province = $3 WHERE address_id = $4`,
-      [address_line1, city, province, addressId]
+      [address_line1, city, province, addressId],
     );
 
     await client.query("COMMIT");
@@ -476,13 +501,14 @@ export async function updateBranchDetails(
     revalidatePath("/branches");
 
     return { success: true, message: "Branch updated successfully" };
-  }
-  catch (error: any) {
+  } catch (error: any) {
     await client.query("ROLLBACK");
     console.error("Failed to update branch:", error);
-    return { success: false, error: error.message || "Failed to update branch" };
-  }
-  finally {
+    return {
+      success: false,
+      error: error.message || "Failed to update branch",
+    };
+  } finally {
     client.release();
   }
 }
@@ -495,18 +521,20 @@ export async function assignManager(branchId: string, managerId: string) {
     }
 
     await db.query(
-      `UPDATE branch SET manager_id = $1 WHERE branch_id = $2`,
-      [managerId, branchId]
+      `update branch set manager_id = $1, is_active = TRUE, updated_at = NOW() where branch_id = $2`,
+      [managerId, branchId],
     );
 
     revalidatePath(`/admin/branches/${branchId}`);
     revalidatePath("/admin/branches");
 
     return { success: true, message: "Manager assigned successfully" };
-  }
-  catch (error: any) {
+  } catch (error: any) {
     console.error("Failed to assign manager:", error);
-    return { success: false, error: error.message || "Failed to assign manager" };
+    return {
+      success: false,
+      error: error.message || "Failed to assign manager",
+    };
   }
 }
 
@@ -518,18 +546,20 @@ export async function removeManager(branchId: string) {
     }
 
     await db.query(
-      `UPDATE branch SET manager_id = NULL WHERE branch_id = $1`,
-      [branchId]
+      `update branch set manager_id = NULL, is_active = FALSE, updated_at = NOW() where branch_id = $1`,
+      [branchId],
     );
 
     revalidatePath(`/admin/branches/${branchId}`);
     revalidatePath("/admin/branches");
 
     return { success: true, message: "Manager removed successfully" };
-  }
-  catch (error: any) {
+  } catch (error: any) {
     console.error("Failed to remove manager:", error);
-    return { success: false, error: error.message || "Failed to remove manager" };
+    return {
+      success: false,
+      error: error.message || "Failed to remove manager",
+    };
   }
 }
 
@@ -542,15 +572,14 @@ export async function assignStaff(branchId: string, employeeId: string) {
 
     await db.query(
       `UPDATE employee SET branch_id = $1 WHERE employee_id = $2`,
-      [branchId, employeeId]
+      [branchId, employeeId],
     );
 
     revalidatePath(`/admin/branches/${branchId}`);
     revalidatePath("/admin/branches");
 
     return { success: true, message: "Staff assigned successfully" };
-  }
-  catch (error: any) {
+  } catch (error: any) {
     console.error("Failed to assign staff:", error);
     return { success: false, error: error.message || "Failed to assign staff" };
   }
@@ -565,7 +594,7 @@ export async function removeStaff(employeeId: string, branchId?: string) {
 
     await db.query(
       `UPDATE employee SET branch_id = NULL WHERE employee_id = $1`,
-      [employeeId]
+      [employeeId],
     );
 
     if (branchId) {
@@ -575,8 +604,7 @@ export async function removeStaff(employeeId: string, branchId?: string) {
     revalidatePath("/branches");
 
     return { success: true, message: "Staff removed successfully" };
-  }
-  catch (error: any) {
+  } catch (error: any) {
     console.error("Failed to remove staff:", error);
     return { success: false, error: error.message || "Failed to remove staff" };
   }
@@ -589,19 +617,30 @@ export async function getBranchDetails(branchId: string) {
       return null;
     }
 
-    const [branchResults, staffResults, availableStaffResults, treatmentsResults, visitsResults, invoicesResults, complaintsResults] = await Promise.all([
-
+    const [
+      branchResults,
+      staffResults,
+      availableStaffResults,
+      treatmentsResults,
+      visitsResults,
+      invoicesResults,
+      complaintsResults,
+    ] = await Promise.all([
       //Branch Details
-      db.query(`
+      db.query(
+        `
         SELECT b.branch_id, b.branch_name, b.is_active, a.address_line1, a.city, a.province, u.full_name AS manager_name
         FROM branch b
         LEFT JOIN address a ON b.address_id = a.address_id
         LEFT JOIN app_user u ON b.manager_id = u.user_id
         WHERE b.branch_id = $1
-      `, [branchId]),
+      `,
+        [branchId],
+      ),
 
       //Active Staff and Doctors
-      db.query(`
+      db.query(
+        `
         SELECT e.employee_id AS "employeeId", u.full_name AS name, e.role, spec.title AS specialization
         FROM employee e
         JOIN app_user u ON e.employee_id = u.user_id
@@ -613,7 +652,9 @@ export async function getBranchDetails(branchId: string) {
         LEFT JOIN specialization spec ON spec.specialization_id = ds.specialization_id
         WHERE e.branch_id = $1 AND e.is_active = true
         ORDER BY e.role ASC, u.full_name ASC
-      `, [branchId]),
+      `,
+        [branchId],
+      ),
 
       //Unassigned Staff
       db.query(`
@@ -624,16 +665,20 @@ export async function getBranchDetails(branchId: string) {
       `),
 
       //Treatments
-      db.query(`
+      db.query(
+        `
         SELECT t.treatment_service_code AS "treatmentId", t.treatment_name AS "treatmentName", t.category, t.base_price AS "basePrice",
         COALESCE(bt.is_available, false) AS "isOffered"
         FROM treatment_catalogue t
         LEFT JOIN branch_treatment bt ON bt.treatment_service_code = t.treatment_service_code AND bt.branch_id = $1
         ORDER BY t.category ASC, t.treatment_name ASC
-      `, [branchId]),
+      `,
+        [branchId],
+      ),
 
       //Visits / Treatment History
-      db.query(`
+      db.query(
+        `
         SELECT 
           a.appointment_id AS "appointmentId",
           TO_CHAR(ts.available_date, 'YYYY-MM-DD') AS "visitDate",
@@ -654,10 +699,13 @@ export async function getBranchDetails(branchId: string) {
         WHERE ts.branch_id = $1
         ORDER BY ts.available_date DESC, ts.start_time DESC
         LIMIT 20
-      `, [branchId]),
+      `,
+        [branchId],
+      ),
 
       //Invoices & Financials
-      db.query(`
+      db.query(
+        `
         SELECT 
           inv.invoice_id AS "invoiceId",
           TO_CHAR(inv.created_at, 'YYYY-MM-DD') AS "invoiceDate",
@@ -674,10 +722,13 @@ export async function getBranchDetails(branchId: string) {
         WHERE ts.branch_id = $1
         ORDER BY inv.created_at DESC
         LIMIT 20
-      `, [branchId]),
+      `,
+        [branchId],
+      ),
 
       //Complaints
-      db.query(`
+      db.query(
+        `
         SELECT 
           c.complaint_id AS "complaintId",
           COALESCE(u.full_name, 'Anonymous Patient') AS "patientName",
@@ -691,7 +742,9 @@ export async function getBranchDetails(branchId: string) {
         LEFT JOIN app_user u ON u.user_id = p.patient_id
         WHERE c.branch_id = $1
         ORDER BY c.created_at DESC
-      `, [branchId]),
+      `,
+        [branchId],
+      ),
     ]);
 
     if (branchResults.rows.length === 0) return null;
@@ -700,8 +753,14 @@ export async function getBranchDetails(branchId: string) {
     const staff = staffResults.rows;
     const invoices = invoicesResults.rows;
 
-    const totalRevenue = invoices.reduce((sum, inv) => sum + Number(inv.paidAmount || 0), 0);
-    const totalDue = invoices.reduce((sum, inv) => sum + Number(inv.dueAmount || 0), 0);
+    const totalRevenue = invoices.reduce(
+      (sum, inv) => sum + Number(inv.paidAmount || 0),
+      0,
+    );
+    const totalDue = invoices.reduce(
+      (sum, inv) => sum + Number(inv.dueAmount || 0),
+      0,
+    );
 
     return {
       branch: {
@@ -724,8 +783,10 @@ export async function getBranchDetails(branchId: string) {
         staffCount: staff.filter((s: any) => s.role !== "Doctor").length,
         totalRevenue,
         totalDue,
-        pendingComplaints: complaintsResults.rows.filter((c: any) => c.status === "Pending").length,
-      }
+        pendingComplaints: complaintsResults.rows.filter(
+          (c: any) => c.status === "Pending",
+        ).length,
+      },
     };
   } catch (error: any) {
     console.error("getBranchCompleteDetails error:", error);
@@ -733,19 +794,26 @@ export async function getBranchDetails(branchId: string) {
   }
 }
 
-export async function branchTreatment(branchId: string, treatmentId: string, isAvailable: boolean) {
+export async function branchTreatment(
+  branchId: string,
+  treatmentId: string,
+  isAvailable: boolean,
+) {
   try {
     const user = await getCurrentUser();
     if (!user || user.role !== "admin") {
       return { success: false, error: "Unauthorized" };
     }
 
-    await db.query(`
+    await db.query(
+      `
       INSERT INTO branch_treatment (branch_id, treatment_service_code, is_available)
       VALUES ($1, $2, $3)
       ON CONFLICT (branch_id, treatment_service_code)
       DO UPDATE SET is_available = $3
-    `, [branchId, treatmentId, isAvailable]);
+    `,
+      [branchId, treatmentId, isAvailable],
+    );
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
