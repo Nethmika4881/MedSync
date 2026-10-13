@@ -50,7 +50,8 @@ export type UpdateDoctorFeeResult =
 export interface DoctorDirectoryItem {
   doctorId: string;
   name: string;
-  specialization: string; // first specialization title, or "General Practice" fallback
+  specialization: string; // Formatted comma-separated string e.g. "Cardiology, Internal Medicine", or "General Practice"
+  specializations: string[]; // Ordered list of all associated specializations
   consultationFee: number;
   experience: number; // years_experience (nullable → 0)
   branchId: string;
@@ -77,12 +78,10 @@ export interface SpecializationOption {
 
 /**
  * Returns all active doctors joined with their primary branch,
- * first specialization, and display fields derived from app_user.
+ * all associated specializations aggregated as an array, and display fields.
  *
- * availability filter: doctor.is_available (the doctor's own availability flag —
- * NOT appointment-slot availability, which would require checking time_slot capacity.
- * The schema supports slot-level availability via time_slot.max_tickets vs
- * COUNT(appointment) but that query is out of scope for a directory listing).
+ * Each doctor appears exactly once. Multiple specializations are retrieved
+ * via deterministic aggregation (ORDER BY s.title).
  */
 export async function getDoctorDirectory(): Promise<DoctorDirectoryItem[]> {
   const { rows } = await db.query(`
@@ -90,45 +89,51 @@ export async function getDoctorDirectory(): Promise<DoctorDirectoryItem[]> {
       d.doctor_id                         AS "doctorId",
       u.full_name                         AS "name",
       UPPER(LEFT(u.full_name, 2))         AS "avatar",
-      COALESCE(s.title, 'General Practice') AS "specialization",
       d.consultation_fee                  AS "consultationFee",
       COALESCE(d.years_experience, 0)     AS "experience",
       e.branch_id                         AS "branchId",
       b.branch_name                       AS "branchName",
       COALESCE(d.qualification, '')       AS "education",
       d.is_available                      AS "isAvailable",
-      u.email                             AS "email"
+      u.email                             AS "email",
+      COALESCE(
+        (
+          SELECT ARRAY_AGG(s.title ORDER BY s.title)
+          FROM doctor_specialization ds
+          JOIN specialization s ON s.specialization_id = ds.specialization_id
+          WHERE ds.doctor_id = d.doctor_id
+        ),
+        ARRAY[]::text[]
+      ) AS "specializations"
     FROM doctor d
     JOIN employee  e ON e.employee_id = d.doctor_id
     JOIN app_user  u ON u.user_id     = e.employee_id
     JOIN branch    b ON b.branch_id   = e.branch_id
-    -- Left join: a doctor with no specialization still appears
-    LEFT JOIN doctor_specialization ds ON ds.doctor_id = d.doctor_id
-    LEFT JOIN specialization        s  ON s.specialization_id = ds.specialization_id
     WHERE e.is_active = true
       AND d.is_available IS NOT NULL
-    -- One row per doctor — take first specialization alphabetically
-    ORDER BY u.full_name ASC, s.title ASC NULLS LAST
+    ORDER BY u.full_name ASC
   `);
 
-  // Deduplicate: keep only the first row per doctor (first spec alphabetically)
-  const seen = new Set<string>();
-  const deduped: DoctorDirectoryItem[] = [];
-  for (const row of rows) {
-    if (!seen.has(row.doctorId)) {
-      seen.add(row.doctorId);
-      deduped.push({
-        ...row,
-        // These fields do not exist in the current schema.
-        // Safe neutral defaults preserve the existing DoctorCard layout.
-        rating: 0,
-        reviewCount: 0,
-        bio: "",
-        phone: "",
-      });
-    }
-  }
-  return deduped;
+  return rows.map((row) => {
+    const specializations: string[] = Array.isArray(row.specializations)
+      ? row.specializations
+      : [];
+    const specialization =
+      specializations.length > 0
+        ? specializations.join(", ")
+        : "General Practice";
+
+    return {
+      ...row,
+      specialization,
+      specializations,
+      // Hardcoded safe defaults for schema fields not in current migration
+      rating: 0,
+      reviewCount: 0,
+      bio: "",
+      phone: "",
+    };
+  });
 }
 
 /**
