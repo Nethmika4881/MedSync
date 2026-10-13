@@ -168,21 +168,21 @@ Deployment credentials and database connection values are stored as GitHub Actio
 
 ## Team and Contributions
 
-The points below show each member's main area of ownership. The team also reviewed, fixed, and integrated work across the whole system.
+The points below summarize each member's main areas of ownership based on the implemented features and Git history. Team members also reviewed, fixed, and integrated work across the whole system.
 
 ### [Kumarasiri I. D. N. (240370X) (@Nethmika4881)](https://github.com/Nethmika4881)
 
 - Created the repository foundation, application structure, routes, shared interface components, and early responsive screens
-- Built authentication, patient registration, validation, password security, Redis sessions, middleware, and role based routing
-- Developed admin features for staff, doctors, schedules, fees, reports, revenue, and branch summaries
-- Set up Flyway, PostgreSQL, Docker, Redis, shared database access, and security improvements across the application
+- Built authentication, patient registration, validation, password security, Redis sessions, middleware, and role-based routing
+- Developed admin features for staff, doctors, schedules, fees, patient access and auditing, reports, revenue, and branch summaries
+- Set up Flyway, PostgreSQL, Docker, Redis, shared database access, and database rules requiring managers for active branches
 - Created the three CI/CD workflows, managed Azure delivery, integrated team branches, and resolved build and migration conflicts
 
 ### [Pinnapola P. A. H. D. (240515A) (@Hiruna4587)](https://github.com/Hiruna4587)
 
 - Created the initial healthcare schema and added constraints and triggers that protect important data
 - Built treatment catalogue management and treatment query features
-- Developed branch management, branch analytics, the admin dashboard, and settings
+- Developed branch management, branch analytics, the admin dashboard, settings, and notifications
 - Implemented complaints and insurance package management
 - Built admin reports, performance measures, insurance and treatment reports
 
@@ -191,7 +191,7 @@ The points below show each member's main area of ownership. The team also review
 - Built the front desk layout, navigation, loading states, and recoverable error screens
 - Developed dashboard measures, charts, quick actions, and the live patient queue
 - Connected patient search and patient details to PostgreSQL and built transactional registration
-- Implemented scheduled, walk in, and emergency appointments with check in actions
+- Implemented scheduled and walk-in appointments with live slot selection and check-in actions
 - Built invoice, payment, receipt, and insurance claim workflows and corrected front desk routing issues
 
 ### [Rakumar K. (240540U) (@Koshi2004)](https://github.com/Koshi2004)
@@ -200,12 +200,12 @@ The points below show each member's main area of ownership. The team also review
 - Built the doctor data layer and connected doctor screens to live PostgreSQL data
 - Developed the dashboard, patient queue, schedules, working hours, profiles, and settings
 - Built the consultation workspace with treatment selection, notes, follow ups, and completion rules
-- Implemented prescriptions, medication and allergy safety information, clinical protections, and workflow fixes
+- Implemented prescriptions, medication and allergy safety, multiple doctor specializations, and database protections against overlapping doctor time slots in V35
 
 ### [Gunawardena N. N. De. A. (240205) (@NethmiNadeeshani2005)](https://github.com/NethmiNadeeshani2005)
 
-- Built patient navigation, branch aware state, and the patient application layout
+- Built patient navigation, branch-aware state, branch selection during authentication, and the patient application layout
 - Developed the searchable doctor directory with multiple filters
 - Implemented safe appointment booking with slot locking, ticket limits, and collision prevention
-- Built appointment history, rescheduling, dashboard data, prescriptions, and medical records
+- Built appointment history, rescheduling, dashboard data, grouped prescription views, and medical records
 - Developed billing, invoice, insurance, claim, payment, refund, and credit request experiences
