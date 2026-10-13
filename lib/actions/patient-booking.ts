@@ -431,6 +431,7 @@ export async function bookPatientAppointment(
     // Insert appointment with created_by = NULL (patient self-booking per V16)
     const insertRes = await client.query(
       `INSERT INTO appointment (
+      
          time_slot_id,
          patient_id,
          queue_number,
