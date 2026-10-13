@@ -41,12 +41,10 @@ export const roleNavConfig: Record<UserRole, NavItem[]> = {
       href: "/admin/insurance",
       icon: "Shield",
       children: [
-        { label: "Providers", href: "/admin/insurance", icon: "Building2" },
-        {
-          label: "Packages",
-          href: "/admin/insurance/packages",
-          icon: "Package",
-        },
+        { label: "Providers", href: "/admin/insurance",          icon: "Building2" },
+        { label: "Packages",  href: "/admin/insurance/packages", icon: "Package" },
+        { label: "Patients",  href: "/admin/insurance/patients", icon: "Users" },
+        { label: "Claims",    href: "/admin/insurance/claims",   icon: "FileCheck" },
       ],
     },
     { label: "Reports", href: "/admin/reports", icon: "BarChart3" },
