@@ -125,6 +125,5 @@ export const roleNavConfig: Record<UserRole, NavItem[]> = {
         },
       ],
     },
-    { label: "Settings", href: "/front-desk/settings", icon: "Settings" },
   ],
 };
