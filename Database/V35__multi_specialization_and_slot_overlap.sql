@@ -1,5 +1,3 @@
--- 1. A doctor may hold several specializations (composite PK doctor_id + specialization_id
---    from V3 still prevents the same specialization being added twice).
 ALTER TABLE doctor_specialization
 DROP CONSTRAINT IF EXISTS uq_doctor_one_specialization;
 
@@ -35,8 +33,6 @@ EXCLUDE USING gist (
     tsrange(available_date + start_time, available_date + end_time) WITH &&
 );
 
--- fn_sync_time_slots named the old unique constraint in ON CONFLICT, which would no longer
--- absorb a partially overlapping period. Skip any conflicting row instead.
 CREATE OR REPLACE FUNCTION fn_sync_time_slots(
     p_doctor_id UUID,
     p_from      DATE,
@@ -52,13 +48,11 @@ BEGIN
         RETURN 0;
     END IF;
 
-    -- A doctor who is not accepting appointments gets no new sessions.
+    -- A doctor who doesn't accept appointments gets no new sessions.
     IF EXISTS (SELECT 1 FROM doctor WHERE doctor_id = p_doctor_id AND is_available IS FALSE) THEN
         RETURN 0;
     END IF;
 
-    -- day_of_week: 0 = Sunday ... 6 = Saturday, the same as EXTRACT(DOW ...).
-    -- Tickets = session length / minutes per slot (09:00-13:00 at 15 minutes = 16).
     INSERT INTO time_slot (doctor_id, branch_id, available_date, start_time, end_time, max_tickets)
     SELECT ds.doctor_id,
            ds.branch_id,

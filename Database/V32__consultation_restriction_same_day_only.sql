@@ -1,6 +1,3 @@
--- A doctor must finish the current consultation before starting another, but only
--- within the same day. An unfinished consultation from an earlier day must not block
--- today's patients (it stays visible on the dashboard until completed).
 CREATE OR REPLACE PROCEDURE sp_start_consultation(
     p_appointment_id UUID,
     p_doctor_id      UUID

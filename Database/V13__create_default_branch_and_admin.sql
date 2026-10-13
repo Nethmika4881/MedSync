@@ -1,7 +1,3 @@
--- Create default branch and admin account
--- This migration ensures a default branch exists before creating the admin user,
--- fixing the silent skip in V13 which ran before any branch data existed.
-
 DO $$
 DECLARE
     new_address_id      UUID;
@@ -11,7 +7,6 @@ DECLARE
     branch_address_id   UUID;
     branch_contact_id   UUID;
 BEGIN
-    -- ── 1. Ensure a default branch exists ──────────────────────────────────
     SELECT branch_id INTO default_branch_id FROM branch LIMIT 1;
 
     IF default_branch_id IS NULL THEN
@@ -30,7 +25,6 @@ BEGIN
         RETURNING branch_id INTO default_branch_id;
     END IF;
 
-    -- ── 2. Create default admin (if not already present) ───────────────────
     IF NOT EXISTS (SELECT 1 FROM app_user WHERE email = 'admin@medsync.com') THEN
 
         INSERT INTO address (address_line1, address_line2, city, province, postal_code, country)

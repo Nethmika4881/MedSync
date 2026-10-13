@@ -1,12 +1,3 @@
--- A doctor can hold several specializations 
--- sp_update_doctor_profile used to treat p_specialization as ONE title and delete every other
--- specialization row. The Settings page loads v_doctor_profile.specializations ("A, B") and
--- sends it straight back, so saving the profile collapsed it into a single bogus
--- specialization called "A, B".
---
--- p_specialization is now a comma-separated list. Same signature, so callers are unchanged.
--- An empty value still clears every specialization.
-
 CREATE OR REPLACE PROCEDURE sp_update_doctor_profile(
     p_doctor_id        UUID,
     p_room_no          VARCHAR,
@@ -120,7 +111,6 @@ BEGIN
            updated_at    = NOW()
      WHERE address_id = v_address_id;
 
-    -- Comma-separated list of specializations. Empty clears all of them.
     IF COALESCE(TRIM(p_specialization), '') = '' THEN
         DELETE FROM doctor_specialization WHERE doctor_id = p_doctor_id;
     ELSE
@@ -145,7 +135,6 @@ BEGIN
             v_keep := v_keep || v_spec_id;
         END LOOP;
 
-        -- Only what the doctor listed stays.
         DELETE FROM doctor_specialization
          WHERE doctor_id = p_doctor_id
            AND specialization_id <> ALL (v_keep);
