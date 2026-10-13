@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  HeartPulse,
   LayoutDashboard,
   Calendar,
   Search,
@@ -19,6 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logOut } from "@/lib/actions/auth";
+import { Brand } from "@/components/catms/Brand";
 
 const navLinks = [
   { label: "Dashboard",       href: "/patient/dashboard",     icon: LayoutDashboard },
@@ -44,10 +44,10 @@ export function PatientNav() {
           {/* Brand */}
           <Link
             href="/patient/dashboard"
-            className="flex items-center gap-2 shrink-0 text-xl font-bold font-outfit text-slate-900 tracking-tight"
+            className="inline-flex shrink-0 items-center"
+            aria-label="MedSync dashboard"
           >
-            <HeartPulse className="w-7 h-7 text-[var(--brand-primary)]" />
-            Med<span className="text-[var(--brand-primary)]">Sync</span>
+            <Brand markClassName="size-9" textClassName="text-xl" />
           </Link>
 
           {/* Desktop Nav Links */}

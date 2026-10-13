@@ -7,6 +7,7 @@ import { z } from "zod";
 import { signIn } from "@/lib/actions/auth";
 import { signInSchema } from "@/lib/schemas";
 import { useState } from "react";
+import { Brand } from "@/components/catms/Brand";
  
 
 type LoginFormValues = z.infer<typeof signInSchema>;
@@ -31,7 +32,9 @@ export default function LoginPageClient() {
       <div className="w-full max-w-sm">
 
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-foreground">MedSync</h1>
+          <h1>
+            <Brand className="justify-center" markClassName="size-10" textClassName="text-2xl text-foreground" />
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">
             Sign in to your account
           </p>

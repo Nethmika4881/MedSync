@@ -11,6 +11,11 @@ export const metadata = {
   title: "MedSync | Clinic Management",
   description:
     "Multi-branch clinic management system — patient booking, clinical workspace, front desk, and admin portals.",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
