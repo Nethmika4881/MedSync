@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { 
   Card, 
   CardContent, 
@@ -11,7 +11,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { 
   ShieldCheck, 
-  RefreshCw, 
   TrendingUp, 
   Building2, 
   DollarSign, 
@@ -24,88 +23,28 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
-  getStats, 
-  getProviders, 
-  getPackages, 
   togglePackageStatus, 
-  syncPackages, 
   Stats as InsuranceStats, 
   Providers as InsuranceProviderSummary, 
   Packages as InsurancePackageItem 
 } from "@/lib/actions/admin-insurance";
 
 interface ClientPageProps {
-  user: {
-    userId?: string;
-    fullName?: string;
-    name?: string;
-    role?: string;
-    [key: string]: any;
-  };
+  initialStats: InsuranceStats;
+  initialProviders: InsuranceProviderSummary[];
+  initialPackages: InsurancePackageItem[];
 }
 
-export default function InsuranceClientPage({ user }: ClientPageProps) {
-  void user;
-  const [stats, setStats] = useState<InsuranceStats>({
-    totalInsuredPatients: 0,
-    activePoliciesCount: 0,
-    totalCoverageUtilized: 0,
-    totalProvidersCount: 0,
-    totalPackagesCount: 0,
-  });
-  const [providers, setProviders] = useState<InsuranceProviderSummary[]>([]);
-  const [packages, setPackages] = useState<InsurancePackageItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [syncingProvider, setSyncingProvider] = useState<string | null>(null);
+export default function InsuranceClientPage({
+  initialStats,
+  initialProviders,
+  initialPackages,
+}: ClientPageProps) {
+  const stats = initialStats;
+  const providers = initialProviders;
+  const [packages, setPackages] = useState<InsurancePackageItem[]>(initialPackages);
   const [togglingPackageId, setTogglingPackageId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-
-  const loadData = useCallback(async (showFullLoader = true) => {
-    if (showFullLoader) setIsLoading(true);
-    else setIsRefreshing(true);
-
-    try {
-      const [statsData, providersData, packagesData] = await Promise.all([
-        getStats(),
-        getProviders(),
-        getPackages(),
-      ]);
-
-      setStats(statsData);
-      setProviders(providersData);
-      setPackages(packagesData);
-    } catch (err) {
-      console.error("Failed to load insurance dashboard:", err);
-      setStatusMessage({ type: "error", text: "Failed to load real-time insurance data." });
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadData(true);
-  }, [loadData]);
-
-  const handleSync = async (providerName: string) => {
-    setSyncingProvider(providerName);
-    setStatusMessage(null);
-
-    try {
-      const res = await syncPackages(providerName);
-      if (res.success) {
-        setStatusMessage({ type: "success", text: res.message || `Successfully synced ${providerName} packages.` });
-        await loadData(false);
-      } else {
-        setStatusMessage({ type: "error", text: res.error || "Package synchronization failed." });
-      }
-    } catch {
-      setStatusMessage({ type: "error", text: "An unexpected error occurred during sync." });
-    } finally {
-      setSyncingProvider(null);
-    }
-  };
 
   const handleTogglePackage = async (packageId: string, currentStatus: boolean) => {
     setTogglingPackageId(packageId);
@@ -136,24 +75,12 @@ export default function InsuranceClientPage({ user }: ClientPageProps) {
   return (
     <div className="max-w-7xl mx-auto space-y-6 animate-fade-in p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
+      <div className="pb-2 border-b border-slate-200/80">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Insurance & Packages</h2>
           <p className="text-slate-500 text-sm mt-0.5">
             Contracted insurers, coverage utilization, patient policies, and package rules.
           </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={isLoading || isRefreshing}
-            onClick={() => void loadData(false)}
-            className="h-9 text-xs text-slate-700 border-slate-300 hover:bg-slate-50 shadow-xs"
-          >
-            <RefreshCw className={cn("w-3.5 h-3.5 mr-1.5 text-slate-500", isRefreshing && "animate-spin text-teal-600")} />
-            {isRefreshing ? "Refreshing..." : "Refresh Metrics"}
-          </Button>
         </div>
       </div>
 
@@ -266,16 +193,11 @@ export default function InsuranceClientPage({ user }: ClientPageProps) {
               </span>
             </CardTitle>
             <CardDescription className="text-xs">
-              Synchronize package catalog updates from verified third-party insurers.
+              Provider summaries loaded from the insurance packages stored in the database.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-4 divide-y divide-slate-100">
-            {isLoading ? (
-              <div className="py-12 flex flex-col justify-center items-center text-slate-400 text-xs gap-2">
-                <Loader2 className="w-6 h-6 animate-spin text-teal-600" />
-                <span>Loading providers...</span>
-              </div>
-            ) : providers.length === 0 ? (
+            {providers.length === 0 ? (
               <div className="py-12 flex flex-col items-center justify-center text-center">
                 <Building2 className="w-8 h-8 text-slate-300 mb-2" />
                 <p className="text-xs font-medium text-slate-600">No providers registered</p>
@@ -284,33 +206,11 @@ export default function InsuranceClientPage({ user }: ClientPageProps) {
             ) : (
               providers.map((p) => (
                 <div key={p.providerName} className="py-4 first:pt-0 last:pb-0 space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-sm font-semibold text-slate-900">{p.providerName}</h4>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        <span className="font-medium text-teal-700">{p.activePackages} active</span> of {p.totalPackages} total packages
-                      </p>
-                    </div>
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={syncingProvider === p.providerName}
-                      onClick={() => handleSync(p.providerName)}
-                      className="h-8 text-xs font-medium text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-teal-700 transition-colors shadow-xs"
-                    >
-                      {syncingProvider === p.providerName ? (
-                        <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5 text-teal-600" />
-                          <span>Syncing...</span>
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCw className="w-3.5 h-3.5 mr-1.5 text-slate-500" />
-                          <span>Sync Packages</span>
-                        </>
-                      )}
-                    </Button>
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-900">{p.providerName}</h4>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      <span className="font-medium text-teal-700">{p.activePackages} active</span> of {p.totalPackages} total packages
+                    </p>
                   </div>
 
                   <div className="flex items-center justify-between text-[11px] bg-slate-50/70 p-2 rounded-md text-slate-500">
@@ -342,16 +242,11 @@ export default function InsuranceClientPage({ user }: ClientPageProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6 space-y-5">
-            {isLoading ? (
-              <div className="py-12 flex flex-col justify-center items-center text-slate-400 text-xs gap-2">
-                <Loader2 className="w-6 h-6 animate-spin text-teal-600" />
-                <span>Loading package metrics...</span>
-              </div>
-            ) : packages.length === 0 ? (
+            {packages.length === 0 ? (
               <div className="py-12 flex flex-col items-center justify-center text-center">
                 <TrendingUp className="w-8 h-8 text-slate-300 mb-2" />
                 <p className="text-xs font-medium text-slate-600">No package data found</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Sync an insurer to populate package metrics.</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Add insurance packages to the database to populate these metrics.</p>
               </div>
             ) : (
               packages.slice(0, 5).map((pkg) => {
@@ -417,19 +312,10 @@ export default function InsuranceClientPage({ user }: ClientPageProps) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={8} className="py-12 text-center text-slate-400">
-                      <div className="flex justify-center items-center gap-2">
-                        <Loader2 className="w-5 h-5 animate-spin text-teal-600" />
-                        <span>Loading directory...</span>
-                      </div>
-                    </td>
-                  </tr>
-                ) : packages.length === 0 ? (
+                {packages.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="py-10 text-center text-slate-400">
-                      No packages found. Click &quot;Sync Packages&quot; above to import catalog data.
+                      No insurance packages are stored in the database.
                     </td>
                   </tr>
                 ) : (
