@@ -65,36 +65,28 @@ export default function DashboardPage({ user }: { user: any }) {
         return [
           { 
             title: "Active Branches", 
-            value: loadingAdminData 
-              ? "..." 
-              : `${adminData?.totals?.activeBranches ?? 0} / ${adminData?.totals?.totalBranches ?? 0}`, 
+            value: `${adminData?.totals?.activeBranches ?? 0} / ${adminData?.totals?.totalBranches ?? 0}`, 
             icon: Building2, 
             color: "text-teal-600", 
             bg: "bg-teal-100" 
           },
           { 
             title: "Network Doctors", 
-            value: loadingAdminData 
-              ? "..." 
-              : String(adminData?.totals?.totalDoctors ?? 0), 
+            value: String(adminData?.totals?.totalDoctors ?? 0), 
             icon: Stethoscope, 
             color: "text-blue-600", 
             bg: "bg-blue-100" 
           },
           { 
             title: "Total Patients", 
-            value: loadingAdminData 
-              ? "..." 
-              : (adminData?.totals?.totalPatients ?? 0).toLocaleString(), 
+            value: (adminData?.totals?.totalPatients ?? 0).toLocaleString(), 
             icon: Users, 
             color: "text-purple-600", 
             bg: "bg-purple-100" 
           },
           { 
             title: "Support Staff", 
-            value: loadingAdminData 
-              ? "..." 
-              : String((adminData?.totals?.totalFrontdesk ?? 0) + (adminData?.totals?.totalAdmins ?? 0)), 
+            value: String((adminData?.totals?.totalFrontdesk ?? 0) + (adminData?.totals?.totalAdmins ?? 0)), 
             icon: Activity, 
             color: "text-amber-600", 
             bg: "bg-amber-100" 
@@ -110,6 +102,15 @@ export default function DashboardPage({ user }: { user: any }) {
     .filter((a) => a.status === "Confirmed" || a.status === "Rescheduled")
     .filter((a) => (role === "doctor" ? a.doctorId === user?.userId : role === "patient" ? a.patientId === user?.userId : true))
     .slice(0, 5);
+
+  // Loading state while admin data is being fetched
+  if (loadingAdminData) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <p className="text-sm font-medium text-slate-400 tracking-wide">Loading dashboard…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
