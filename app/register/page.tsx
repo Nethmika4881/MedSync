@@ -8,6 +8,7 @@ import { RegisterFormValues, registerSchema } from "@/lib/schemas";
 import registerFunction from "@/lib/actions/auth";
 import { getBranches } from "@/lib/actions/branches";
 import { ChevronDown, Check } from "lucide-react";
+import { Brand } from "@/components/catms/Brand";
 
 const inputClass =
   "bg-card border border-border text-foreground text-sm rounded-md px-3 py-2 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring w-full";
@@ -140,7 +141,9 @@ export default function RegisterPage() {
     <main className="min-h-screen flex items-center justify-center bg-background py-12">
       <div className="w-full max-w-lg px-4">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-foreground">MedSync</h1>
+          <h1>
+            <Brand className="justify-center" markClassName="size-10" textClassName="text-2xl text-foreground" />
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">
             Create your account
           </p>

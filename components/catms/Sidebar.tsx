@@ -4,12 +4,13 @@ import React, { useEffect } from "react";
 import Link from "next/link";
 import { useSidebarStore } from "@/lib/stores/sidebarStore";
 import { usePathname } from "next/navigation";
-import { HeartPulse, LogOut, ChevronDown } from "lucide-react";
+import { LogOut, ChevronDown } from "lucide-react";
 import { roleNavConfig } from "@/lib/roleNavConfig";
 import type { UserRole } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import * as Icons from "lucide-react";
 import { logOut } from "@/lib/actions/auth";
+import { Brand } from "@/components/catms/Brand";
 
 /** Derive role from the URL prefix so we don't need a client auth store. */
 function getRoleFromPath(pathname: string): UserRole | null {
@@ -53,10 +54,10 @@ export function Sidebar() {
       <div className="h-16 flex items-center px-6 border-b border-slate-100 shrink-0">
         <Link
           href={role === "receptionist" ? "/front-desk/dashboard" : `/${role}/dashboard`}
-          className="flex items-center gap-2 text-xl font-bold font-outfit text-slate-900 tracking-tight"
+          className="inline-flex items-center"
+          aria-label="MedSync dashboard"
         >
-          <HeartPulse className="w-7 h-7 text-[var(--brand-primary)]" />
-          Med<span className="text-[var(--brand-primary)]">Sync</span>
+          <Brand markClassName="size-9" textClassName="text-xl" />
         </Link>
       </div>
 
