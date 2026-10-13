@@ -16,7 +16,7 @@ import {
   DollarSign,
   Filter,
 } from "lucide-react";
-import { cn, getSpecialtyGradient } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { BookingModal } from "@/components/catms/BookingModal";
 
 // ─── Info Pill ────────────────────────────────────────────────────────────────
@@ -47,24 +47,40 @@ function DoctorCard({
   doctor: DoctorDirectoryItem;
   onBook: (d: DoctorDirectoryItem) => void;
 }) {
-  const gradient = getSpecialtyGradient(doctor.specialization);
+  const specs =
+    doctor.specializations && doctor.specializations.length > 0
+      ? doctor.specializations
+      : [doctor.specialization || "General Practice"];
 
   return (
-    <div className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col">
-      <div className={`h-1 w-full bg-gradient-to-r ${gradient}`} />
+    <div className="group bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-teal-200 hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col">
+      {/* Consistent neutral card with MedSync's teal accent */}
+      <div className="h-1.5 w-full bg-[var(--brand-primary)]" />
       <div className="p-6 flex-1 flex flex-col gap-4">
         <div className="flex items-start gap-4">
-          <div
-            className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-md`}
-          >
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-teal-50 border border-teal-100 text-[var(--brand-primary)] flex items-center justify-center font-bold text-lg shrink-0 shadow-2xs">
             {doctor.avatar.replace(/[0-9]/g, "")}
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-bold text-slate-900 text-base leading-tight truncate">{doctor.name}</h3>
-            <p className="text-sm text-[var(--brand-primary)] font-semibold mt-0.5">{doctor.specialization}</p>
+            <h3 className="font-bold text-slate-900 text-base leading-tight truncate">
+              {doctor.name}
+            </h3>
+
+            {/* Individual specialization badges allowing wrap */}
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {specs.map((spec) => (
+                <span
+                  key={spec}
+                  className="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200/80"
+                >
+                  {spec}
+                </span>
+              ))}
+            </div>
+
             {/* Rating: not in current DB schema — only shown when non-zero */}
             {doctor.rating > 0 && (
-              <div className="flex items-center gap-1 mt-1">
+              <div className="flex items-center gap-1 mt-2">
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
@@ -76,14 +92,18 @@ function DoctorCard({
                     )}
                   />
                 ))}
-                <span className="text-xs font-semibold text-slate-700 ml-1">{doctor.rating}</span>
-                <span className="text-xs text-slate-400">({doctor.reviewCount})</span>
+                <span className="text-xs font-semibold text-slate-700 ml-1">
+                  {doctor.rating}
+                </span>
+                <span className="text-xs text-slate-400">
+                  ({doctor.reviewCount})
+                </span>
               </div>
             )}
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 mt-1">
           {doctor.experience > 0 && (
             <InfoPill icon={Clock} label={`${doctor.experience} yrs exp`} />
           )}
@@ -147,15 +167,24 @@ export default function FindDoctorsPage({ user, doctors, branches, specializatio
   const filtered = useMemo(() => {
     return doctors.filter((d) => {
       const q = search.toLowerCase();
+      const specs =
+        d.specializations && d.specializations.length > 0
+          ? d.specializations
+          : [d.specialization || "General Practice"];
+
       const matchesSearch =
         !q ||
         d.name.toLowerCase().includes(q) ||
-        d.specialization.toLowerCase().includes(q) ||
+        specs.some((s) => s.toLowerCase().includes(q)) ||
         d.branchName.toLowerCase().includes(q);
-      const matchesSpec = selectedSpec === "All" || d.specialization.split(", ").includes(selectedSpec);
-      const matchesBranch = selectedBranch === "All" || d.branchName === selectedBranch;
+
+      const matchesSpec =
+        selectedSpec === "All" || specs.includes(selectedSpec);
+
+      const matchesBranch =
+        selectedBranch === "All" || d.branchName === selectedBranch;
+
       // Availability maps to doctor.is_available — the doctor's general flag.
-      // Slot-level capacity availability requires time_slot checks (out of scope here).
       const matchesAvail = !availableOnly || d.isAvailable;
       return matchesSearch && matchesSpec && matchesBranch && matchesAvail;
     });
