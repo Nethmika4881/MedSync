@@ -5,9 +5,8 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Calendar, Activity, CreditCard, Clock, CheckCircle2, Building2, Stethoscope, AlertCircle, ArrowUpRight, MapPin, ClipboardPlus 
 } from "lucide-react";
-import { appointmentsByMonth } from "@/lib/constants";
 import { getDashboardData, type DashboardData } from "@/lib/actions/admin-dashboard";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar 
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
 import { StatusPill } from "@/components/catms/StatusPill";
 import { SessionBadge } from "@/components/catms/SessionBadge";

@@ -84,9 +84,8 @@ export default function RegisterPage() {
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      role: "Employee",
-      employeeRole: "Doctor",
-      fullName: "Dr. Sample Name",
+      role: "Patient",
+      fullName: "Sample Name",
       nic: "198012345678",
       email: "sample@example.com",
       phoneNumber: "+94771234567",
@@ -100,16 +99,7 @@ export default function RegisterPage() {
       country: "Sri Lanka",
       password: "password123",
       confirmPassword: "password123",
-      // Doctor fields
-      specialization: "Cardiology",
-      joinedDate: "2024-01-01",
-      medicalLicenceNo: "MD-12345",
-      consultationFee: 1500,
-      yearsExperience: 10,
-      qualification: "MBBS, MD",
-      roomNo: "101A",
       branchId: "",
-      // Patient fields
       bloodGroup: "O+",
       emergencyContactName: "Jane Doe",
       emergencyContactPhone: "+94777654321",
@@ -117,7 +107,6 @@ export default function RegisterPage() {
     },
   });
 
-  const role = watch("role");
   const selectedBranchId = watch("branchId");
 
   const handleBranchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -159,47 +148,13 @@ export default function RegisterPage() {
             Create your account
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            Patient accounts create
+            Patient accounts can be created here. Staff accounts are created by an administrator.
           </p>
         </div>
 
         <div className="bg-card border border-border rounded-xl shadow-sm p-8">
-
-          {/* Role toggle */}
-          <div className="flex rounded-md border border-border overflow-hidden mb-6">
-            <button
-              type="button"
-              id="role-patient"
-              onClick={() => {
-                setValue("role", "Patient", { shouldValidate: true });
-                setValue("employeeRole", undefined, { shouldValidate: true });
-              }}
-              className={`flex-1 py-2 text-sm font-medium transition-colors ${role === "Patient"
-                ? "bg-primary text-primary-foreground"
-                : "bg-card text-muted-foreground hover:bg-muted"
-                }`}
-            >
-              Patient
-            </button>
-            <button
-              type="button"
-              id="role-employee"
-              onClick={() => {
-                setValue("role", "Employee", { shouldValidate: true });
-                setValue("employeeRole", "Doctor", { shouldValidate: true });
-              }}
-              className={`flex-1 py-2 text-sm font-medium transition-colors border-l border-border ${role === "Employee"
-                ? "bg-primary text-primary-foreground"
-                : "bg-card text-muted-foreground hover:bg-muted"
-                }`}
-            >
-              Doctor
-            </button>
-          </div>
-
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
             <input type="hidden" {...register("role")} />
-            <input type="hidden" {...register("employeeRole")} />
 
             {/* ── PERSONAL INFO ── */}
             {sectionLabel("Personal Information")}
@@ -472,9 +427,7 @@ export default function RegisterPage() {
             </div>
 
             {/* ── PATIENT FIELDS ── */}
-            {role === "Patient" && (
-              <>
-                {sectionLabel("Patient Details")}
+            {sectionLabel("Patient Details")}
 
             <div className="flex flex-col gap-1.5">
               <label
@@ -545,96 +498,6 @@ export default function RegisterPage() {
                 )}
               </div>
             </div>
-          </>
-            )}
-
-          {role === "Employee" && (
-            <>
-              {sectionLabel("Employment Details")}
-              <div className="flex flex-col gap-1.5 flex-1">
-                <label htmlFor="joined-date" className="text-sm font-medium text-foreground">Joined date</label>
-                <input id="joined-date" type="date"
-                  {...register("joinedDate")} className={inputClass}
-                  aria-invalid={errors.joinedDate ? "true" : undefined} />
-                {errors.joinedDate && (
-                  <p className="text-xs text-destructive">{errors.joinedDate.message}</p>
-                )}
-              </div>
-            </>
-          )}
-
-          {/* ── DOCTOR FIELDS ── */}
-          {role === "Employee" && (
-            <>
-              {sectionLabel("Doctor Details")}
-
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="medical-licence" className="text-sm font-medium text-foreground">Medical Licence No</label>
-                <input id="medical-licence" type="text" placeholder="e.g. MD-12345"
-                  {...register("medicalLicenceNo")} className={inputClass}
-                  aria-invalid={errors.medicalLicenceNo ? "true" : undefined} />
-                {errors.medicalLicenceNo && (
-                  <p className="text-xs text-destructive">{errors.medicalLicenceNo.message}</p>
-                )}
-              </div>
-
-              <div className="flex gap-3">
-                <div className="flex flex-col gap-1.5 flex-1">
-                  <label htmlFor="specialization" className="text-sm font-medium text-foreground">Specialization</label>
-                  <input id="specialization" type="text" placeholder="e.g. Cardiology"
-                    {...register("specialization")} className={inputClass}
-                    aria-invalid={errors.specialization ? "true" : undefined} />
-                  {errors.specialization && (
-                    <p className="text-xs text-destructive">{errors.specialization.message}</p>
-                  )}
-                </div>
-                <div className="flex flex-col gap-1.5 flex-1">
-                  <label htmlFor="qualification" className="text-sm font-medium text-foreground">Qualification</label>
-                  <input id="qualification" type="text" placeholder="e.g. MBBS, MD"
-                    {...register("qualification")} className={inputClass}
-                    aria-invalid={errors.qualification ? "true" : undefined} />
-                  {errors.qualification && (
-                    <p className="text-xs text-destructive">{errors.qualification.message}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <div className="flex flex-col gap-1.5 flex-1">
-                  <label htmlFor="consultation-fee" className="text-sm font-medium text-foreground">Consultation Fee</label>
-                  <input id="consultation-fee" type="number" step="0.01" placeholder="1500.00"
-                    {...register("consultationFee")} className={inputClass}
-                    aria-invalid={errors.consultationFee ? "true" : undefined} />
-                  {errors.consultationFee && (
-                    <p className="text-xs text-destructive">{errors.consultationFee.message}</p>
-                  )}
-                </div>
-                <div className="flex flex-col gap-1.5 flex-1">
-                  <label htmlFor="years-experience" className="text-sm font-medium text-foreground">Years of Experience</label>
-                  <input id="years-experience" type="number" placeholder="5"
-                    {...register("yearsExperience")} className={inputClass}
-                    aria-invalid={errors.yearsExperience ? "true" : undefined} />
-                  {errors.yearsExperience && (
-                    <p className="text-xs text-destructive">{errors.yearsExperience.message}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <div className="flex flex-col gap-1.5 flex-1">
-                  <label htmlFor="room-no" className="text-sm font-medium text-foreground">Room No</label>
-                  <input id="room-no" type="text" placeholder="101A"
-                    {...register("roomNo")} className={inputClass}
-                    aria-invalid={errors.roomNo ? "true" : undefined} />
-                  {errors.roomNo && (
-                    <p className="text-xs text-destructive">{errors.roomNo.message}</p>
-                  )}
-                </div>
-
-              </div>
-
-            </>
-          )}
 
           {/* ── CLINIC BRANCH ── */}
           {sectionLabel("Clinic Branch")}
