@@ -3,10 +3,7 @@
 ALTER TABLE doctor_specialization
 DROP CONSTRAINT IF EXISTS uq_doctor_one_specialization;
 
--- 2. A doctor cannot have two overlapping sessions on the same day, in any branch.
---    The old UNIQUE (doctor_id, available_date, start_time, end_time) only caught identical
---    periods. Back-to-back sessions (09:00-13:00 and 13:00-17:00) stay allowed because the
---    range is half-open.
+
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
 DO $$
