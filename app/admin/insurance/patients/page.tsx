@@ -149,7 +149,7 @@ export default function InsurancePatientsPage() {
                       <td className="py-3 px-4 min-w-[180px]">
                         <div className="flex justify-between text-[11px] mb-1">
                           <span className="font-semibold text-slate-700 dark:text-slate-300">
-                            LKR {row.usedCoverageAmount.toLocaleString()}
+                            Rs. {row.usedCoverageAmount.toLocaleString()}
                           </span>
                           <span className="text-slate-400">
                             / {row.annualLimit.toLocaleString()}

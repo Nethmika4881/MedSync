@@ -6,12 +6,10 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  return `Rs. ${new Intl.NumberFormat('en-LK', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount);
+  }).format(amount)}`;
 }
 
 export function formatDate(dateStr: string): string {
@@ -141,4 +139,3 @@ export function getSpecialtyGradient(specialty?: string): string {
   }
   return fallbackGradients[Math.abs(hash) % fallbackGradients.length];
 }
-

@@ -34,7 +34,7 @@ function fmt(val: string | number | null | undefined): string {
   if (val === null || val === undefined) return "Rs. 0.00";
   const n = typeof val === "string" ? parseFloat(val) : val;
   if (isNaN(n)) return "Rs. 0.00";
-  return `Rs. ${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `Rs. ${n.toLocaleString("en-LK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export default function PatientClaimsClient({ user }: { user: AuthUser }) {

@@ -23,13 +23,11 @@ interface PageProps {
 }
 
 const currencyFormatter = new Intl.NumberFormat("en-LK", {
-  style: "currency",
-  currency: "LKR",
   minimumFractionDigits: 2,
 });
 
 function formatCurrency(value: number): string {
-  return currencyFormatter.format(Number(value) || 0);
+  return `Rs. ${currencyFormatter.format(Number(value) || 0)}`;
 }
 
 function formatDate(value: string): string {
