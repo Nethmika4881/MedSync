@@ -59,6 +59,7 @@ export interface PatientClaimRecord {
   appointmentDate: string;
   doctorName: string;
   specialization: string | null;
+  specializations?: string[];
   branchName: string;
   reasonForVisit: string | null;
 
@@ -133,7 +134,15 @@ export async function getPatientClaims(): Promise<PatientClaimsData> {
          TO_CHAR(ts.available_date, 'YYYY-MM-DD') AS "appointmentDate",
          a.reason_for_visit                       AS "reasonForVisit",
          u.full_name                              AS "doctorName",
-         spec.title                               AS "specialization",
+         COALESCE(
+           (
+             SELECT ARRAY_AGG(s.title ORDER BY s.title)
+             FROM doctor_specialization ds
+             JOIN specialization s ON s.specialization_id = ds.specialization_id
+             WHERE ds.doctor_id = d.doctor_id
+           ),
+           ARRAY[]::text[]
+         )                                        AS "specializations",
          b.branch_name                            AS "branchName"
        FROM insurance_claim ic
        JOIN invoice inv          ON inv.invoice_id        = ic.invoice_id
@@ -145,12 +154,6 @@ export async function getPatientClaims(): Promise<PatientClaimsData> {
        JOIN employee e           ON e.employee_id         = d.doctor_id
        JOIN app_user u           ON u.user_id             = e.employee_id
        JOIN branch b             ON b.branch_id           = ts.branch_id
-       LEFT JOIN (
-         SELECT dsp.doctor_id, STRING_AGG(sp.title, ', ' ORDER BY sp.title) AS title
-         FROM doctor_specialization dsp
-         JOIN specialization sp ON sp.specialization_id = dsp.specialization_id
-         GROUP BY dsp.doctor_id
-       ) spec ON spec.doctor_id = d.doctor_id
        WHERE inv.patient_id = $1
        ORDER BY ic.claim_date DESC, ic.created_at DESC`,
       [patientId]
@@ -264,7 +267,11 @@ export async function getPatientClaims(): Promise<PatientClaimsData> {
       appointmentId: c.appointmentId,
       appointmentDate: c.appointmentDate,
       doctorName: c.doctorName,
-      specialization: c.specialization,
+      specialization:
+        Array.isArray(c.specializations) && c.specializations.length > 0
+          ? c.specializations.join(", ")
+          : null,
+      specializations: Array.isArray(c.specializations) ? c.specializations : [],
       branchName: c.branchName,
       reasonForVisit: c.reasonForVisit,
 

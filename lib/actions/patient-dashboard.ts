@@ -16,6 +16,7 @@ export interface PatientUpcomingAppointment {
   reasonForVisit: string | null;
   doctorName: string;
   specialization: string | null;
+  specializations?: string[];
   branchName: string;
 }
 
@@ -58,7 +59,15 @@ export async function getPatientDashboardData(): Promise<PatientDashboardMetrics
          a.queue_number                           AS "queueNumber",
          a.reason_for_visit                       AS "reasonForVisit",
          u.full_name                              AS "doctorName",
-         spec.title                               AS "specialization",
+         COALESCE(
+           (
+             SELECT ARRAY_AGG(s.title ORDER BY s.title)
+             FROM doctor_specialization ds
+             JOIN specialization s ON s.specialization_id = ds.specialization_id
+             WHERE ds.doctor_id = d.doctor_id
+           ),
+           ARRAY[]::text[]
+         )                                        AS "specializations",
          b.branch_name                            AS "branchName"
        FROM appointment a
        JOIN time_slot ts ON ts.time_slot_id = a.time_slot_id
@@ -66,12 +75,6 @@ export async function getPatientDashboardData(): Promise<PatientDashboardMetrics
        JOIN employee e ON e.employee_id = d.doctor_id
        JOIN app_user u ON u.user_id = e.employee_id
        JOIN branch b ON b.branch_id = ts.branch_id
-       LEFT JOIN (
-         SELECT dsp.doctor_id, STRING_AGG(sp.title, ', ' ORDER BY sp.title) AS title
-         FROM doctor_specialization dsp
-         JOIN specialization sp ON sp.specialization_id = dsp.specialization_id
-         GROUP BY dsp.doctor_id
-       ) spec ON spec.doctor_id = d.doctor_id
        WHERE a.patient_id = $1
          AND a.status IN ('Scheduled', 'Rescheduled')
        ORDER BY ts.available_date ASC, ts.start_time ASC
@@ -159,18 +162,27 @@ export async function getPatientDashboardData(): Promise<PatientDashboardMetrics
       cancelled: r.cancelled || 0,
     }));
 
-    const upcomingAppointments: PatientUpcomingAppointment[] = upcomingRows.map((r) => ({
-      appointmentId: r.appointmentId,
-      appointmentDate: r.appointmentDate,
-      startTime: r.startTime,
-      endTime: r.endTime,
-      status: r.status,
-      queueNumber: r.queueNumber,
-      reasonForVisit: r.reasonForVisit,
-      doctorName: r.doctorName,
-      specialization: r.specialization,
-      branchName: r.branchName,
-    }));
+    const upcomingAppointments: PatientUpcomingAppointment[] = upcomingRows.map((r) => {
+      const specializations: string[] = Array.isArray(r.specializations)
+        ? r.specializations
+        : [];
+      return {
+        appointmentId: r.appointmentId,
+        appointmentDate: r.appointmentDate,
+        startTime: r.startTime,
+        endTime: r.endTime,
+        status: r.status,
+        queueNumber: r.queueNumber,
+        reasonForVisit: r.reasonForVisit,
+        doctorName: r.doctorName,
+        specialization:
+          specializations.length > 0
+            ? specializations.join(", ")
+            : "General Practice",
+        specializations,
+        branchName: r.branchName,
+      };
+    });
 
     return {
       upcomingAppointmentsCount: upcomingAppointments.length,
