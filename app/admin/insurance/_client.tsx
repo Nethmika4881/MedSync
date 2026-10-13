@@ -20,8 +20,7 @@ import {
   CheckCircle2, 
   Loader2, 
   Layers,
-  X,
-  ExternalLink
+  X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { X, ShieldCheck, AlertCircle, FileText, Calendar, Building, CreditCard } from "lucide-react";
+import { X, FileText, Calendar, CreditCard } from "lucide-react";
 import { EnrolledPolicy, ClaimHistory, getPolicyClaims } from "@/lib/actions/admin-insurance";
 
 interface DrawerProps {

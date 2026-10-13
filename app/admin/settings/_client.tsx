@@ -13,7 +13,6 @@ import {
   Clock,
   Plus,
   Trash2,
-  Bell,
 } from "lucide-react";
 import { getInitials, cn } from "@/lib/utils";
 import type { AuthUser } from "@/lib/types";
@@ -32,82 +31,6 @@ import {
   updatePassword,
   type AdminProfileData,
 } from "@/lib/actions/admin-settings";
-
-export type AdminNotificationCategory = {
-  category: string;
-  items: {
-    id: string;
-    label: string;
-    desc: string;
-    defaultOn: boolean;
-  }[];
-};
-
-const ADMIN_NOTIFICATION_SECTIONS: AdminNotificationCategory[] = [
-  {
-    category: "Security & Governance",
-    items: [
-      {
-        id: "sec_failed_logins",
-        label: "Suspicious Login & Lockouts",
-        desc: "Immediate alert when repeated failed logins or account lockouts occur.",
-        defaultOn: true,
-      },
-      {
-        id: "sec_role_change",
-        label: "Privilege Escalation Alerts",
-        desc: "Notify when an employee account is assigned Admin or Clinical privileges.",
-        defaultOn: true,
-      },
-      {
-        id: "sec_audit_config",
-        label: "Hospital Rule Modifications",
-        desc: "Notify when operational thresholds or branch parameters are updated.",
-        defaultOn: false,
-      },
-    ],
-  },
-  {
-    category: "Financial & Billing Audits",
-    items: [
-      {
-        id: "fin_void_refund",
-        label: "Invoice Voids & Refunds",
-        desc: "Alert whenever a settled invoice is cancelled or a refund is recorded.",
-        defaultOn: true,
-      },
-      {
-        id: "fin_overdue_debtor",
-        label: "Severe Outstanding Debts",
-        desc: "Alert when patient unpaid balances exceed the 30-day grace period.",
-        defaultOn: true,
-      },
-      {
-        id: "fin_daily_close",
-        label: "Daily Settlement Digest",
-        desc: "Receive an automated summary of daily collections per branch at 11:59 PM.",
-        defaultOn: false,
-      },
-    ],
-  },
-  {
-    category: "Clinical Operations & Staffing",
-    items: [
-      {
-        id: "ops_session_cancel",
-        label: "Doctor Session Cancellations",
-        desc: "Urgent alert if a scheduled session with booked patients is cancelled.",
-        defaultOn: true,
-      },
-      {
-        id: "ops_queue_overflow",
-        label: "Branch Queue Overflow",
-        desc: "Alert when walk-in tickets or emergency queue caps reach 100% at any branch.",
-        defaultOn: true,
-      },
-    ],
-  },
-];
 
 export default function SettingsPage({
   user,
@@ -150,18 +73,7 @@ export default function SettingsPage({
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
 
-  // ─── 3. Notifications State (Default Setup) ──────────────────────────────
-  const [notifications, setNotifications] = useState<Record<string, boolean>>(() => {
-    const initial: Record<string, boolean> = {};
-    ADMIN_NOTIFICATION_SECTIONS.forEach((sec) => {
-      sec.items.forEach((item) => {
-        initial[item.id] = item.defaultOn;
-      });
-    });
-    return initial;
-  });
-
-  // ─── 4. Appearance State ─────────────────────────────────────────────────
+  // ─── 3. Appearance State ─────────────────────────────────────────────────
   const [theme, setTheme] = useState<"light" | "dark" | "system">("light");
   const [, setDensity] = useState<"compact" | "comfortable">(
     "comfortable",
@@ -176,7 +88,7 @@ export default function SettingsPage({
     setTimeout(() => setStatusMessage(null), 3500);
   };
 
-  // Sync Appearance & Notifications from localStorage on initial render
+  // Sync appearance from localStorage on initial render
   useEffect(() => {
     // A. Theme & Layout
     const savedTheme =
@@ -193,15 +105,6 @@ export default function SettingsPage({
     setDensity(savedDensity);
     applyTheme(savedTheme);
 
-    // B. Notifications
-    const savedNotifications = localStorage.getItem("medsync_admin_notifications");
-    if (savedNotifications) {
-      try {
-        setNotifications(JSON.parse(savedNotifications));
-      } catch {
-        // Fallback silently if corrupt
-      }
-    }
   }, []);
 
   const applyTheme = (selectedTheme: "light" | "dark" | "system") => {
@@ -218,14 +121,6 @@ export default function SettingsPage({
     } else {
       root.classList.remove("dark");
     }
-  };
-
-  const handleSaveNotifications = () => {
-    localStorage.setItem(
-      "medsync_admin_notifications",
-      JSON.stringify(notifications),
-    );
-    showFeedback("Notification preferences saved.");
   };
 
   const handleThemeChange = (newTheme: "light" | "dark" | "system") => {
