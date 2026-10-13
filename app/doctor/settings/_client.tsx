@@ -315,7 +315,7 @@ export default function DoctorSettingsPage({ profile, schedule, branches }: Sett
                 <p className="text-sm font-semibold text-slate-900">Professional</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <TextField id="licence" label="Medical Licence No." value={form.licenceNo} maxLength={50} onChange={(v) => setField("licenceNo", v)} />
-                  <TextField id="specialization" label="Specialization" value={form.specialization} maxLength={100} onChange={(v) => setField("specialization", v)} />
+                  <TextField id="specialization" label="Specializations (comma separated)" value={form.specialization} maxLength={250} onChange={(v) => setField("specialization", v)} />
                   <div className="space-y-1.5">
                     <Label htmlFor="profile-branch">Branch</Label>
                     <Select value={form.branchId} onValueChange={(v) => setField("branchId", v)}>

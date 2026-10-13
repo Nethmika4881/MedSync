@@ -67,7 +67,7 @@ export const updateProfileSchema = z.object({
     .refine((v) => v <= new Date().toISOString().slice(0, 10), "Date of birth must be in the past"),
   gender: z.enum(["Male", "Female", "Other"], { errorMap: () => ({ message: "Select a gender" }) }),
   licenceNo: z.string().trim().min(1, "Medical licence number is required").max(50, "Licence number is too long"),
-  specialization: z.string().trim().max(100, "Specialization is too long"),
+  specialization: z.string().trim().max(250, "Specializations are too long"),
   branchId: uuid,
   consultationFee: z
     .number({ invalid_type_error: "Enter the consultation fee" })

@@ -103,15 +103,19 @@ export async function getDoctorDirectory(): Promise<DoctorDirectoryItem[]> {
     JOIN app_user  u ON u.user_id     = e.employee_id
     JOIN branch    b ON b.branch_id   = e.branch_id
     -- Left join: a doctor with no specialization still appears
-    LEFT JOIN doctor_specialization ds ON ds.doctor_id = d.doctor_id
-    LEFT JOIN specialization        s  ON s.specialization_id = ds.specialization_id
+    -- All specializations, alphabetical, in one comma-separated value
+    LEFT JOIN (
+      SELECT dsp.doctor_id, STRING_AGG(sp.title, ', ' ORDER BY sp.title) AS title
+      FROM doctor_specialization dsp
+      JOIN specialization sp ON sp.specialization_id = dsp.specialization_id
+      GROUP BY dsp.doctor_id
+    ) s ON s.doctor_id = d.doctor_id
     WHERE e.is_active = true
       AND d.is_available IS NOT NULL
-    -- One row per doctor — take first specialization alphabetically
-    ORDER BY u.full_name ASC, s.title ASC NULLS LAST
+    ORDER BY u.full_name ASC
   `);
 
-  // Deduplicate: keep only the first row per doctor (first spec alphabetically)
+  // One row per doctor already; this only guards against duplicate ids
   const seen = new Set<string>();
   const deduped: DoctorDirectoryItem[] = [];
   for (const row of rows) {

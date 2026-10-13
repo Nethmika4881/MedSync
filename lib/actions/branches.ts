@@ -711,10 +711,11 @@ export async function getBranchDetails(branchId: string) {
         JOIN app_user u ON e.employee_id = u.user_id
         LEFT JOIN doctor d ON d.doctor_id = e.employee_id
         LEFT JOIN (
-          SELECT DISTINCT ON (doctor_id) doctor_id, specialization_id
-          FROM doctor_specialization
-        ) ds ON ds.doctor_id = d.doctor_id
-        LEFT JOIN specialization spec ON spec.specialization_id = ds.specialization_id
+         SELECT dsp.doctor_id, STRING_AGG(sp.title, ', ' ORDER BY sp.title) AS title
+         FROM doctor_specialization dsp
+         JOIN specialization sp ON sp.specialization_id = dsp.specialization_id
+         GROUP BY dsp.doctor_id
+       ) spec ON spec.doctor_id = d.doctor_id
         WHERE e.branch_id = $1 AND e.is_active = true
         ORDER BY e.role ASC, u.full_name ASC
       `,
