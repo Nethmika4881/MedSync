@@ -1,6 +1,6 @@
 ALTER TABLE app_user ADD COLUMN salt VARCHAR(255);
 
--- Set the salt and correct password hash for the default admin user
+-- salt and correct password hash for default admin
 UPDATE app_user
 SET
     salt = 'TPXYuE4bXTpZsWl9XZOU',

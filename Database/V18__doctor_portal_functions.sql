@@ -1,6 +1,6 @@
 CREATE OR REPLACE FUNCTION fn_ticket_minutes(
-    p_start       TIME,
-    p_end         TIME,
+    p_start TIME,
+    p_end TIME,
     p_max_tickets INT
 )
 RETURNS INT
@@ -9,15 +9,14 @@ IMMUTABLE
 AS $$
     SELECT GREATEST(
         1,
-        ROUND(EXTRACT(EPOCH FROM (p_end - p_start)) / 60.0 / NULLIF(p_max_tickets, 0))
-    )::INT;
+        ROUND(EXTRACT(EPOCH FROM (p_end - p_start)) / 60.0 / NULLIF(p_max_tickets, 0)))::INT;
 $$;
 
 CREATE OR REPLACE FUNCTION fn_schedule_overlaps(
     p_doctor_id  UUID,
-    p_day        INT,
-    p_start      TIME,
-    p_end        TIME,
+    p_day INT,
+    p_start TIME,
+    p_end TIME,
     p_exclude_id UUID DEFAULT NULL
 )
 RETURNS BOOLEAN

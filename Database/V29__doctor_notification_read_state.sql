@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS doctor_notification_read (
-    doctor_id       UUID NOT NULL REFERENCES app_user(user_id) ON DELETE CASCADE,
+    doctor_id UUID NOT NULL REFERENCES app_user(user_id) ON DELETE CASCADE,
     notification_id TEXT NOT NULL,
-    read_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    read_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (doctor_id, notification_id)
 );
 

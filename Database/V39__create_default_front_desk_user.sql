@@ -1,11 +1,3 @@
--- Create a default front desk account for local and demonstration environments.
---
--- Login:
---   Email:    frontdesk@medsync.com
---   Password: password123
---
--- Change this password after the first login in any non-demo environment.
-
 DO $$
 DECLARE
     target_branch_id      UUID;
@@ -30,7 +22,6 @@ BEGIN
         RETURN;
     END IF;
 
-    -- Prefer the same branch as the default admin account created in V13.
     SELECT e.branch_id
     INTO target_branch_id
     FROM app_user u
@@ -39,7 +30,6 @@ BEGIN
       AND e.is_active = TRUE
     LIMIT 1;
 
-    -- Support databases where the default admin was replaced or renamed.
     IF target_branch_id IS NULL THEN
         SELECT b.branch_id
         INTO target_branch_id

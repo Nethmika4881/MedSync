@@ -13,13 +13,10 @@ BEGIN
         RETURN 0;
     END IF;
 
-    -- A doctor who is not accepting appointments gets no new sessions.
     IF EXISTS (SELECT 1 FROM doctor WHERE doctor_id = p_doctor_id AND is_available IS FALSE) THEN
         RETURN 0;
     END IF;
 
-    -- day_of_week: 0 = Sunday ... 6 = Saturday, the same as EXTRACT(DOW ...).
-    -- Tickets = session length / minutes per slot (09:00-13:00 at 15 minutes = 16).
     INSERT INTO time_slot (doctor_id, branch_id, available_date, start_time, end_time, max_tickets)
     SELECT ds.doctor_id,
            ds.branch_id,

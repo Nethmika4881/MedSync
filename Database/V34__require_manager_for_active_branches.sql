@@ -1,4 +1,4 @@
--- Assign an existing non-doctor employee to branches without managers.
+-- Assign a non-doctor employee to branches without managers.
 UPDATE branch b
 SET manager_id = (
     SELECT e.employee_id
@@ -13,7 +13,6 @@ SET manager_id = (
 )
 WHERE b.manager_id IS NULL;
 
--- Stop the migration if an active branch still has no manager.
 DO $$
 BEGIN
     IF EXISTS (
@@ -26,7 +25,7 @@ BEGIN
     END IF;
 END $$;
 
--- Inactive draft branches may temporarily have no manager.
+-- Inactive draft branches may temporarily has no manager.
 ALTER TABLE branch
 ADD CONSTRAINT chk_active_branch_has_manager
 CHECK (is_active IS NOT TRUE OR manager_id IS NOT NULL);
