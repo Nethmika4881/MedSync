@@ -199,7 +199,7 @@ export default function InsuranceClientPage({ user }: ClientPageProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-slate-900 tracking-tight">
-              Rs. {stats.totalCoverageUtilized.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              LKR {stats.totalCoverageUtilized.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <p className="text-[11px] text-slate-400 mt-1">Claimed hospital expenses by patients</p>
           </CardContent>
@@ -316,7 +316,7 @@ export default function InsuranceClientPage({ user }: ClientPageProps) {
                   <div className="flex items-center justify-between text-[11px] bg-slate-50/70 p-2 rounded-md text-slate-500">
                     <span>{p.enrolledPoliciesCount} enrolled policies</span>
                     <span className="font-semibold text-slate-800">
-                      Rs. {p.totalCoverageUtilized.toLocaleString()} utilized
+                      LKR {p.totalCoverageUtilized.toLocaleString()} utilized
                     </span>
                   </div>
                 </div>
@@ -375,7 +375,7 @@ export default function InsuranceClientPage({ user }: ClientPageProps) {
 
                     <div className="flex items-center justify-between text-[11px] text-slate-400">
                       <span>Copayment: <strong className="text-slate-600 font-medium">{pkg.copaymentPercentage}%</strong></span>
-                      <span>Total Spent: <strong className="text-slate-600 font-medium">Rs. {pkg.totalUtilizedAmount.toLocaleString()}</strong></span>
+                      <span>Total Spent: <strong className="text-slate-600 font-medium">LKR {pkg.totalUtilizedAmount.toLocaleString()}</strong></span>
                     </div>
                   </div>
                 );
@@ -451,12 +451,12 @@ export default function InsuranceClientPage({ user }: ClientPageProps) {
                       </td>
                       <td className="py-3.5 px-4 font-medium text-slate-700">
                         {pkg.annualLimit > 0
-                          ? `Rs. ${pkg.annualLimit.toLocaleString()}`
+                          ? `LKR ${pkg.annualLimit.toLocaleString()}`
                           : <span className="text-teal-700 font-semibold">Unlimited</span>}
                       </td>
                       <td className="py-3.5 px-4 font-semibold text-slate-800">{pkg.enrolledCount}</td>
                       <td className="py-3.5 px-4 text-slate-600 font-medium">
-                        Rs. {pkg.totalUtilizedAmount.toLocaleString()}
+                        LKR {pkg.totalUtilizedAmount.toLocaleString()}
                       </td>
                       <td className="py-3.5 px-4">
                         <span

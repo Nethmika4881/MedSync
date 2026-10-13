@@ -31,10 +31,10 @@ import type { AuthUser } from "@/lib/types";
 type Tab = "all" | "in-review" | "approved" | "rejected";
 
 function fmt(val: string | number | null | undefined): string {
-  if (val === null || val === undefined) return "Rs. 0.00";
+  if (val === null || val === undefined) return "LKR 0.00";
   const n = typeof val === "string" ? parseFloat(val) : val;
-  if (isNaN(n)) return "Rs. 0.00";
-  return `Rs. ${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (isNaN(n)) return "LKR 0.00";
+  return `LKR ${n.toLocaleString("en-LK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export default function PatientClaimsClient({ user }: { user: AuthUser }) {
