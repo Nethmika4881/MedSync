@@ -112,6 +112,7 @@ export async function getDoctorDirectory(): Promise<DoctorDirectoryItem[]> {
     WHERE e.is_active = true
       AND d.is_available IS NOT NULL
     ORDER BY u.full_name ASC
+    ORDER BY u.full_name ASC
   `);
 
   return rows.map((row) => {

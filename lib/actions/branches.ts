@@ -35,6 +35,7 @@ export interface BranchStaffMember {
   employeeId: string;
   name: string;
   role: string;
+  branchName?: string;
 }
 
 export interface BranchDetails {
@@ -250,11 +251,19 @@ export async function getBranchById(branchId: string) {
 
     const staffResult = await db.query(staff, [branchId]);
 
-    const availableStaff = `SELECT e.employee_id AS "employeeId", u.full_name AS name, e.role FROM employee e
+    const availableStaff = `SELECT e.employee_id AS "employeeId", u.full_name AS name, e.role,
+        source_branch.branch_name AS "branchName"
+      FROM employee e
       JOIN app_user u ON e.employee_id = u.user_id
-      WHERE e.is_active = true AND e.branch_id IS NULL;`;
+      JOIN branch source_branch ON source_branch.branch_id = e.branch_id
+      WHERE e.is_active = true
+        AND e.branch_id <> $1
+        AND NOT EXISTS (
+          SELECT 1 FROM branch managed WHERE managed.manager_id = e.employee_id
+        )
+      ORDER BY u.full_name ASC;`;
 
-    const availableStaffResult = await db.query(availableStaff);
+    const availableStaffResult = await db.query(availableStaff, [branchId]);
 
     const row = branchResult.rows[0];
 
@@ -585,15 +594,36 @@ export async function assignStaff(branchId: string, employeeId: string) {
       return { success: false, error: "Unauthorized" };
     }
 
-    await db.query(
-      `UPDATE employee SET branch_id = $1 WHERE employee_id = $2`,
+    const result = await db.query(
+      `UPDATE employee e
+       SET branch_id = target.branch_id,
+           updated_at = NOW()
+       FROM branch target
+       WHERE target.branch_id = $1
+         AND e.employee_id = $2
+         AND e.is_active = TRUE
+         AND e.branch_id <> target.branch_id
+         AND NOT EXISTS (
+           SELECT 1 FROM branch managed WHERE managed.manager_id = e.employee_id
+         )
+       RETURNING e.employee_id`,
       [branchId, employeeId],
     );
 
+    if (result.rowCount === 0) {
+      return {
+        success: false,
+        error:
+          "The staff member is unavailable, already belongs to this branch, or manages another branch",
+      };
+    }
+
     revalidatePath(`/admin/branches/${branchId}`);
     revalidatePath("/admin/branches");
+    revalidatePath("/admin/staff");
+    revalidatePath("/admin/doctors");
 
-    return { success: true, message: "Staff assigned successfully" };
+    return { success: true, message: "Staff transferred successfully" };
   } catch (error: any) {
     console.error("Failed to assign staff:", error);
     return { success: false, error: error.message || "Failed to assign staff" };
@@ -613,17 +643,20 @@ export async function removeStaff(employeeId: string, branchId?: string) {
            end_date = COALESCE(e.end_date, CURRENT_DATE),
            updated_at = NOW()
        WHERE e.employee_id = $1
+         AND e.is_active = TRUE
+         AND ($2::uuid IS NULL OR e.branch_id = $2)
          AND NOT EXISTS (
            SELECT 1 FROM branch b WHERE b.manager_id = e.employee_id
          )
        RETURNING e.employee_id`,
-      [employeeId],
+      [employeeId, branchId ?? null],
     );
 
     if (result.rowCount === 0) {
       return {
         success: false,
-        error: "Assign another branch manager before removing this employee",
+        error:
+          "The staff member could not be deactivated. They may manage a branch or no longer belong to this branch",
       };
     }
 
@@ -631,9 +664,11 @@ export async function removeStaff(employeeId: string, branchId?: string) {
       revalidatePath(`/admin/branches/${branchId}`);
     }
     revalidatePath("/admin/branches");
+    revalidatePath("/admin/staff");
+    revalidatePath("/admin/doctors");
     revalidatePath("/branches");
 
-    return { success: true, message: "Staff removed successfully" };
+    return { success: true, message: "Staff deactivated successfully" };
   } catch (error: any) {
     console.error("Failed to remove staff:", error);
     return { success: false, error: error.message || "Failed to remove staff" };
@@ -676,23 +711,34 @@ export async function getBranchDetails(branchId: string) {
         JOIN app_user u ON e.employee_id = u.user_id
         LEFT JOIN doctor d ON d.doctor_id = e.employee_id
         LEFT JOIN (
-          SELECT DISTINCT ON (doctor_id) doctor_id, specialization_id
-          FROM doctor_specialization
-        ) ds ON ds.doctor_id = d.doctor_id
-        LEFT JOIN specialization spec ON spec.specialization_id = ds.specialization_id
+         SELECT dsp.doctor_id, STRING_AGG(sp.title, ', ' ORDER BY sp.title) AS title
+         FROM doctor_specialization dsp
+         JOIN specialization sp ON sp.specialization_id = dsp.specialization_id
+         GROUP BY dsp.doctor_id
+       ) spec ON spec.doctor_id = d.doctor_id
         WHERE e.branch_id = $1 AND e.is_active = true
         ORDER BY e.role ASC, u.full_name ASC
       `,
         [branchId],
       ),
 
-      //Unassigned Staff
-      db.query(`
-        SELECT e.employee_id AS "employeeId", u.full_name AS name, e.role
+      //Active staff who can be transferred from another branch
+      db.query(
+        `
+        SELECT e.employee_id AS "employeeId", u.full_name AS name, e.role,
+          source_branch.branch_name AS "branchName"
         FROM employee e
         JOIN app_user u ON e.employee_id = u.user_id
-        WHERE e.is_active = true AND e.branch_id IS NULL
-      `),
+        JOIN branch source_branch ON source_branch.branch_id = e.branch_id
+        WHERE e.is_active = true
+          AND e.branch_id <> $1
+          AND NOT EXISTS (
+            SELECT 1 FROM branch managed WHERE managed.manager_id = e.employee_id
+          )
+        ORDER BY u.full_name ASC
+      `,
+        [branchId],
+      ),
 
       //Treatments
       db.query(

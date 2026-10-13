@@ -53,21 +53,21 @@ export type RescheduleErrorCode =
 
 export type RescheduleAppointmentResult =
   | {
-      success: true;
-      data: {
-        appointmentId: string;
-        queueNumber: number;
-        newTimeSlotId: string;
-        date: string;
-        startTime: string;
-        endTime: string;
-      };
-    }
-  | {
-      success: false;
-      code: RescheduleErrorCode;
-      error: string;
+    success: true;
+    data: {
+      appointmentId: string;
+      queueNumber: number;
+      newTimeSlotId: string;
+      date: string;
+      startTime: string;
+      endTime: string;
     };
+  }
+  | {
+    success: false;
+    code: RescheduleErrorCode;
+    error: string;
+  };
 
 /**
  * Returns appointment history for the authenticated patient.

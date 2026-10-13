@@ -131,7 +131,7 @@ export interface UpdateProfileInput {
   dob: string; // "YYYY-MM-DD"
   gender: "Male" | "Female" | "Other";
   licenceNo: string;
-  specialization: string; // "" clears it
+  specialization: string; // comma-separated list, "" clears all
   branchId: string;
   consultationFee: number;
   roomNo: string;

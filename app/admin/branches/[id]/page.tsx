@@ -47,6 +47,7 @@ export default function BranchDetailPage({
   const [isManagerModalOpen, setIsManagerModalOpen] = useState(false);
   const [isAssignStaffModalOpen, setIsAssignStaffModalOpen] = useState(false);
   const [isActionLoading, setIsActionLoading] = useState(false);
+  const [actionError, setActionError] = useState("");
 
   // Form states
   const [editForm, setEditForm] = useState({
@@ -147,12 +148,16 @@ export default function BranchDetailPage({
 
   const handleChangeManager = async (e: React.FormEvent) => {
     e.preventDefault();
+    setActionError("");
     setIsActionLoading(true);
     try {
       const res = await assignManager(branchId, selectedManagerId);
       if (res.success) {
         setIsManagerModalOpen(false);
-        loadDetails();
+        setSelectedManagerId("");
+        await loadDetails();
+      } else {
+        setActionError(res.error || "Unable to assign the branch manager");
       }
     } finally {
       setIsActionLoading(false);
@@ -161,19 +166,28 @@ export default function BranchDetailPage({
 
   const handleRemoveManager = async () => {
     if (!confirm("Remove the current branch manager?")) return;
+    setActionError("");
     const res = await removeManager(branchId);
-    if (res.success) loadDetails();
+    if (res.success) {
+      await loadDetails();
+    } else {
+      setActionError(res.error || "Unable to remove the branch manager");
+    }
   };
 
   const handleAssignStaff = async (e: React.FormEvent) => {
     e.preventDefault();
+    setActionError("");
     setIsActionLoading(true);
     try {
       const res = await assignStaff(branchId, newStaffId);
       if (res.success) {
         setIsAssignStaffModalOpen(false);
         setNewStaffId("");
-        loadDetails();
+        setStaffSearchQuery("");
+        await loadDetails();
+      } else {
+        setActionError(res.error || "Unable to transfer the staff member");
       }
     } finally {
       setIsActionLoading(false);
@@ -181,9 +195,19 @@ export default function BranchDetailPage({
   };
 
   const handleRemoveStaff = async (employeeId: string) => {
-    if (!confirm("Remove this staff member from this branch?")) return;
+    if (
+      !confirm(
+        "Deactivate this staff member? They will no longer be able to sign in as an active employee.",
+      )
+    )
+      return;
+    setActionError("");
     const res = await removeStaff(employeeId, branchId);
-    if (res.success) loadDetails();
+    if (res.success) {
+      await loadDetails();
+    } else {
+      setActionError(res.error || "Unable to deactivate the staff member");
+    }
   };
 
   if (isLoading) {
@@ -216,6 +240,12 @@ export default function BranchDetailPage({
       >
         <ArrowLeft className="w-4 h-4 mr-1.5" /> Back to all branches
       </Link>
+
+      {actionError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {actionError}
+        </div>
+      )}
 
       {/* Header Banner */}
       <Card className="border-0 shadow-sm overflow-hidden bg-gradient-to-r from-teal-600 to-cyan-700">
@@ -519,11 +549,16 @@ export default function BranchDetailPage({
               <Users className="w-5 h-5 text-teal-600" /> All Assigned Personnel
             </CardTitle>
             <Button
-              onClick={() => setIsAssignStaffModalOpen(true)}
+              onClick={() => {
+                setActionError("");
+                setNewStaffId("");
+                setStaffSearchQuery("");
+                setIsAssignStaffModalOpen(true);
+              }}
               size="sm"
               className="bg-teal-700 hover:bg-teal-800 text-white"
             >
-              Assign Staff
+              Transfer Staff
             </Button>
           </CardHeader>
           <CardContent className="p-0">
@@ -551,7 +586,7 @@ export default function BranchDetailPage({
                     size="sm"
                     className="text-slate-400 hover:text-red-600"
                   >
-                    Remove
+                    Deactivate
                   </Button>
                 </div>
               ))}
@@ -803,12 +838,12 @@ export default function BranchDetailPage({
         </div>
       )}
 
-      {/* Assign Staff Modal */}
+      {/* Transfer Staff Modal */}
       {isAssignStaffModalOpen && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <Card className="w-full max-w-md border-0">
             <div className="flex justify-between p-6 border-b">
-              <h3 className="text-lg font-bold">Assign Staff Member</h3>
+              <h3 className="text-lg font-bold">Transfer Staff Member</h3>
               <button onClick={() => setIsAssignStaffModalOpen(false)}>
                 <X className="w-5 h-5 text-slate-400" />
               </button>
@@ -817,7 +852,7 @@ export default function BranchDetailPage({
               <form onSubmit={handleAssignStaff} className="space-y-4">
                 <input
                   type="text"
-                  placeholder="Search unassigned staff..."
+                  placeholder="Search staff at other branches..."
                   value={staffSearchQuery}
                   onChange={(e) => setStaffSearchQuery(e.target.value)}
                   className="w-full h-10 px-3 rounded-lg border text-sm"
@@ -836,9 +871,17 @@ export default function BranchDetailPage({
                     >
                       <span>
                         {s.name} ({s.role})
+                        <span className="block text-slate-500">
+                          Current branch: {s.branchName}
+                        </span>
                       </span>
                     </div>
                   ))}
+                  {filteredAvailableStaff?.length === 0 && (
+                    <p className="p-3 text-center text-xs text-slate-500">
+                      No transferable staff members found.
+                    </p>
+                  )}
                 </div>
                 <div className="flex justify-end gap-3 pt-2">
                   <Button
@@ -853,7 +896,7 @@ export default function BranchDetailPage({
                     disabled={isActionLoading || !newStaffId}
                     className="bg-teal-700 text-white"
                   >
-                    Assign Staff
+                    Transfer Staff
                   </Button>
                 </div>
               </form>
