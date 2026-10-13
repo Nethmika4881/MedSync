@@ -38,9 +38,8 @@ const sectionLabel = (text: string) => (
 );
 
 export default function RegisterPage() {
-  const [branches, setBranches] = useState<
-    { branch_id: string; branch_name: string }[]
-  >(DEFAULT_BRANCHES);
+  const [branches, setBranches] =
+    useState<{ branch_id: string; branch_name: string }[]>(DEFAULT_BRANCHES);
   const [branchSearch, setBranchSearch] = useState("");
   const [isBranchDropdownOpen, setIsBranchDropdownOpen] = useState(false);
   const branchDropdownRef = useRef<HTMLDivElement>(null);
@@ -115,7 +114,7 @@ export default function RegisterPage() {
     setIsBranchDropdownOpen(true);
 
     const match = branches.find(
-      (b) => b.branch_name.toLowerCase() === value.trim().toLowerCase()
+      (b) => b.branch_name.toLowerCase() === value.trim().toLowerCase(),
     );
     if (match) {
       setValue("branchId", match.branch_id, { shouldValidate: true });
@@ -147,13 +146,14 @@ export default function RegisterPage() {
           <p className="text-sm text-muted-foreground mt-1">
             Create your account
           </p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Patient accounts can be created here. Staff accounts are created by an administrator.
-          </p>
         </div>
 
         <div className="bg-card border border-border rounded-xl shadow-sm p-8">
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex flex-col gap-5"
+            noValidate
+          >
             <input type="hidden" {...register("role")} />
 
             {/* ── PERSONAL INFO ── */}
@@ -480,187 +480,220 @@ export default function RegisterPage() {
 
             <div className="flex gap-3">
               <div className="flex flex-col gap-1.5 flex-1">
-                <label htmlFor="emergency-phone" className="text-sm font-medium text-foreground">Phone</label>
-                <input id="emergency-phone" type="tel" placeholder="+94771234567"
-                  {...register("emergencyContactPhone")} className={inputClass}
-                  aria-invalid={errors.emergencyContactPhone ? "true" : undefined} />
+                <label
+                  htmlFor="emergency-phone"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Phone
+                </label>
+                <input
+                  id="emergency-phone"
+                  type="tel"
+                  placeholder="+94771234567"
+                  {...register("emergencyContactPhone")}
+                  className={inputClass}
+                  aria-invalid={
+                    errors.emergencyContactPhone ? "true" : undefined
+                  }
+                />
                 {errors.emergencyContactPhone && (
-                  <p className="text-xs text-destructive">{errors.emergencyContactPhone.message}</p>
+                  <p className="text-xs text-destructive">
+                    {errors.emergencyContactPhone.message}
+                  </p>
                 )}
               </div>
               <div className="flex flex-col gap-1.5 flex-1">
-                <label htmlFor="emergency-relationship" className="text-sm font-medium text-foreground">Relationship</label>
-                <input id="emergency-relationship" type="text" placeholder="Parent, Spouse…"
-                  {...register("emergencyContactRelationship")} className={inputClass}
-                  aria-invalid={errors.emergencyContactRelationship ? "true" : undefined} />
-                {errors.emergencyContactRelationship && (
-                  <p className="text-xs text-destructive">{errors.emergencyContactRelationship.message}</p>
-                )}
-              </div>
-            </div>
-
-          {/* ── CLINIC BRANCH ── */}
-          {sectionLabel("Clinic Branch")}
-
-          <div className="flex flex-col gap-1.5 mb-2 relative" ref={branchDropdownRef}>
-            <label
-              htmlFor="branch-search"
-              className="text-sm font-medium text-foreground"
-            >
-              Select Branch
-            </label>
-
-            <input type="hidden" {...register("branchId")} />
-
-            <div className="relative">
-              <input
-                id="branch-search"
-                type="text"
-                placeholder="Type to search or select a branch..."
-                value={branchSearch}
-                onChange={handleBranchInputChange}
-                onFocus={() => setIsBranchDropdownOpen(true)}
-                className={`${inputClass} pr-10`}
-                autoComplete="off"
-                aria-invalid={errors.branchId ? "true" : undefined}
-              />
-              <button
-                type="button"
-                onClick={() => setIsBranchDropdownOpen((prev) => !prev)}
-                className="absolute right-0 top-0 bottom-0 px-3 flex items-center justify-center text-muted-foreground hover:text-foreground"
-                tabIndex={-1}
-                aria-label="Toggle branch dropdown"
-              >
-                <ChevronDown
-                  className={`h-4 w-4 transition-transform ${isBranchDropdownOpen ? "rotate-180" : ""
-                    }`}
+                <label
+                  htmlFor="emergency-relationship"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Relationship
+                </label>
+                <input
+                  id="emergency-relationship"
+                  type="text"
+                  placeholder="Parent, Spouse…"
+                  {...register("emergencyContactRelationship")}
+                  className={inputClass}
+                  aria-invalid={
+                    errors.emergencyContactRelationship ? "true" : undefined
+                  }
                 />
-              </button>
-            </div>
-
-            {isBranchDropdownOpen && (
-              <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-card border border-border rounded-md shadow-lg max-h-60 overflow-y-auto py-1">
-                {branches.filter((b) =>
-                  b.branch_name
-                    .toLowerCase()
-                    .includes(branchSearch.toLowerCase())
-                ).length === 0 ? (
-                  <div className="px-3 py-2 text-sm text-muted-foreground">
-                    No matching branches found
-                  </div>
-                ) : (
-                  branches
-                    .filter((b) =>
-                      b.branch_name
-                        .toLowerCase()
-                        .includes(branchSearch.toLowerCase())
-                    )
-                    .map((b) => (
-                      <button
-                        key={b.branch_id}
-                        type="button"
-                        className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between hover:bg-accent hover:text-accent-foreground transition-colors ${selectedBranchId === b.branch_id
-                          ? "bg-accent/50 font-medium text-primary"
-                          : "text-foreground"
-                          }`}
-                        onClick={() => handleSelectBranch(b)}
-                      >
-                        <span>{b.branch_name}</span>
-                        {selectedBranchId === b.branch_id && (
-                          <Check className="h-4 w-4 text-primary" />
-                        )}
-                      </button>
-                    ))
+                {errors.emergencyContactRelationship && (
+                  <p className="text-xs text-destructive">
+                    {errors.emergencyContactRelationship.message}
+                  </p>
                 )}
               </div>
-            )}
+            </div>
 
-            {errors.branchId && (
-              <p className="text-xs text-destructive">
-                {errors.branchId.message}
-              </p>
-            )}
-          </div>
+            {/* ── CLINIC BRANCH ── */}
+            {sectionLabel("Clinic Branch")}
 
-          {error && (
-            <p role="alert" className="text-sm text-destructive">
-              {error}
-            </p>
-          )}
-
-          {/* ── SECURITY ── */}
-          {sectionLabel("Security")}
-
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="password"
-              className="text-sm font-medium text-foreground"
+            <div
+              className="flex flex-col gap-1.5 mb-2 relative"
+              ref={branchDropdownRef}
             >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              {...register("password")}
-              className={inputClass}
-              aria-invalid={errors.password ? "true" : undefined}
-            />
-            {errors.password && (
-              <p className="text-xs text-destructive">
-                {errors.password.message}
+              <label
+                htmlFor="branch-search"
+                className="text-sm font-medium text-foreground"
+              >
+                Select Branch
+              </label>
+
+              <input type="hidden" {...register("branchId")} />
+
+              <div className="relative">
+                <input
+                  id="branch-search"
+                  type="text"
+                  placeholder="Type to search or select a branch..."
+                  value={branchSearch}
+                  onChange={handleBranchInputChange}
+                  onFocus={() => setIsBranchDropdownOpen(true)}
+                  className={`${inputClass} pr-10`}
+                  autoComplete="off"
+                  aria-invalid={errors.branchId ? "true" : undefined}
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsBranchDropdownOpen((prev) => !prev)}
+                  className="absolute right-0 top-0 bottom-0 px-3 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
+                  aria-label="Toggle branch dropdown"
+                >
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${
+                      isBranchDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {isBranchDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-card border border-border rounded-md shadow-lg max-h-60 overflow-y-auto py-1">
+                  {branches.filter((b) =>
+                    b.branch_name
+                      .toLowerCase()
+                      .includes(branchSearch.toLowerCase()),
+                  ).length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                      No matching branches found
+                    </div>
+                  ) : (
+                    branches
+                      .filter((b) =>
+                        b.branch_name
+                          .toLowerCase()
+                          .includes(branchSearch.toLowerCase()),
+                      )
+                      .map((b) => (
+                        <button
+                          key={b.branch_id}
+                          type="button"
+                          className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between hover:bg-accent hover:text-accent-foreground transition-colors ${
+                            selectedBranchId === b.branch_id
+                              ? "bg-accent/50 font-medium text-primary"
+                              : "text-foreground"
+                          }`}
+                          onClick={() => handleSelectBranch(b)}
+                        >
+                          <span>{b.branch_name}</span>
+                          {selectedBranchId === b.branch_id && (
+                            <Check className="h-4 w-4 text-primary" />
+                          )}
+                        </button>
+                      ))
+                  )}
+                </div>
+              )}
+
+              {errors.branchId && (
+                <p className="text-xs text-destructive">
+                  {errors.branchId.message}
+                </p>
+              )}
+            </div>
+
+            {error && (
+              <p role="alert" className="text-sm text-destructive">
+                {error}
               </p>
             )}
-          </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="confirm-password"
-              className="text-sm font-medium text-foreground"
+            {/* ── SECURITY ── */}
+            {sectionLabel("Security")}
+
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="password"
+                className="text-sm font-medium text-foreground"
+              >
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                {...register("password")}
+                className={inputClass}
+                aria-invalid={errors.password ? "true" : undefined}
+              />
+              {errors.password && (
+                <p className="text-xs text-destructive">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="confirm-password"
+                className="text-sm font-medium text-foreground"
+              >
+                Confirm password
+              </label>
+              <input
+                id="confirm-password"
+                type="password"
+                placeholder="••••••••"
+                {...register("confirmPassword")}
+                className={inputClass}
+                aria-invalid={errors.confirmPassword ? "true" : undefined}
+              />
+              {errors.confirmPassword && (
+                <p className="text-xs text-destructive">
+                  {errors.confirmPassword.message}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-primary text-primary-foreground text-sm font-medium rounded-md px-4 py-2 hover:bg-primary/90 transition-colors mt-1 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Confirm password
-            </label>
-            <input
-              id="confirm-password"
-              type="password"
-              placeholder="••••••••"
-              {...register("confirmPassword")}
-              className={inputClass}
-              aria-invalid={errors.confirmPassword ? "true" : undefined}
-            />
-            {errors.confirmPassword && (
-              <p className="text-xs text-destructive">
-                {errors.confirmPassword.message}
-              </p>
-            )}
+              {isSubmitting ? "Creating account…" : "Create account"}
+            </button>
+          </form>
+
+          <div className="flex items-center gap-3 my-6">
+            <div className="flex-1 border-t border-border" />
+            <span className="text-xs text-muted-foreground">or</span>
+            <div className="flex-1 border-t border-border" />
           </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-primary text-primary-foreground text-sm font-medium rounded-md px-4 py-2 hover:bg-primary/90 transition-colors mt-1 disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? "Creating account…" : "Create account"}
-          </button>
-        </form>
-
-        <div className="flex items-center gap-3 my-6">
-          <div className="flex-1 border-t border-border" />
-          <span className="text-xs text-muted-foreground">or</span>
-          <div className="flex-1 border-t border-border" />
+          <p className="text-center text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link
+              href="/login"
+              className="text-primary font-medium hover:underline"
+            >
+              Sign in
+            </Link>
+          </p>
         </div>
-
-        <p className="text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link
-            href="/login"
-            className="text-primary font-medium hover:underline"
-          >
-            Sign in
-          </Link>
-        </p>
       </div>
-    </div>
     </main>
   );
 }
