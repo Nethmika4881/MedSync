@@ -504,7 +504,7 @@ export async function getEnrolledPolicies({page = 1, pageSize = 10, search = "",
 
   const offset = (page - 1) * pageSize;
   const values: any[] = [];
-  let whereClauses: string[] = [];
+  const whereClauses: string[] = [];
 
   if (search.trim()) {
     values.push(`%${search.trim()}%`);

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Search, Plus, ChevronLeft, ChevronRight, Eye, ShieldCheck, Filter } from "lucide-react";
+import { Search, Plus, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { 
   getEnrolledPolicies, 
   EnrolledPolicy, 
