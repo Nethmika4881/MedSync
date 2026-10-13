@@ -1,5 +1,5 @@
 {
-  "tool": "@playwright/test",
+  "tool": "playwright",
   "gate": null,
   "additionalTools": [],
   "e2eTool": "playwright",

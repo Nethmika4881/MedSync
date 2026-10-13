@@ -26,7 +26,7 @@ import {
   togglePackageStatus, 
   deletePackages, 
   Packages 
-} from "@/lib/actions/insurance";
+} from "@/lib/actions/admin-insurance";
 
 // color styling for provider
 const PROVIDER_THEMES: Record<string, { gradient: string; badge: string; border: string; text: string }> = {

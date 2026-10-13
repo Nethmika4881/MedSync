@@ -31,6 +31,7 @@ export interface ConsultationRecordItem {
   doctorId: string;
   doctorName: string;
   specialization: string | null;
+  specializations?: string[];
 
   // Branch info
   branchName: string;
@@ -91,7 +92,15 @@ export async function getPatientRecords(): Promise<ConsultationRecordItem[]> {
 
          ts.doctor_id                              AS "doctorId",
          u.full_name                               AS "doctorName",
-         spec.title                                AS "specialization",
+         COALESCE(
+           (
+             SELECT ARRAY_AGG(s.title ORDER BY s.title)
+             FROM doctor_specialization ds
+             JOIN specialization s ON s.specialization_id = ds.specialization_id
+             WHERE ds.doctor_id = d.doctor_id
+           ),
+           ARRAY[]::text[]
+         )                                         AS "specializations",
 
          b.branch_name                             AS "branchName"
        FROM consultation_record cr
@@ -101,11 +110,6 @@ export async function getPatientRecords(): Promise<ConsultationRecordItem[]> {
        JOIN employee e      ON e.employee_id    = d.doctor_id
        JOIN app_user u      ON u.user_id        = e.employee_id
        JOIN branch b        ON b.branch_id      = ts.branch_id
-       LEFT JOIN (
-         SELECT DISTINCT ON (doctor_id) doctor_id, specialization_id
-         FROM doctor_specialization
-       ) ds ON ds.doctor_id = d.doctor_id
-       LEFT JOIN specialization spec ON spec.specialization_id = ds.specialization_id
        WHERE a.patient_id = $1
        ORDER BY ts.available_date DESC, ts.start_time DESC`,
       [patientId]
@@ -157,10 +161,18 @@ export async function getPatientRecords(): Promise<ConsultationRecordItem[]> {
     }
 
     // 4. Attach treatments to their consultation record
-    return consultations.map((c) => ({
-      ...c,
-      treatments: treatmentsByAppt[c.appointmentId] || [],
-    }));
+    return consultations.map((c) => {
+      const specializations: string[] = Array.isArray(c.specializations)
+        ? c.specializations
+        : [];
+      return {
+        ...c,
+        specialization:
+          specializations.length > 0 ? specializations.join(", ") : null,
+        specializations,
+        treatments: treatmentsByAppt[c.appointmentId] || [],
+      };
+    });
   } catch (err) {
     console.error("[getPatientRecords] Failed to fetch records:", err);
     return [];

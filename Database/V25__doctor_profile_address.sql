@@ -1,7 +1,3 @@
--- Doctors can edit the address they gave at registration from the Settings page.
--- 1. v_doctor_profile gets the address columns (appended, so existing columns keep their order).
--- 2. sp_update_doctor_profile also updates the address, in the same transaction.
-
 CREATE OR REPLACE VIEW v_doctor_profile AS
 SELECT
     d.doctor_id,
@@ -35,7 +31,6 @@ JOIN app_user u ON u.user_id     = d.doctor_id
 JOIN branch   b ON b.branch_id   = e.branch_id
 JOIN address  ad ON ad.address_id = u.address_id;
 
--- The signature changes (five new parameters), so drop the old procedure first.
 DROP PROCEDURE IF EXISTS sp_update_doctor_profile(UUID, VARCHAR, VARCHAR, INT, BOOLEAN, VARCHAR);
 
 CREATE PROCEDURE sp_update_doctor_profile(

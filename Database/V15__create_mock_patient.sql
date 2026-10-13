@@ -5,33 +5,27 @@ DECLARE
     new_user_id UUID;
     default_branch_id UUID;
 BEGIN
-    -- Check if this specific patient already exists to avoid duplicates
     IF NOT EXISTS (SELECT 1 FROM app_user WHERE email = 'patient@example.com') THEN
-        
-        -- Get the first available branch (Patients must be registered to a branch)
+     
         SELECT branch_id INTO default_branch_id FROM branch LIMIT 1;
-        
-        -- If no branch exists, we must create a dummy one first
+
         IF default_branch_id IS NULL THEN
-            -- Branch needs an address and contact too
             INSERT INTO address (address_line1, city, country) VALUES ('Branch St', 'Colombo', 'Sri Lanka') RETURNING address_id INTO new_address_id;
             INSERT INTO contact DEFAULT VALUES RETURNING contact_id INTO new_contact_id;
             INSERT INTO branch (branch_name, address_id, contact_id) VALUES ('Main Branch', new_address_id, new_contact_id) RETURNING branch_id INTO default_branch_id;
         END IF;
 
-        -- 1. Create Patient's Address
         INSERT INTO address (address_line1, city, country)
         VALUES ('123 Mock Street', 'Colombo', 'Sri Lanka')
         RETURNING address_id INTO new_address_id;
 
-        -- 2. Create Patient's Contact
         INSERT INTO contact DEFAULT VALUES
         RETURNING contact_id INTO new_contact_id;
 
         INSERT INTO contact_number (contact_id, number_type, number)
         VALUES (new_contact_id, 'Mobile', '0771234567');
 
-        -- 3. Create the App User (with 'password123')
+        -- password123
         INSERT INTO app_user (salt, address_id, contact_id, user_type, full_name, nic, email, gender, dob, password_hash)
         VALUES (
             'mx9OM4mf7LRDXiYwIJ4n',
@@ -47,7 +41,6 @@ BEGIN
         )
         RETURNING user_id INTO new_user_id;
 
-        -- 4. Link the user to the Patient table
         INSERT INTO patient (patient_id, blood_group, registered_branch_id)
         VALUES (new_user_id, 'O+', default_branch_id);
 

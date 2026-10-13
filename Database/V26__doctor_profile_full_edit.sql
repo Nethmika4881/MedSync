@@ -1,8 +1,3 @@
--- The doctor can now edit every field of their profile from the Settings page.
--- 1. v_doctor_profile also exposes nic, dob and gender (appended; existing columns keep their order).
--- 2. sp_update_doctor_profile takes the whole profile and validates the rules the schema cannot
---    express as one message: unique email / NIC / licence number, active branch, fee >= 0.
-
 CREATE OR REPLACE VIEW v_doctor_profile AS
 SELECT
     d.doctor_id,
@@ -39,7 +34,6 @@ JOIN app_user u ON u.user_id     = d.doctor_id
 JOIN branch   b ON b.branch_id   = e.branch_id
 JOIN address  ad ON ad.address_id = u.address_id;
 
--- The signature changes again, so drop the V25 version first.
 DROP PROCEDURE IF EXISTS sp_update_doctor_profile(
     UUID, VARCHAR, VARCHAR, INT, BOOLEAN, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR
 );
@@ -155,7 +149,6 @@ BEGIN
            updated_at    = NOW()
      WHERE address_id = v_address_id;
 
-    -- One specialization per doctor (V24). An empty value clears it.
     IF COALESCE(TRIM(p_specialization), '') = '' THEN
         DELETE FROM doctor_specialization WHERE doctor_id = p_doctor_id;
     ELSE

@@ -74,7 +74,7 @@ BEGIN
         RAISE EXCEPTION 'Pick a follow-up date or untick follow-up';
     END IF;
 
-    -- Friendly validation before anything is written.
+    -- validation before anything is written.
     IF EXISTS (
         SELECT 1 FROM jsonb_to_recordset(v_treatments) AS t(quantity INT)
         WHERE COALESCE(t.quantity, 0) < 1
@@ -89,7 +89,6 @@ BEGIN
         RAISE EXCEPTION 'Every prescription needs a dosage and a duration of at least 1 day';
     END IF;
 
-    -- 1. consultation record
     INSERT INTO consultation_record
         (appointment_id, symptoms, diagnosis, notes, follow_up_required, follow_up_date)
     VALUES (
@@ -108,7 +107,7 @@ BEGIN
         follow_up_date     = EXCLUDED.follow_up_date
     RETURNING consultation_rec_id INTO p_consultation_id;
 
-    -- 2. treatment orders: replace the ones nobody has started yet
+    --treatment orders
     DELETE FROM appointment_treatment
     WHERE appointment_id = p_appointment_id
       AND status = 'Ordered';
@@ -134,7 +133,7 @@ BEGIN
         RAISE EXCEPTION 'A selected treatment is not in the active catalogue';
     END IF;
 
-    -- 3. prescriptions: replace all
+    --replace all
     DELETE FROM prescription WHERE appointment_id = p_appointment_id;
 
     INSERT INTO prescription
@@ -185,8 +184,6 @@ BEGIN
         RAISE EXCEPTION 'A diagnosis is required to complete the consultation';
     END IF;
 
-    -- prescription.allergy_checked is the doctor's sign-off against the
-    -- patient's allergies and the medication's contraindications.
     IF EXISTS (
         SELECT 1
         FROM jsonb_to_recordset(COALESCE(p_prescriptions, '[]'::jsonb)) AS p(allergy_checked BOOLEAN)
@@ -203,8 +200,6 @@ BEGIN
         v_consultation_id
     );
 
-    -- Lock the visit. From here the lock_completed_consultation trigger
-    -- rejects any further change to the record, prescriptions or orders.
     UPDATE appointment
     SET status = 'Completed'
     WHERE appointment_id = p_appointment_id

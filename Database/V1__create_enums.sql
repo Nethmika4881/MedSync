@@ -17,11 +17,6 @@ CREATE TYPE contact_number_type_enum AS ENUM (
     'Work'
 );
 
- 
-
--- ------------------------------------------------------------
--- Employee Role
--- ------------------------------------------------------------
 
 CREATE TYPE employee_role_enum AS ENUM (
     'Doctor',

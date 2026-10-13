@@ -11,6 +11,9 @@
 /coverage
 /playwright-report/
 /test-results/
+/blob-report/
+/.playwright/
+/e2e/.auth/
 
 # next.js
 /.next/
@@ -45,7 +48,7 @@ node_modules/
 /.agents/
 /.claude/
 /memory.md
-
+/.archify/
 /.gitignore
 /context
 /docs/

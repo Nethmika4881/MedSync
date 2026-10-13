@@ -157,13 +157,14 @@ export async function createStaff(dirtyData: unknown = {}) {
     const branchDetails = await client.query(
       `
       select branch_id,branch_name from branch
-      where branch_id = $1 and is_active = $2;
+      where branch_id = $1
+        and (is_active = true or manager_id is null);
       `,
-      [data.branchID, true],
+      [data.branchID],
     );
 
     if (branchDetails.rowCount === 0) {
-      throw new Error("not a branch as selected");
+      throw new Error("The selected branch cannot accept staff members");
     }
     const addressDetails = await client.query(
       `
@@ -274,6 +275,11 @@ export async function createStaff(dirtyData: unknown = {}) {
   } catch (err) {
     await client.query("rollback"); //revert changes back if there was any errors
     console.error("unable to create staff : " + err);
+    return {
+      success: false,
+      error:
+        err instanceof Error ? err.message : "Unable to create staff member",
+    };
   } finally {
     client.release();
   }

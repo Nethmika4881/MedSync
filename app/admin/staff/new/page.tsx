@@ -101,7 +101,7 @@ export default function NewStaffPage() {
       const result = await createStaff(form);
 
       if (!result?.success) {
-        setError("Unable to create staff member.");
+        setError(result?.error || "Unable to create staff member.");
         return;
       }
 
