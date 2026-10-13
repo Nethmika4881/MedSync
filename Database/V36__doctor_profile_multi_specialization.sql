@@ -1,4 +1,4 @@
--- A doctor can hold several specializations (V35 dropped uq_doctor_one_specialization).
+-- A doctor can hold several specializations 
 -- sp_update_doctor_profile used to treat p_specialization as ONE title and delete every other
 -- specialization row. The Settings page loads v_doctor_profile.specializations ("A, B") and
 -- sends it straight back, so saving the profile collapsed it into a single bogus
