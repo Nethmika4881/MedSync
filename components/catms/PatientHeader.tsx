@@ -31,7 +31,7 @@ export function PatientHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-30 h-16 bg-white/80 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between shadow-xs transition-colors">
+    <header className="sticky top-0 z-30 h-16 bg-white/80 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-xs transition-colors">
       <div className="flex items-center gap-3">
         {/* Mobile Hamburger Drawer Trigger */}
         <button

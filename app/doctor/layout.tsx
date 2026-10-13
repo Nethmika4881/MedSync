@@ -2,6 +2,15 @@ import React from "react";
 import { Sidebar } from "@/components/catms/Sidebar";
 import { Header } from "@/components/catms/Header";
 import { SidebarInset } from "@/components/catms/SidebarInset";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  icons: {
+    icon: "/favicon.ico?v=2",
+    shortcut: "/favicon.ico?v=2",
+    apple: "/favicon.ico?v=2",
+  },
+};
 
 export default function DoctorLayout({
   children,

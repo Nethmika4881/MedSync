@@ -3,6 +3,15 @@ import { Sidebar } from "@/components/catms/Sidebar";
 import { Header } from "@/components/catms/Header";
 import { Building2 } from "lucide-react";
 import { SidebarInset } from "@/components/catms/SidebarInset";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  icons: {
+    icon: "/favicon.ico?v=2",
+    shortcut: "/favicon.ico?v=2",
+    apple: "/favicon.ico?v=2",
+  },
+};
 
 export default function FrontDeskLayout({
   children,

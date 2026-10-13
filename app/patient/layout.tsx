@@ -2,6 +2,15 @@ import React from "react";
 import { PatientSidebar } from "@/components/catms/PatientSidebar";
 import { PatientHeader } from "@/components/catms/PatientHeader";
 import { PatientSidebarInset } from "@/components/catms/PatientSidebarInset";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  icons: {
+    icon: "/favicon.ico?v=2",
+    shortcut: "/favicon.ico?v=2",
+    apple: "/favicon.ico?v=2",
+  },
+};
 
 export default function PatientLayout({
   children,
@@ -13,7 +22,7 @@ export default function PatientLayout({
       <PatientSidebar />
       <PatientSidebarInset>
         <PatientHeader />
-        <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-8">
+        <main className="flex-1 overflow-x-hidden p-4 sm:p-6 lg:p-8">
           {children}
         </main>
       </PatientSidebarInset>
