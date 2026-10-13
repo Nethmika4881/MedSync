@@ -84,25 +84,23 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
     defaultValues: {
       role: "Patient",
-      fullName: "Sample Name",
-      nic: "198012345678",
-      email: "sample@example.com",
-      phoneNumber: "+94771234567",
-      dob: "1980-01-01",
-      gender: "Male",
-      addressLine1: "123 Sample Street",
-      addressLine2: "Apt 4B",
-      city: "Colombo",
-      province: "Western",
-      postalCode: "10100",
-      country: "Sri Lanka",
-      password: "password123",
-      confirmPassword: "password123",
+      fullName: "",
+      nic: "",
+      email: "",
+      phoneNumber: "",
+      dob: "",
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      province: "",
+      postalCode: "",
+      country: "",
+      password: "",
+      confirmPassword: "",
       branchId: "",
-      bloodGroup: "O+",
-      emergencyContactName: "Jane Doe",
-      emergencyContactPhone: "+94777654321",
-      emergencyContactRelationship: "Spouse",
+      emergencyContactName: "",
+      emergencyContactPhone: "",
+      emergencyContactRelationship: "",
     },
   });
 
@@ -441,7 +439,9 @@ export default function RegisterPage() {
               </label>
               <select
                 id="blood-group"
-                {...register("bloodGroup")}
+                {...register("bloodGroup", {
+                  setValueAs: (v) => (v === "" ? undefined : v),
+                })}
                 className={inputClass}
               >
                 <option value="">Select</option>
