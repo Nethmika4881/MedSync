@@ -13,11 +13,8 @@ import {
   MapPin,
   HeartPulse,
   AlertCircle,
-  FileText,
   Clock,
   Loader2,
-  Building2,
-  ShieldCheck,
 } from "lucide-react";
 import { getBranchPatientById, type FrontDeskPatientSummary } from "@/lib/actions/frontdesk-patients";
 import { getBranchAppointments, type FrontDeskAppointment } from "@/lib/actions/frontdesk-appointments";
