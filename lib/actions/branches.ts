@@ -520,10 +520,25 @@ export async function assignManager(branchId: string, managerId: string) {
       return { success: false, error: "Unauthorized" };
     }
 
-    await db.query(
-      `update branch set manager_id = $1, is_active = TRUE, updated_at = NOW() where branch_id = $2`,
+    const result = await db.query(
+      `UPDATE branch b
+       SET manager_id = e.employee_id, is_active = TRUE, updated_at = NOW()
+       FROM employee e
+       WHERE b.branch_id = $2
+         AND e.employee_id = $1
+         AND e.branch_id = b.branch_id
+         AND e.is_active = TRUE
+         AND e.role <> 'Doctor'
+       RETURNING b.branch_id`,
       [managerId, branchId],
     );
+
+    if (result.rowCount === 0) {
+      return {
+        success: false,
+        error: "Select an active non-doctor employee from this branch",
+      };
+    }
 
     revalidatePath(`/admin/branches/${branchId}`);
     revalidatePath("/admin/branches");
@@ -592,10 +607,25 @@ export async function removeStaff(employeeId: string, branchId?: string) {
       return { success: false, error: "Unauthorized" };
     }
 
-    await db.query(
-      `UPDATE employee SET branch_id = NULL WHERE employee_id = $1`,
+    const result = await db.query(
+      `UPDATE employee e
+       SET is_active = FALSE,
+           end_date = COALESCE(e.end_date, CURRENT_DATE),
+           updated_at = NOW()
+       WHERE e.employee_id = $1
+         AND NOT EXISTS (
+           SELECT 1 FROM branch b WHERE b.manager_id = e.employee_id
+         )
+       RETURNING e.employee_id`,
       [employeeId],
     );
+
+    if (result.rowCount === 0) {
+      return {
+        success: false,
+        error: "Assign another branch manager before removing this employee",
+      };
+    }
 
     if (branchId) {
       revalidatePath(`/admin/branches/${branchId}`);
