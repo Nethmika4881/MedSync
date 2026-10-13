@@ -25,6 +25,7 @@ export interface PatientAppointmentHistoryItem {
   doctorId: string;
   doctorName: string;
   doctorSpecialization: string;
+  doctorSpecializations?: string[];
   consultationFee: number;
   branchId: string;
   branchName: string;
@@ -52,21 +53,21 @@ export type RescheduleErrorCode =
 
 export type RescheduleAppointmentResult =
   | {
-      success: true;
-      data: {
-        appointmentId: string;
-        queueNumber: number;
-        newTimeSlotId: string;
-        date: string;
-        startTime: string;
-        endTime: string;
-      };
-    }
-  | {
-      success: false;
-      code: RescheduleErrorCode;
-      error: string;
+    success: true;
+    data: {
+      appointmentId: string;
+      queueNumber: number;
+      newTimeSlotId: string;
+      date: string;
+      startTime: string;
+      endTime: string;
     };
+  }
+  | {
+    success: false;
+    code: RescheduleErrorCode;
+    error: string;
+  };
 
 /**
  * Returns appointment history for the authenticated patient.
@@ -96,7 +97,15 @@ export async function getPatientAppointments(): Promise<PatientAppointmentHistor
          TO_CHAR(a.updated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "updatedAt",
          s.doctor_id                              AS "doctorId",
          u.full_name                              AS "doctorName",
-         COALESCE(spec.title, 'General Practice') AS "doctorSpecialization",
+         COALESCE(
+           (
+             SELECT ARRAY_AGG(s.title ORDER BY s.title)
+             FROM doctor_specialization ds
+             JOIN specialization s ON s.specialization_id = ds.specialization_id
+             WHERE ds.doctor_id = d.doctor_id
+           ),
+           ARRAY[]::text[]
+         )                                        AS "doctorSpecializations",
          d.consultation_fee                       AS "consultationFee",
          s.branch_id                              AS "branchId",
          b.branch_name                            AS "branchName",
@@ -118,18 +127,26 @@ export async function getPatientAppointments(): Promise<PatientAppointmentHistor
        JOIN employee e ON e.employee_id = d.doctor_id
        JOIN app_user u ON u.user_id = e.employee_id
        JOIN branch b ON b.branch_id = s.branch_id
-       LEFT JOIN (
-         SELECT dsp.doctor_id, STRING_AGG(sp.title, ', ' ORDER BY sp.title) AS title
-         FROM doctor_specialization dsp
-         JOIN specialization sp ON sp.specialization_id = dsp.specialization_id
-         GROUP BY dsp.doctor_id
-       ) spec ON spec.doctor_id = d.doctor_id
        WHERE a.patient_id = $1
        ORDER BY s.available_date DESC, s.start_time DESC`,
       [patientId]
     );
 
-    return rows as PatientAppointmentHistoryItem[];
+    return rows.map((r) => {
+      const doctorSpecializations: string[] = Array.isArray(r.doctorSpecializations)
+        ? r.doctorSpecializations
+        : [];
+      const doctorSpecialization =
+        doctorSpecializations.length > 0
+          ? doctorSpecializations.join(", ")
+          : "General Practice";
+
+      return {
+        ...r,
+        doctorSpecialization,
+        doctorSpecializations,
+      };
+    });
   } catch (err) {
     console.error("[getPatientAppointments] Failed to query patient appointments:", err);
     return [];

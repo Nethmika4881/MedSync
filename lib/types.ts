@@ -37,6 +37,7 @@ export interface Doctor {
   doctorId: string;
   name: string;
   specialization: string;
+  specializations?: string[];
   branchId: string;
   branchName: string;
   consultationFee: number;

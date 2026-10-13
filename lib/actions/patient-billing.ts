@@ -51,6 +51,7 @@ export interface PatientInvoiceItem {
   // Doctor & branch
   doctorName: string;
   specialization: string | null;
+  specializations?: string[];
   branchName: string;
 
   // Treatments (line items)
@@ -112,7 +113,15 @@ export async function getPatientBilling(): Promise<PatientInvoiceItem[]> {
          a.reason_for_visit                          AS "reasonForVisit",
 
          u.full_name                                 AS "doctorName",
-         spec.title                                  AS "specialization",
+         COALESCE(
+           (
+             SELECT ARRAY_AGG(s.title ORDER BY s.title)
+             FROM doctor_specialization ds
+             JOIN specialization s ON s.specialization_id = ds.specialization_id
+             WHERE ds.doctor_id = d.doctor_id
+           ),
+           ARRAY[]::text[]
+         )                                           AS "specializations",
          b.branch_name                               AS "branchName"
        FROM invoice inv
        JOIN appointment a  ON a.appointment_id = inv.appointment_id
@@ -121,12 +130,6 @@ export async function getPatientBilling(): Promise<PatientInvoiceItem[]> {
        JOIN employee e     ON e.employee_id    = d.doctor_id
        JOIN app_user u     ON u.user_id        = e.employee_id
        JOIN branch b       ON b.branch_id      = ts.branch_id
-       LEFT JOIN (
-         SELECT dsp.doctor_id, STRING_AGG(sp.title, ', ' ORDER BY sp.title) AS title
-         FROM doctor_specialization dsp
-         JOIN specialization sp ON sp.specialization_id = dsp.specialization_id
-         GROUP BY dsp.doctor_id
-       ) spec ON spec.doctor_id = d.doctor_id
        WHERE inv.patient_id = $1
        ORDER BY inv.invoice_date DESC`,
       [patientId]
@@ -230,12 +233,20 @@ export async function getPatientBilling(): Promise<PatientInvoiceItem[]> {
     }
 
     // 8. Assemble final result
-    return invoices.map((inv) => ({
-      ...inv,
-      treatments: treatmentsByAppt[inv.appointmentId] || [],
-      payments: paymentsByInvoice[inv.invoiceId] || [],
-      claim: claimByInvoice[inv.invoiceId] || null,
-    }));
+    return invoices.map((inv) => {
+      const specializations: string[] = Array.isArray(inv.specializations)
+        ? inv.specializations
+        : [];
+      return {
+        ...inv,
+        specialization:
+          specializations.length > 0 ? specializations.join(", ") : null,
+        specializations,
+        treatments: treatmentsByAppt[inv.appointmentId] || [],
+        payments: paymentsByInvoice[inv.invoiceId] || [],
+        claim: claimByInvoice[inv.invoiceId] || null,
+      };
+    });
   } catch (err) {
     console.error("[getPatientBilling] Failed to fetch billing:", err);
     return [];
