@@ -21,6 +21,7 @@ on:
         options:
           - info
           - migrate
+          - repair
 
       confirmation:
         description: "For production migrate, type MIGRATE-PRODUCTION"
