@@ -1,9 +1,11 @@
 import { getCurrentUser } from "@/lib/actions/getcurrentuser";
 import { redirect } from "next/navigation";
-import NewAppointmentPage from "./_client";
+import NewAppointmentClient from "@/components/frontdesk/new-appointment-client";
 
-export default async function Page() {
+export default async function NewAppointmentPage() {
   const user = await getCurrentUser();
-  if (!user) redirect("/login?clear=1");
-  return <NewAppointmentPage user={user} />;
+  if (!user || (user.role !== "receptionist" && user.role !== "admin")) {
+    redirect("/login");
+  }
+  return <NewAppointmentClient user={user} />;
 }
