@@ -58,14 +58,6 @@ export interface UpdateBranchDetailsInput {
   province: string;
 }
 
-const branchInputSchema = z.object({
-  branch_name: z.string().trim().min(1, "Branch name is required").max(100),
-  address_line1: z.string().trim().min(1, "Address is required").max(255),
-  city: z.string().trim().min(1, "City is required").max(100),
-  province: z.string().trim().min(1, "Province is required").max(100),
-});
-const branchIdSchema = z.string().uuid("Invalid branch ID");
-
 export interface BranchTraffic {
   branchId: string;
   branchName: string;
@@ -165,17 +157,17 @@ export async function getBranches(): Promise<BranchOverview[]> {
   }
 }
 
-export async function createBranch(data: unknown) {
+export async function createBranch(data: CreateBranchInput) {
   const user = await getCurrentUser();
   if (!user || user.role !== "admin") {
     return { success: false, error: "Unauthorized" };
   }
 
-  const parsedData = branchInputSchema.safeParse(data);
-  if (!parsedData.success) {
-    return { success: false, error: parsedData.error.issues[0]?.message ?? "Invalid branch details." };
+  const { branch_name, address_line1, city, province } = data;
+
+  if (!branch_name || !address_line1 || !city || !province) {
+    return { success: false, error: "Missing required fields." };
   }
-  const { branch_name, address_line1, city, province } = parsedData.data;
 
   const client = await db.connect();
 
@@ -200,12 +192,12 @@ export async function createBranch(data: unknown) {
     revalidatePath("/admin/branches");
     revalidatePath("/branches");
 
-    return {success: true, message: "Branch created successfully", branch: branchResult.rows[0],};
+    return { success: true, message: "Branch created successfully", branch: branchResult.rows[0], };
 
   } catch (error: any) {
     await client.query("ROLLBACK");
     console.error("Failed to create branch:", error);
-    return {success: false, error: error.message || "Failed to create branch.",};
+    return { success: false, error: error.message || "Failed to create branch.", };
 
   } finally {
     client.release();
@@ -216,9 +208,7 @@ export async function getBranchById(branchId: string) {
   try {
     const user = await getCurrentUser();
     if (!user) return null;
-    const parsedId = branchIdSchema.safeParse(branchId);
-    if (!parsedId.success) return null;
-    if (user.role !== "admin" && user.branchId !== parsedId.data) return null;
+    if (user.role !== "admin" && user.branchId !== branchId) return null;
 
     const branch = `SELECT b.branch_id, b.branch_name, b.is_active, a.address_line1, a.city, a.province, u.full_name AS manager_name,
         (SELECT COUNT(*) FROM employee e WHERE e.branch_id = b.branch_id AND e.role = 'Doctor') AS doctor_count,
@@ -229,7 +219,7 @@ export async function getBranchById(branchId: string) {
         LEFT JOIN app_user u ON m.employee_id = u.user_id
         WHERE b.branch_id = $1;`;
 
-    const branchResult = await db.query(branch, [parsedId.data]);
+    const branchResult = await db.query(branch, [branchId]);
 
     if (branchResult.rows.length === 0) {
       return null;
@@ -239,7 +229,7 @@ export async function getBranchById(branchId: string) {
       JOIN app_user u ON e.employee_id = u.user_id
       WHERE e.branch_id = $1 AND e.is_active = true;`;
 
-    const staffResult = await db.query(staff,     [parsedId.data]);
+    const staffResult = await db.query(staff, [branchId]);
 
     const availableStaff = `SELECT e.employee_id AS "employeeId", u.full_name AS name, e.role FROM employee e
       JOIN app_user u ON e.employee_id = u.user_id
@@ -270,18 +260,13 @@ export async function deleteBranch(branchId: string) {
       return { success: false, error: "Unauthorized" };
     }
 
-    const parsedId = branchIdSchema.safeParse(branchId);
-    if (!parsedId.success) {
-      return { success: false, error: "Invalid branch ID" };
-    }
-
-    await db.query(`UPDATE branch SET is_active = FALSE WHERE branch_id = $1`, [parsedId.data]);
+    await db.query(`UPDATE branch SET is_active = FALSE WHERE branch_id = $1`, [branchId]);
 
     revalidatePath("/admin/branches");
     revalidatePath("/branches");
 
     return { success: true, message: "Branch deleted successfully" };
-  } 
+  }
   catch (error: any) {
     console.error("Failed to delete branch:", error);
     return { success: false, error: error.message || "Failed to delete branch" };
@@ -409,7 +394,7 @@ export async function branchOverview(timeRange: "today" | "7d" | "30d" = "30d") 
       operationalWarnings,
       complaints: complaintsResults.rows as PatientComplaint[],
     };
-  } 
+  }
   catch (error: any) {
     console.error("Failed to load branch overview analytics:", error);
     return { success: false, error: error.message };
@@ -436,7 +421,7 @@ export async function complaints(complaintId: string) {
 
     revalidatePath("/admin/branches");
     return { success: true };
-  } 
+  }
   catch (error: any) {
     console.error("Failed to resolve complaint:", error);
     return { success: false, error: error.message };
@@ -491,12 +476,12 @@ export async function updateBranchDetails(
     revalidatePath("/branches");
 
     return { success: true, message: "Branch updated successfully" };
-  } 
+  }
   catch (error: any) {
     await client.query("ROLLBACK");
     console.error("Failed to update branch:", error);
     return { success: false, error: error.message || "Failed to update branch" };
-  } 
+  }
   finally {
     client.release();
   }
@@ -518,7 +503,7 @@ export async function assignManager(branchId: string, managerId: string) {
     revalidatePath("/admin/branches");
 
     return { success: true, message: "Manager assigned successfully" };
-  } 
+  }
   catch (error: any) {
     console.error("Failed to assign manager:", error);
     return { success: false, error: error.message || "Failed to assign manager" };
@@ -541,7 +526,7 @@ export async function removeManager(branchId: string) {
     revalidatePath("/admin/branches");
 
     return { success: true, message: "Manager removed successfully" };
-  } 
+  }
   catch (error: any) {
     console.error("Failed to remove manager:", error);
     return { success: false, error: error.message || "Failed to remove manager" };
@@ -564,7 +549,7 @@ export async function assignStaff(branchId: string, employeeId: string) {
     revalidatePath("/admin/branches");
 
     return { success: true, message: "Staff assigned successfully" };
-  } 
+  }
   catch (error: any) {
     console.error("Failed to assign staff:", error);
     return { success: false, error: error.message || "Failed to assign staff" };
@@ -590,7 +575,7 @@ export async function removeStaff(employeeId: string, branchId?: string) {
     revalidatePath("/branches");
 
     return { success: true, message: "Staff removed successfully" };
-  } 
+  }
   catch (error: any) {
     console.error("Failed to remove staff:", error);
     return { success: false, error: error.message || "Failed to remove staff" };
