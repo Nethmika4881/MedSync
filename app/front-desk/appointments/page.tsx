@@ -9,5 +9,5 @@ export default async function Page() {
 
   const initialAppointments = await getBranchAppointments(user.branchId);
 
-  return <AppointmentsPage user={user} initialAppointments={initialAppointments} />;
+  return <AppointmentsPage initialAppointments={initialAppointments} />;
 }

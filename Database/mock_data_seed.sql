@@ -99,19 +99,19 @@ BEGIN
 INSERT INTO address (address_line1, address_line2, city, province, postal_code) VALUES ('No. 124, Galle Road','Kollupitiya','Colombo','Western','00300') RETURNING address_id INTO t_addr;
 INSERT INTO contact DEFAULT VALUES RETURNING contact_id INTO t_cont;
 INSERT INTO contact_number (contact_id, number_type, number, is_primary) VALUES (t_cont,'Work','0112573400',TRUE);
-INSERT INTO branch (branch_name, address_id, contact_id, opened_date) VALUES ('MedSync Central Colombo', t_addr, t_cont, '2023-01-15') RETURNING branch_id INTO br1;
+INSERT INTO branch (branch_name, address_id, contact_id, opened_date, is_active) VALUES ('MedSync Central Colombo', t_addr, t_cont, '2023-01-15', FALSE) RETURNING branch_id INTO br1;
 
 -- Branch 2 – Kandy
 INSERT INTO address (address_line1, address_line2, city, province, postal_code) VALUES ('No. 45, Peradeniya Road','','Kandy','Central','20000') RETURNING address_id INTO t_addr;
 INSERT INTO contact DEFAULT VALUES RETURNING contact_id INTO t_cont;
 INSERT INTO contact_number (contact_id, number_type, number, is_primary) VALUES (t_cont,'Work','0812234500',TRUE);
-INSERT INTO branch (branch_name, address_id, contact_id, opened_date) VALUES ('MedSync Kandy Branch', t_addr, t_cont, '2023-06-01') RETURNING branch_id INTO br2;
+INSERT INTO branch (branch_name, address_id, contact_id, opened_date, is_active) VALUES ('MedSync Kandy Branch', t_addr, t_cont, '2023-06-01', FALSE) RETURNING branch_id INTO br2;
 
 -- Branch 3 – Galle
 INSERT INTO address (address_line1, address_line2, city, province, postal_code) VALUES ('No. 78, Church Street','Galle Fort','Galle','Southern','80000') RETURNING address_id INTO t_addr;
 INSERT INTO contact DEFAULT VALUES RETURNING contact_id INTO t_cont;
 INSERT INTO contact_number (contact_id, number_type, number, is_primary) VALUES (t_cont,'Work','0912245600',TRUE);
-INSERT INTO branch (branch_name, address_id, contact_id, opened_date) VALUES ('MedSync Southern Galle', t_addr, t_cont, '2024-02-10') RETURNING branch_id INTO br3;
+INSERT INTO branch (branch_name, address_id, contact_id, opened_date, is_active) VALUES ('MedSync Southern Galle', t_addr, t_cont, '2024-02-10', FALSE) RETURNING branch_id INTO br3;
 
 -- ============================================================================
 --  2.  FRONT-DESK EMPLOYEES  (3 – one per branch)
@@ -137,6 +137,11 @@ INSERT INTO contact DEFAULT VALUES RETURNING contact_id INTO t_cont;
 INSERT INTO contact_number (contact_id, number_type, number, is_primary) VALUES (t_cont,'Mobile','0781234567',TRUE);
 INSERT INTO app_user (salt,address_id,contact_id,user_type,full_name,nic,email,gender,dob,password_hash) VALUES (c_salt,t_addr,t_cont,'Employee','Chamila Pathirage','199478901234','chamila.fd@medsync.com','Female','1994-12-30',c_hash) RETURNING user_id INTO fd3;
 INSERT INTO employee (employee_id,branch_id,role,salary,joined_date) VALUES (fd3,br3,'FrontDesk',70000.00,'2024-03-01');
+
+-- Assign one non-medical employee as manager before activating each branch.
+UPDATE branch SET manager_id = fd1, is_active = TRUE WHERE branch_id = br1;
+UPDATE branch SET manager_id = fd2, is_active = TRUE WHERE branch_id = br2;
+UPDATE branch SET manager_id = fd3, is_active = TRUE WHERE branch_id = br3;
 
 -- ============================================================================
 --  3.  SPECIALIZATIONS  (10)
