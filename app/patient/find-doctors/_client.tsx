@@ -152,7 +152,7 @@ export default function FindDoctorsPage({ user, doctors, branches, specializatio
         d.name.toLowerCase().includes(q) ||
         d.specialization.toLowerCase().includes(q) ||
         d.branchName.toLowerCase().includes(q);
-      const matchesSpec = selectedSpec === "All" || d.specialization === selectedSpec;
+      const matchesSpec = selectedSpec === "All" || d.specialization.split(", ").includes(selectedSpec);
       const matchesBranch = selectedBranch === "All" || d.branchName === selectedBranch;
       // Availability maps to doctor.is_available — the doctor's general flag.
       // Slot-level capacity availability requires time_slot checks (out of scope here).

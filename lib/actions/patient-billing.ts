@@ -122,10 +122,11 @@ export async function getPatientBilling(): Promise<PatientInvoiceItem[]> {
        JOIN app_user u     ON u.user_id        = e.employee_id
        JOIN branch b       ON b.branch_id      = ts.branch_id
        LEFT JOIN (
-         SELECT DISTINCT ON (doctor_id) doctor_id, specialization_id
-         FROM doctor_specialization
-       ) ds ON ds.doctor_id = d.doctor_id
-       LEFT JOIN specialization spec ON spec.specialization_id = ds.specialization_id
+         SELECT dsp.doctor_id, STRING_AGG(sp.title, ', ' ORDER BY sp.title) AS title
+         FROM doctor_specialization dsp
+         JOIN specialization sp ON sp.specialization_id = dsp.specialization_id
+         GROUP BY dsp.doctor_id
+       ) spec ON spec.doctor_id = d.doctor_id
        WHERE inv.patient_id = $1
        ORDER BY inv.invoice_date DESC`,
       [patientId]
