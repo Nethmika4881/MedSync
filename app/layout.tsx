@@ -12,9 +12,9 @@ export const metadata = {
   description:
     "Multi-branch clinic management system — patient booking, clinical workspace, front desk, and admin portals.",
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-    apple: "/favicon.ico",
+    icon: "/favicon.ico?v=2",
+    shortcut: "/favicon.ico?v=2",
+    apple: "/favicon.ico?v=2",
   },
 };
 

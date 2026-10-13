@@ -11,7 +11,7 @@ export function Brand({ className, markClassName, textClassName }: BrandProps) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <Image
-        src="/favicon.ico"
+        src="/favicon.ico?v=2"
         width={40}
         height={40}
         alt=""

@@ -84,7 +84,7 @@ export default function PatientDashboardClient({ user }: { user: AuthUser }) {
   if (error || !data) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-3 animate-fade-in">
-        <AlertTriangle className="w-8 h-8 text-amber-500" />
+        <AlertTriangle className="w-8 h-8 text-red-500" />
         <p className="text-sm text-slate-600">{error || "Something went wrong."}</p>
         <button
           className="text-sm font-semibold text-[var(--brand-primary)] hover:underline"
@@ -96,24 +96,23 @@ export default function PatientDashboardClient({ user }: { user: AuthUser }) {
     );
   }
 
-  const hasOutstanding = data.totalDueRaw > 0;
   const nextAppt = data.upcomingAppointments[0];
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-5xl mx-auto">
-      {/* ── Welcome Banner ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl p-6 sm:p-8 shadow-sm">
-        <div className="space-y-1">
-          <h2 className="text-2xl sm:text-3xl font-bold font-outfit tracking-tight text-white">
+    <div className="space-y-6 animate-fade-in">
+      {/* ── Welcome Header ── */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">
             Welcome back, {firstName}!
           </h2>
-          <p className="text-slate-300 text-sm max-w-xl">
+          <p className="text-slate-500">
             Here is your real-time health summary, upcoming consultations, and clinical records.
           </p>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Link href="/patient/appointments">
-            <Button className="bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white rounded-xl shadow-md gap-2 font-medium">
+            <Button className="w-full rounded-xl bg-[var(--brand-primary)] text-white shadow-sm hover:bg-[var(--brand-secondary)] sm:w-auto">
               <PlusCircle className="w-4 h-4" />
               Book Appointment
             </Button>
@@ -121,7 +120,7 @@ export default function PatientDashboardClient({ user }: { user: AuthUser }) {
           <Link href="/patient/find-doctors">
             <Button
               variant="outline"
-              className="bg-white/10 hover:bg-white/20 border-white/20 text-white rounded-xl gap-2 font-medium"
+              className="w-full rounded-xl sm:w-auto"
             >
               <Search className="w-4 h-4" />
               Find Doctors
@@ -131,16 +130,16 @@ export default function PatientDashboardClient({ user }: { user: AuthUser }) {
       </div>
 
       {/* ── Metrics Grid (Derived from real PostgreSQL data) ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {/* Metric 1: Upcoming Appointments */}
         <Link href="/patient/appointments" className="block group">
-          <Card className="border-slate-200 shadow-xs hover:border-[var(--brand-primary)] hover:shadow-md transition-all h-full">
-            <CardContent className="p-5 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+          <Card className="h-full border-none shadow-sm transition-shadow hover:shadow-md">
+            <CardContent className="flex items-center gap-4 p-6">
+              <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
                 <Calendar className="w-6 h-6" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <p className="text-sm font-medium text-slate-500">
                   Upcoming Visits
                 </p>
                 <h3 className="text-2xl font-bold text-slate-900 mt-0.5">
@@ -160,13 +159,13 @@ export default function PatientDashboardClient({ user }: { user: AuthUser }) {
 
         {/* Metric 2: Active Prescriptions */}
         <Link href="/patient/prescriptions" className="block group">
-          <Card className="border-slate-200 shadow-xs hover:border-[var(--brand-primary)] hover:shadow-md transition-all h-full">
-            <CardContent className="p-5 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+          <Card className="h-full border-none shadow-sm transition-shadow hover:shadow-md">
+            <CardContent className="flex items-center gap-4 p-6">
+              <div className="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
                 <Pill className="w-6 h-6" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <p className="text-sm font-medium text-slate-500">
                   Active Prescriptions
                 </p>
                 <h3 className="text-2xl font-bold text-slate-900 mt-0.5">
@@ -184,34 +183,22 @@ export default function PatientDashboardClient({ user }: { user: AuthUser }) {
 
         {/* Metric 3: Outstanding Balance */}
         <Link href="/patient/billing" className="block group">
-          <Card className="border-slate-200 shadow-xs hover:border-[var(--brand-primary)] hover:shadow-md transition-all h-full">
-            <CardContent className="p-5 flex items-start gap-4">
-              <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform ${hasOutstanding
-                    ? "bg-amber-50 text-amber-600"
-                    : "bg-emerald-50 text-emerald-600"
-                  }`}
-              >
+          <Card className="h-full border-none shadow-sm transition-shadow hover:shadow-md">
+            <CardContent className="flex items-center gap-4 p-6">
+              <div className="w-12 h-12 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center shrink-0">
                 <CreditCard className="w-6 h-6" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <p className="text-sm font-medium text-slate-500">
                   Outstanding Bills
                 </p>
-                <h3
-                  className={`text-2xl font-bold mt-0.5 ${hasOutstanding ? "text-amber-600" : "text-slate-900"
-                    }`}
-                >
+                <h3 className="text-2xl font-bold text-slate-900 mt-0.5">
                   {data.outstandingBalance}
                 </h3>
-                <p className="text-xs mt-1 truncate">
-                  {hasOutstanding ? (
-                    <span className="text-amber-600 font-medium">
-                      {data.unpaidInvoicesCount} invoice(s) pending
-                    </span>
-                  ) : (
-                    <span className="text-emerald-600 font-medium">All invoices settled</span>
-                  )}
+                <p className="mt-1 truncate text-xs text-slate-500">
+                  {data.totalDueRaw > 0
+                    ? `${data.unpaidInvoicesCount} invoice(s) pending`
+                    : "All invoices settled"}
                 </p>
               </div>
             </CardContent>
@@ -220,13 +207,13 @@ export default function PatientDashboardClient({ user }: { user: AuthUser }) {
 
         {/* Metric 4: Completed Consultations */}
         <Link href="/patient/records" className="block group">
-          <Card className="border-slate-200 shadow-xs hover:border-[var(--brand-primary)] hover:shadow-md transition-all h-full">
-            <CardContent className="p-5 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+          <Card className="h-full border-none shadow-sm transition-shadow hover:shadow-md">
+            <CardContent className="flex items-center gap-4 p-6">
+              <div className="w-12 h-12 rounded-xl bg-green-100 text-green-600 flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <p className="text-sm font-medium text-slate-500">
                   Consultation History
                 </p>
                 <h3 className="text-2xl font-bold text-slate-900 mt-0.5">
@@ -244,11 +231,11 @@ export default function PatientDashboardClient({ user }: { user: AuthUser }) {
       </div>
 
       {/* ── Main Dashboard Content Grid ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
         {/* Left Column: Monthly Activity Chart & Health Shortcuts (2 Cols) */}
         <div className="lg:col-span-2 space-y-6">
           {/* Monthly Activity Chart */}
-          <Card className="border-slate-200 shadow-xs">
+          <Card className="border-slate-200 shadow-sm">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div>
@@ -271,7 +258,7 @@ export default function PatientDashboardClient({ user }: { user: AuthUser }) {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="h-[260px] pt-4">
+            <CardContent className="h-[300px] pt-4">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={data.monthlyActivity}
@@ -362,7 +349,7 @@ export default function PatientDashboardClient({ user }: { user: AuthUser }) {
                 className="p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center justify-between group"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
                     <CreditCard className="w-5 h-5" />
                   </div>
                   <div>
@@ -398,7 +385,7 @@ export default function PatientDashboardClient({ user }: { user: AuthUser }) {
 
         {/* Right Column: Upcoming Appointments with Zero-Data State */}
         <div className="space-y-4">
-          <Card className="border-slate-200 shadow-xs flex flex-col h-full">
+          <Card className="border-slate-200 shadow-xs flex flex-col overflow-hidden">
             <CardHeader className="pb-3 border-b border-slate-100">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base font-semibold text-slate-900">

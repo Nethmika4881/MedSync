@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  HeartPulse,
   LayoutDashboard,
   Calendar,
   Search,
@@ -96,9 +96,14 @@ export function PatientSidebar() {
             )}
             title="MedSync Patient Portal"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[var(--brand-primary)] to-cyan-500 flex items-center justify-center text-white shadow-md shadow-[var(--brand-primary)]/25 shrink-0">
-              <HeartPulse className="w-5 h-5" />
-            </div>
+            <Image
+              src="/favicon.ico?v=2"
+              width={40}
+              height={40}
+              alt=""
+              aria-hidden="true"
+              className="size-10 shrink-0 rounded-xl object-cover shadow-md shadow-[var(--brand-primary)]/20"
+            />
             {!isCollapsed && (
               <div className="flex flex-col leading-none">
                 <span className="text-lg font-bold">
