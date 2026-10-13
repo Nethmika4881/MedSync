@@ -264,12 +264,12 @@ export default function InsuranceClaimsPage() {
                       </td>
 
                       <td className="py-3.5 px-4 font-semibold text-slate-900">
-                        LKR {Number(claim.claimAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        Rs. {Number(claim.claimAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </td>
 
                       <td className="py-3.5 px-4 text-slate-700 font-medium">
                         {claim.approvedAmount > 0
-                          ? `LKR ${Number(claim.approvedAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+                          ? `Rs. ${Number(claim.approvedAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
                           : <span className="text-slate-400 font-normal italic">Pending</span>}
                       </td>
 
@@ -379,7 +379,7 @@ export default function InsuranceClaimsPage() {
                 <span className="text-slate-500">Package Annual Limit:</span>
                 <span className="text-slate-800">
                   {selectedClaim.annualLimit > 0
-                    ? `LKR ${Number(selectedClaim.annualLimit).toLocaleString()}`
+                    ? `Rs. ${Number(selectedClaim.annualLimit).toLocaleString()}`
                     : "Unlimited"}{" "}
                   ({selectedClaim.copaymentPercentage}% Copay)
                 </span>
@@ -387,7 +387,7 @@ export default function InsuranceClaimsPage() {
               <div className="flex justify-between">
                 <span className="text-slate-500">Claimed Amount:</span>
                 <span className="font-bold text-slate-900">
-                  LKR {Number(selectedClaim.claimAmount).toLocaleString()}
+                  Rs. {Number(selectedClaim.claimAmount).toLocaleString()}
                 </span>
               </div>
               {selectedClaim.remarks && (
@@ -401,7 +401,7 @@ export default function InsuranceClaimsPage() {
               <div className="space-y-3 text-xs">
                 <div>
                   <label className="block font-medium text-slate-700 mb-1">
-                    Approved Amount (LKR)
+                    Approved Amount (Rs.)
                   </label>
                   <input
                     type="number"
@@ -411,7 +411,7 @@ export default function InsuranceClaimsPage() {
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500"
                   />
                   <p className="text-[11px] text-slate-400 mt-1">
-                    Suggested after {selectedClaim.copaymentPercentage}% copay: LKR{" "}
+                    Suggested after {selectedClaim.copaymentPercentage}% copay: Rs.{" "}
                     {Math.round(Number(selectedClaim.claimAmount) * ((100 - Number(selectedClaim.copaymentPercentage)) / 100)).toLocaleString()}
                   </p>
                 </div>

@@ -305,7 +305,7 @@ export default function PackagesClientPage() {
                         <span className="text-[10px] text-slate-400 block font-medium">Annual Limit</span>
                         <span className="font-bold text-slate-800 text-[11px] mt-0.5 block truncate">
                           {pkg.annualLimit > 0
-                            ? `LKR ${pkg.annualLimit.toLocaleString()}`
+                            ? `Rs. ${pkg.annualLimit.toLocaleString()}`
                             : "Unlimited"}
                         </span>
                       </div>
@@ -320,7 +320,7 @@ export default function PackagesClientPage() {
                     <strong>{pkg.enrolledCount}</strong> policies
                   </span>
                   <span className="font-medium text-slate-700">
-                    LKR {pkg.totalUtilizedAmount.toLocaleString()} spent
+                    Rs. {pkg.totalUtilizedAmount.toLocaleString()} spent
                   </span>
                 </div>
               </Card>
@@ -391,7 +391,7 @@ export default function PackagesClientPage() {
                   </div>
                   <div className="text-sm font-bold text-slate-900">
                     {activePackage.annualLimit > 0
-                      ? `LKR ${activePackage.annualLimit.toLocaleString()}`
+                      ? `Rs. ${activePackage.annualLimit.toLocaleString()}`
                       : "Unlimited"}
                   </div>
                 </div>
@@ -422,7 +422,7 @@ export default function PackagesClientPage() {
                     <span>Hospital Revenue Billed</span>
                   </div>
                   <div className="text-sm font-bold text-teal-600">
-                    LKR {activePackage.totalUtilizedAmount.toLocaleString()}
+                    Rs. {activePackage.totalUtilizedAmount.toLocaleString()}
                   </div>
                 </div>
               </div>

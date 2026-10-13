@@ -122,7 +122,7 @@ export default function DashboardPage({ user }: { user: any }) {
           },
           {
             title: "Outstanding Bills",
-            value: "LKR 0",
+            value: "Rs. 0",
             icon: CreditCard,
             color: "text-green-600",
             bg: "bg-green-100",
@@ -297,13 +297,13 @@ export default function DashboardPage({ user }: { user: any }) {
                   tick={{ fontSize: 12, fill: "#94a3b8" }}
                 />
 
-                {/* Left Y-Axis: Revenue (LKR in Thousands) */}
+                {/* Left Y-Axis: Revenue (Rs. in Thousands) */}
                 <YAxis
                   yAxisId="revenue"
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12, fill: "#0d9488" }}
-                  tickFormatter={(val) => `LKR ${val / 1000}k`}
+                  tickFormatter={(val) => `Rs. ${val / 1000}k`}
                 />
 
                 {/* Right Y-Axis: Appointments (Count) */}
@@ -327,7 +327,7 @@ export default function DashboardPage({ user }: { user: any }) {
                   }}
                   formatter={(value: number, name: string) => [
                     name === "revenue"
-                      ? `LKR ${value.toLocaleString()}`
+                      ? `Rs. ${value.toLocaleString()}`
                       : value.toLocaleString(),
                     name === "revenue" ? "Revenue" : "Appointments",
                   ]}

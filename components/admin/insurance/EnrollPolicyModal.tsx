@@ -159,7 +159,7 @@ export function EnrollPolicyModal({ isOpen, onClose, onSuccess }: ModalProps) {
               <option value="">Select an active package</option>
               {packages.map((pkg) => (
                 <option key={pkg.packageId} value={pkg.packageId}>
-                  {pkg.providerName} - {pkg.packageName} (Limit: LKR {pkg.annualLimit.toLocaleString()})
+                  {pkg.providerName} - {pkg.packageName} (Limit: Rs. {pkg.annualLimit.toLocaleString()})
                 </option>
               ))}
             </select>

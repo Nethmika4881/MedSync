@@ -130,7 +130,7 @@ export default function BillingPage({
 
     if (amountNum > selectedInvoice.dueAmount) {
       toast.error(
-        `Payment amount (LKR ${amountNum.toLocaleString()}) cannot exceed the remaining balance (LKR ${selectedInvoice.dueAmount.toLocaleString()}).`
+        `Payment amount (Rs. ${amountNum.toLocaleString()}) cannot exceed the remaining balance (Rs. ${selectedInvoice.dueAmount.toLocaleString()}).`
       );
       return;
     }
@@ -282,7 +282,7 @@ export default function BillingPage({
                 Total Billed
               </p>
               <h3 className="text-xl font-bold text-slate-900 mt-1">
-                LKR {totalBilled.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                Rs. {totalBilled.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </h3>
             </div>
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -298,7 +298,7 @@ export default function BillingPage({
                 Collected Revenue
               </p>
               <h3 className="text-xl font-bold text-emerald-600 mt-1">
-                LKR {totalCollected.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                Rs. {totalCollected.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </h3>
             </div>
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
@@ -314,7 +314,7 @@ export default function BillingPage({
                 Outstanding Due
               </p>
               <h3 className="text-xl font-bold text-amber-600 mt-1">
-                LKR {totalOutstanding.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                Rs. {totalOutstanding.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </h3>
             </div>
             <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
@@ -458,13 +458,13 @@ export default function BillingPage({
                           {inv.invoiceDate || "N/A"}
                         </td>
                         <td className="px-6 py-4 font-semibold text-slate-900">
-                          LKR {Number(inv.netAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          Rs. {Number(inv.netAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </td>
                         <td className="px-6 py-4 font-semibold text-emerald-600">
-                          LKR {Number(inv.paidAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          Rs. {Number(inv.paidAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </td>
                         <td className="px-6 py-4 font-semibold text-amber-600">
-                          LKR {Number(inv.dueAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          Rs. {Number(inv.dueAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </td>
                         <td className="px-6 py-4">
                           <StatusPill status={inv.status} />
@@ -532,7 +532,7 @@ export default function BillingPage({
                         {pay.patientName}
                       </td>
                       <td className="px-6 py-4 font-bold text-emerald-600">
-                        LKR {pay.amount.toFixed(2)}
+                        Rs. {pay.amount.toFixed(2)}
                       </td>
                       <td className="px-6 py-4">{pay.method}</td>
                       <td className="px-6 py-4 text-xs font-mono">
@@ -642,10 +642,10 @@ export default function BillingPage({
                           {claim.claimDate || "—"}
                         </td>
                         <td className="px-5 py-4 font-semibold text-slate-900">
-                          LKR {Number(claim.claimedAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          Rs. {Number(claim.claimedAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </td>
                         <td className="px-5 py-4 font-semibold text-emerald-600">
-                          LKR {Number(claim.approvedAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          Rs. {Number(claim.approvedAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </td>
                         <td className="px-5 py-4">
                           <StatusPill status={claim.status} />
@@ -694,19 +694,19 @@ export default function BillingPage({
                 <div className="flex justify-between items-center text-slate-600">
                   <span>Total Invoiced:</span>
                   <span className="font-semibold text-slate-900">
-                    LKR {Number(selectedInvoice.netAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    Rs. {Number(selectedInvoice.netAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-slate-600">
                   <span>Already Paid:</span>
                   <span className="font-semibold text-emerald-600">
-                    LKR {Number(selectedInvoice.paidAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    Rs. {Number(selectedInvoice.paidAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </span>
                 </div>
                 <div className="flex justify-between items-center pt-1 border-t border-slate-200 font-bold">
                   <span className="text-slate-900">Outstanding Balance:</span>
                   <span className="text-amber-700 font-mono text-sm">
-                    LKR {Number(selectedInvoice.dueAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    Rs. {Number(selectedInvoice.dueAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </span>
                 </div>
               </div>
@@ -714,11 +714,11 @@ export default function BillingPage({
               {/* Amount to Collect */}
               <div>
                 <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
-                  Amount to Collect (LKR) *
+                  Amount to Collect (Rs.) *
                 </label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
-                    LKR
+                    Rs.
                   </span>
                   <input
                     type="number"
@@ -870,7 +870,7 @@ export default function BillingPage({
                 <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase text-[10px]">
                   <tr>
                     <th className="p-3">Service / Description</th>
-                    <th className="p-3 text-right">Amount (LKR)</th>
+                    <th className="p-3 text-right">Amount (Rs.)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -907,19 +907,19 @@ export default function BillingPage({
               <div className="flex justify-between text-slate-600">
                 <span>Net Total:</span>
                 <span className="font-semibold text-slate-900 font-mono">
-                  LKR {Number(selectedReceiptInvoice?.netAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  Rs. {Number(selectedReceiptInvoice?.netAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </span>
               </div>
               <div className="flex justify-between text-slate-600">
                 <span>Amount Paid:</span>
                 <span className="font-bold text-emerald-600 font-mono text-sm">
-                  LKR {Number(selectedReceiptInvoice?.paidAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  Rs. {Number(selectedReceiptInvoice?.paidAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </span>
               </div>
               <div className="flex justify-between text-slate-600">
                 <span>Outstanding Balance:</span>
                 <span className="font-semibold text-amber-700 font-mono">
-                  LKR {Number(selectedReceiptInvoice?.dueAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  Rs. {Number(selectedReceiptInvoice?.dueAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </span>
               </div>
             </div>

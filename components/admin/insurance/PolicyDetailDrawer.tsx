@@ -72,13 +72,13 @@ export function PolicyDetailDrawer({ policy, onClose }: DrawerProps) {
               <div>
                 <p className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Remaining Balance</p>
                 <p className="text-2xl font-bold text-emerald-400">
-                  LKR {policy.remainingAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  Rs. {policy.remainingAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </p>
               </div>
               <div className="text-right">
                 <p className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Annual Limit</p>
                 <p className="text-lg font-semibold text-slate-200">
-                  LKR {policy.annualLimit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  Rs. {policy.annualLimit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </p>
               </div>
             </div>
@@ -92,7 +92,7 @@ export function PolicyDetailDrawer({ policy, onClose }: DrawerProps) {
                 />
               </div>
               <div className="flex justify-between text-[11px] text-slate-400">
-                <span>Used: LKR {policy.usedCoverageAmount.toLocaleString()} ({percentUsed}%)</span>
+                <span>Used: Rs. {policy.usedCoverageAmount.toLocaleString()} ({percentUsed}%)</span>
                 <span>Copay: {policy.copaymentPercentage}%</span>
               </div>
             </div>
@@ -133,7 +133,7 @@ export function PolicyDetailDrawer({ policy, onClose }: DrawerProps) {
                   <div key={c.claimId} className="p-3.5 text-xs hover:bg-slate-50/50 dark:hover:bg-slate-850/50 transition">
                     <div className="flex items-center justify-between font-semibold">
                       <span className="text-slate-900 dark:text-slate-100">
-                        Claimed: LKR {c.claimedAmount.toLocaleString()}
+                        Claimed: Rs. {c.claimedAmount.toLocaleString()}
                       </span>
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                         c.status === "Approved" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300" :
@@ -144,7 +144,7 @@ export function PolicyDetailDrawer({ policy, onClose }: DrawerProps) {
                       </span>
                     </div>
                     <div className="flex justify-between text-[11px] text-slate-500 mt-1">
-                      <span>Approved: LKR {c.approvedAmount.toLocaleString()}</span>
+                      <span>Approved: Rs. {c.approvedAmount.toLocaleString()}</span>
                       <span>{c.claimDate}</span>
                     </div>
                     {c.remarks && (

@@ -205,7 +205,7 @@ function DoctorSelector({
             <div>
               <p className="font-semibold text-slate-900 text-sm leading-tight">{selected.name}</p>
               <p className="text-xs text-[var(--brand-primary)] font-medium">
-                {selected.specialization} • Fee: LKR {Number(selected.consultationFee).toLocaleString()}
+                {selected.specialization} • Fee: Rs. {Number(selected.consultationFee).toLocaleString()}
               </p>
             </div>
           </div>
@@ -255,7 +255,7 @@ function DoctorSelector({
                     <div>
                       <p className="font-semibold text-slate-900 text-sm">{d.name}</p>
                       <p className="text-xs text-slate-500">
-                        {d.specialization} • LKR {Number(d.consultationFee).toLocaleString()}
+                        {d.specialization} • Rs. {Number(d.consultationFee).toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -720,7 +720,7 @@ export default function NewAppointmentPage({ user }: { user: any }) {
                   <div className="flex justify-between text-slate-600">
                     <span>Fee:</span>
                     <span className="font-bold text-emerald-700">
-                      LKR {Number(selectedDoctor.consultationFee).toLocaleString()}
+                      Rs. {Number(selectedDoctor.consultationFee).toLocaleString()}
                     </span>
                   </div>
                 </div>
