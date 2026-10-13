@@ -275,6 +275,11 @@ export async function createStaff(dirtyData: unknown = {}) {
   } catch (err) {
     await client.query("rollback"); //revert changes back if there was any errors
     console.error("unable to create staff : " + err);
+    return {
+      success: false,
+      error:
+        err instanceof Error ? err.message : "Unable to create staff member",
+    };
   } finally {
     client.release();
   }

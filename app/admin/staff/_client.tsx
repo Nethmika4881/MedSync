@@ -42,6 +42,10 @@ export default function StaffPage({
   user,
   staff,
   branches,
+  total,
+  page,
+  pageSize,
+  totalPages,
 }: {
   user: AuthUser;
   total: number;
@@ -84,6 +88,16 @@ export default function StaffPage({
     event.preventDefault();
     updateFilter("search", searchTerm.trim());
   }
+
+  function goToPage(nextPage: number) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", String(nextPage));
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }
+
+  const firstResult = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const lastResult = Math.min(page * pageSize, total);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -214,7 +228,8 @@ export default function StaffPage({
                         <Mail className="w-3.5 h-3.5" /> {emp.email}
                       </a>
                       <span className="flex items-center gap-1.5 text-slate-500 text-xs mt-1">
-                        <Phone className="w-3.5 h-3.5" /> {emp.phone}
+                        <Phone className="w-3.5 h-3.5" />
+                        {emp.phone || "No phone number"}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-slate-600">
@@ -243,8 +258,46 @@ export default function StaffPage({
                   </tr>
                 );
               })}
+              {filtered.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="px-6 py-12 text-center text-slate-500"
+                  >
+                    No staff members match these filters.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
+        </div>
+        <div className="flex flex-col gap-3 border-t border-slate-200 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-slate-500">
+            Showing {firstResult} to {lastResult} of {total} staff members
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => goToPage(page - 1)}
+            >
+              Previous
+            </Button>
+            <span className="min-w-20 text-center text-sm text-slate-600">
+              Page {page} of {Math.max(totalPages, 1)}
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => goToPage(page + 1)}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       </Card>
     </div>
