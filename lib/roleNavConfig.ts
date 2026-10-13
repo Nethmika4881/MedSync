@@ -78,7 +78,6 @@ export const roleNavConfig: Record<UserRole, NavItem[]> = {
         { label: "Claims",    href: "/front-desk/billing/claims",   icon: "FileCheck" },
       ],
     },
-    { label: "Settings", href: "/front-desk/settings", icon: "Settings" },
   ],
 
 
