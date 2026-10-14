@@ -478,11 +478,6 @@ export async function enrollPatientPolicy(data: unknown) {
   }
 }
 
-  
-// ==========================================
-// CLAIMS MANAGEMENT BACKEND ACTIONS (MEDSYNC SCHEMA)
-// ==========================================
-
 const approveClaimSchema = z.object({
   claimId: z.string().min(1),
   approvedAmount: z.number().positive(),
