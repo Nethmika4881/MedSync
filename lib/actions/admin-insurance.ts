@@ -478,18 +478,12 @@ export async function enrollPatientPolicy(data: unknown) {
   }
 }
 
-  
-// ==========================================
-// CLAIMS MANAGEMENT BACKEND ACTIONS (MEDSYNC SCHEMA)
-// ==========================================
-
 const approveClaimSchema = z.object({
   claimId: z.string().min(1),
   approvedAmount: z.number().positive(),
   remarks: z.string().max(255).optional(),
 });
 
-// 1. Fetch claims queue
 export async function getClaimsQueue(statusFilter?: string): Promise<ClaimItem[]> {
   const user = await getCurrentUser();
   if (!user || user.role?.toLowerCase() !== "admin") {
@@ -524,7 +518,6 @@ export async function getClaimsQueue(statusFilter?: string): Promise<ClaimItem[]
 
   const params: any[] = [];
   if (statusFilter && statusFilter.toUpperCase() !== "ALL") {
-    // Map PENDING tab to 'Submitted' enum in database
     const mappedStatus = statusFilter.toUpperCase() === "PENDING" ? "Submitted" : statusFilter;
     params.push(mappedStatus);
     query += ` WHERE LOWER(c.status::TEXT) = LOWER($1)`;
@@ -536,7 +529,6 @@ export async function getClaimsQueue(statusFilter?: string): Promise<ClaimItem[]
   return result.rows;
 }
 
-// 2. Approve Claim
 export async function approveClaim(formData: {
   claimId: string;
   approvedAmount: number;
@@ -574,7 +566,6 @@ export async function approveClaim(formData: {
       throw new Error("Approved amount cannot exceed the requested claim amount.");
     }
 
-    // Update insurance_claim
     await client.query(
       `UPDATE insurance_claim 
        SET status = 'Approved', 
@@ -585,7 +576,6 @@ export async function approveClaim(formData: {
       [parsed.data.approvedAmount, parsed.data.remarks ?? null, parsed.data.claimId]
     );
 
-    // Update used_coverage_amount on the insurance policy
     await client.query(
       `UPDATE insurance 
        SET used_coverage_amount = used_coverage_amount + $1, 
@@ -610,7 +600,6 @@ export async function approveClaim(formData: {
   }
 }
 
-// 3. Settle Claim
 export async function settleClaim(claimId: string) {
   const user = await getCurrentUser();
   if (!user || user.role?.toLowerCase() !== "admin") {
@@ -659,7 +648,6 @@ export async function settleClaim(claimId: string) {
   }
 }
 
-// 4. Reject Claim
 export async function rejectClaim(claimId: string, remarks: string) {
   const user = await getCurrentUser();
   if (!user || user.role?.toLowerCase() !== "admin") {
