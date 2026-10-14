@@ -84,7 +84,7 @@ export async function getDashboardData(): Promise<DashboardData | null> {
       db.query(`
         SELECT 
           COUNT(a.appointment_id) AS "todayAppointments",
-          COUNT(a.appointment_id) FILTER (WHERE a.status = 'Completed') AS "todayCompleted"
+          COUNT(a.appointment_id) FILTER (WHERE a.status = 'Scheduled') AS "todayScheduled"
         FROM appointment a
         JOIN time_slot ts ON ts.time_slot_id = a.time_slot_id
         WHERE ts.available_date = CURRENT_DATE

@@ -198,7 +198,7 @@ export async function createBranch(data: CreateBranchInput) {
 
     const branchResult = await client.query(
       `INSERT INTO branch (branch_name, address_id, contact_id, is_active) 
-       VALUES ($1, $2, $3, False) RETURNING *;`,
+       VALUES ($1, $2, $3, TRUE) RETURNING *;`,
       [branch_name, newAddress, newContact],
     );
 
