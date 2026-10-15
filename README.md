@@ -1,3 +1,10 @@
+DEMO ACCOUNT LOGIN CREDENTIALS................
+
+admin@medsync.com password123
+patient@medsync.com password123
+frontdesk@medsync.com   password123
+doctor@medsync.com     password123
+
 # MedSync
 
 MedSync is a clinic management system for Sri Lankan clinics with separate portals for patients, doctors, front desk staff, and administrators. It supports registration, queue based appointments, consultations, prescriptions, billing, insurance, reports, and complaints.
