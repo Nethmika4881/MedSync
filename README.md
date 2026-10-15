@@ -1,9 +1,9 @@
-DEMO ACCOUNT LOGIN CREDENTIALS................
+DEMO ACCOUNT LOGIN CREDENTIALS (shared password : password123 )
 
-admin@medsync.com password123
-patient@medsync.com password123
-frontdesk@medsync.com   password123
-doctor@medsync.com     password123
+admin@medsync.com |
+patient@medsync.com |
+frontdesk@medsync.com|
+doctor@medsync.com |
 
 # MedSync
 
